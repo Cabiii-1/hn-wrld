@@ -25,4 +25,10 @@ Run `npm ci` then `npm run dev` from this folder and open http://localhost:3000.
 Validate with `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. See [Milestone 1 notes](docs/MILESTONE_1.md) and [verification results](docs/verification/RESULTS.md). Production preview: `npm run build` then `npm start`.
 
 ## Important
-The recipient gate, backend and private media workflows are later milestones. Never put contributor messages/uploads in public assets or this prototype. Background PNGs do not include walkability/collisions. Existing Supabase migrations are unmodified and unapplied; they need the M2 security audit. See PRD for safeguards.
+The game still uses synthetic content. Never put contributor messages/uploads in public assets or connect them to the game before M3's recipient gate. Background PNGs do not include walkability/collisions. See PRD for safeguards.
+
+## Milestone 2 implementation
+
+Contributor invitations, text/photo/voice submission, private file validation, Dudu's authenticated review desk and NPC assignment are implemented. **Live Supabase integration verification is pending Docker Desktop**, which is not installed in the current environment.
+
+Install/start Docker Desktop, run `npm run db:setup`, create a local test admin as described in [M2 setup](docs/MILESTONE_2.md), then restart `npm run dev`. Open `/admin` to create invitations. The setup script preserves existing environment files and never prints keys. `npm run test:db` runs SQL/RLS tests without Docker. See [M2 security audit](docs/SECURITY_M2.md) and [M2 verification](docs/verification/M2_RESULTS.md). No hosted project or deployment is required or performed.

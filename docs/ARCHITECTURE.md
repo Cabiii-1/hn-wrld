@@ -2,6 +2,8 @@
 
 M1 implementation: `/` serves a synthetic local house preview, with `GameBridge`, `HouseScene`, a pure TS foot-collision resolver and original runtime bear frames. No protected routes or database access are implemented yet. The following routes describe the later production design; `/` must become the recipient gate before real content is connected. See `MILESTONE_1.md`.
 
+M2 update: `/admin`, `/invite#token` and `/contribute` are implemented with the `/api/manage/` server namespace. The game remains synthetic. Admin cookies carry a verified Supabase access token, contributor cookies carry opaque session secrets, and private media is proxied after authorization. Fragment invitation links replace token-bearing route paths to avoid token leakage in request/access logs. See `MILESTONE_2.md`; live local Supabase validation is pending Docker Desktop. The route list below is the broader release design, not a list of completed endpoints.
+
 ## System boundaries
 ```
 Bubu browser ───────► Next.js App Router on Vercel ◄──── Contributor browser
@@ -16,7 +18,7 @@ Bubu browser ───────► Next.js App Router on Vercel ◄───�
 ## Routes
 - `/` recipient landing / unlock gate
 - `/play` client-only Phaser scene and React dialogue controls
-- `/invite/[token]` short-lived invitation exchange, no third-party scripts, noindex
+- `/invite#token` short-lived invitation exchange, token fragment stripped on exchange, no third-party scripts, noindex
 - `/contribute` recipient-specific authorized submission session
 - `/admin/login`, `/admin/invites`, `/admin/submissions`, `/admin/npcs`, `/admin/preview`
 - `/api/recipient/scenes/[slug]` authenticated, approved and published scene projection only

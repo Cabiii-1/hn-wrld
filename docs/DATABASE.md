@@ -24,11 +24,13 @@
 Recipient scene response example:
 ```json
 {
-  "area": {"slug":"sta-ana","mapKey":"sta_ana"},
-  "npcs": [{"id":"uuid","name":"Tita","message":"We are cheering for you!","spriteVariant":"npc-cream-1","x":12,"y":8,"wanderRadius":3}]
+  "area": {"slug":"sta-ana","mapKey":"sta_ana_house"},
+  "npcs": [{"id":"uuid","name":"Sample Friend","message":"Synthetic example only","spriteVariant":"npc-cream-1","x":425,"y":352,"wanderRadius":20}]
 }
 ```
 Never return invitation hashes, moderator notes, unapproved texts, session IDs or admin metadata.
+
+Migration 0003 implements M2 contributor/admin operations, upload reservations, rate limits, role-restricted transaction functions and cleanup jobs. Radius is now **world pixels** (0–80), replacing the starter's tile-based 0–12 assumption. No recipient projection is implemented until M3. See `SECURITY_M2.md` for the audited role/grant boundaries and test limitations.
 
 ## Media and access schema additions
 The follow-up migration `supabase/migrations/0002_media_recipient_gate.sql` adds:
