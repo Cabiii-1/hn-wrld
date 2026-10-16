@@ -2,8 +2,20 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   agentRules: false,
   allowedDevOrigins: ["127.0.0.1"],
+  serverExternalPackages: ["sharp", "music-metadata", "file-type"],
   async headers() {
     return [
+      ...[
+        "/admin/:path*",
+        "/invite/:path*",
+        "/contribute/:path*",
+        "/api/manage/:path*",
+      ].map((source) => ({
+        source,
+        headers: [
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+        ],
+      })),
       {
         source: "/:path*",
         headers: [
