@@ -1,0 +1,22 @@
+{
+  "sta_ana_house": {
+    "source": "assets/backgrounds/sta_ana_house.png",
+    "publicPath": "/game/backgrounds/sta_ana_house.png",
+    "width": 1672,
+    "height": 941,
+    "worldSize": [836, 470],
+    "creator": "User-provided starter artwork",
+    "license": "Production rights confirmation pending; supplied for this prototype",
+    "purpose": "Scenic backdrop only; explicit collision geometry in src/game/world.ts"
+  },
+  "bears": {
+    "source": "src/game/bear-art.ts",
+    "creator": "Original programmer art created for this project",
+    "frameSize": [32, 32],
+    "frameCount": 12,
+    "feetOrigin": [0.5, 0.9375],
+    "poses": "down 0–3, up 4–7, side 8–11; two idle frames then two walk frames; left mirrors side",
+    "fps": { "idle": 2, "walk": 8 },
+    "accessories": { "bubu": "rose bow and shirt", "npc": "sage scarf" }
+  }
+}
