@@ -99,7 +99,7 @@ export function InviteWelcome({ configured }: { configured: boolean }) {
           A little note. <em>A lot of love.</em>
         </h1>
         <p>
-          You’ve been invited to leave something lovely in Bubu’s little world.
+          You’ve been invited to leave something lovely in Hanna’s little world.
         </p>
       </section>
       <section className="letter-card invitation-card">
@@ -118,7 +118,7 @@ export function InviteWelcome({ configured }: { configured: boolean }) {
         </p>
         <div className="letter-divider" />
         <p className="quiet-copy">
-          Your message will be reviewed by Dudu before Bubu can see it. Photos
+          Your message will be reviewed by Dudu before Hanna can see it. Photos
           and voice notes are optional. No account needed.
         </p>
         {!configured && <SetupNotice />}

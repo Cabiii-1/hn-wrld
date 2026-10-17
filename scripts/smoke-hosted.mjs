@@ -213,6 +213,10 @@ try {
     b = await invite("other");
   await exchange(owner, a);
   await exchange(other, b);
+  assert.equal(
+    (await owner("contributor")).displayName,
+    `SYNTHETIC ${run} owner`,
+  );
   const photo = await sharp({
     create: { width: 16, height: 16, channels: 3, background: "#e5d7a8" },
   })
@@ -295,6 +299,12 @@ try {
   const contribution = desk.contributions.find((c) => c.invitation_id === a.id);
   assert.ok(contribution);
   assert.equal(contribution.status, "pending");
+  assert.equal(
+    contribution.display_name,
+    `SYNTHETIC ${run} owner`,
+    "Contributor identity must come from the invitation",
+  );
+  assert.equal(contribution.relationship_label, null);
   const passcode = randomBytes(24).toString("base64url");
   const key = await admin(
     "admin/recipient-links",

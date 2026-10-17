@@ -168,14 +168,24 @@ describe("contributor and admin UI workflows", () => {
         submitted = true;
         return { received: true };
       }
-      return { submitted, uploads: [], limits: MAX };
+      return {
+        displayName: "Synthetic Friend",
+        submitted,
+        uploads: [],
+        limits: MAX,
+      };
     });
     render(<ContributionForm configured />);
     const name = await screen.findByLabelText(/Your name/);
     await waitFor(() =>
       expect((name as HTMLInputElement).disabled).toBe(false),
     );
-    await userEvent.type(name, "Synthetic Friend");
+    expect((name as HTMLInputElement).value).toBe("Synthetic Friend");
+    expect((name as HTMLInputElement).readOnly).toBe(true);
+    expect(screen.queryByLabelText(/Your connection/)).toBeNull();
+    expect(screen.getByPlaceholderText("Dear Hanna…")).toBeTruthy();
+    await userEvent.type(name, "Changed name");
+    expect((name as HTMLInputElement).value).toBe("Synthetic Friend");
     await userEvent.type(
       screen.getByLabelText(/Your message/),
       "A synthetic little hello.",
@@ -192,8 +202,6 @@ describe("contributor and admin UI workflows", () => {
     );
     await screen.findByText("SAFELY RECEIVED");
     expect(mock.api).toHaveBeenCalledWith("contributions", "POST", {
-      displayName: "Synthetic Friend",
-      relationship: "",
       message: "A synthetic little hello.",
       consent: true,
       uploadIds: [],
@@ -207,14 +215,18 @@ describe("contributor and admin UI workflows", () => {
         submitted = true;
         throw new Error("Connection lost");
       }
-      return { submitted, uploads: [], limits: MAX };
+      return {
+        displayName: "Sample Friend",
+        submitted,
+        uploads: [],
+        limits: MAX,
+      };
     });
     render(<ContributionForm configured />);
     const name = await screen.findByLabelText(/Your name/);
     await waitFor(() =>
       expect((name as HTMLInputElement).disabled).toBe(false),
     );
-    await userEvent.type(name, "Sample Friend");
     await userEvent.type(
       screen.getByLabelText(/Your message/),
       "Synthetic retry test",
@@ -242,7 +254,12 @@ describe("contributor and admin UI workflows", () => {
         uploads = [];
         return { ok: true };
       }
-      return { submitted: false, uploads, limits: MAX };
+      return {
+        displayName: "Synthetic Friend",
+        submitted: false,
+        uploads,
+        limits: MAX,
+      };
     });
     render(<ContributionForm configured />);
     await screen.findByText("Unfinished — remove and retry");

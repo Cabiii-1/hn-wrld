@@ -1,5 +1,7 @@
 # Milestone 2 — contributions and Dudu’s desk
 
+Contributor-name update (2026-10-17): the administrator enters **Contributor’s name** when creating an invitation. The contribution form displays this invitation label read-only, asks only for the message for Hanna and optional media/consent, and omits connection details. Migration `0007_invitation_assigned_names.sql` supplies the scoped name and enforces it for new submissions. Existing submitted names/relationships are preserved; old open forms may still send identity fields, which are ignored.
+
 Follow-up: the owner approved M3 after the hosted rehearsal and their invitation/review use. See `MILESTONE_3.md` for the now-connected recipient house; the M2 device-check limitations below remain tracked for release.
 
 Implemented 2026-10-17 after the owner confirmed the phone layout and approved M2. **Hosted Auth/PostgREST/Storage integration now passes against the owner's fresh `hn-wrld` project.** Physical-device recording and recovery checks remain before M2 is fully verified. The M1 house remains synthetic; no recipient gate or public deployment has been added.

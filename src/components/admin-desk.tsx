@@ -255,12 +255,12 @@ export function AdminDesk({ configured }: { configured: boolean }) {
               One private link for one contributor. Share it with them directly.
             </p>
             <label>
-              Invitation label
+              Contributor’s name
               <input
                 name="label"
                 required
                 maxLength={80}
-                placeholder="A name you’ll recognize"
+                placeholder="The name Hanna knows them by"
                 disabled={busy}
               />
             </label>

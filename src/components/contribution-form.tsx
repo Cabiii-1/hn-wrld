@@ -16,6 +16,7 @@ import { api } from "@/lib/backend/browser-api";
 import { MAX, type Upload } from "@/lib/backend/contracts";
 
 type Snapshot = {
+  displayName: string;
   submitted: boolean;
   uploads: Upload[];
   limits: Pick<typeof MAX, "photoBytes" | "audioBytes" | "audioSeconds">;
@@ -100,8 +101,6 @@ export function ContributionForm({ configured }: { configured: boolean }) {
     const form = new FormData(event.currentTarget);
     try {
       await api("contributions", "POST", {
-        displayName: form.get("displayName"),
-        relationship: form.get("relationship"),
         message,
         consent: form.get("consent") === "on",
         uploadIds:
@@ -207,7 +206,7 @@ export function ContributionForm({ configured }: { configured: boolean }) {
             A little love, <em>on its way.</em>
           </h1>
           <p>
-            Thank you for leaving something lovely for Bubu. Dudu will review
+            Thank you for leaving something lovely for Hanna. Dudu will review
             your message and attachments before they appear in her world.
           </p>
           <p className="quiet-copy">
@@ -240,7 +239,7 @@ export function ContributionForm({ configured }: { configured: boolean }) {
           Leave a little <em>love.</em>
           <Heart size={25} className="title-heart" />
         </h1>
-        <p>A memory, a thank-you, or just a few words from the heart.</p>
+        <p>A memory, a thank-you, or just a few words for Hanna.</p>
       </section>
       {!configured && <SetupNotice />}
       <form className="letter-card contribution-form" onSubmit={submit}>
@@ -248,27 +247,19 @@ export function ContributionForm({ configured }: { configured: boolean }) {
           <span>01</span>
           <div>
             <h2>First, a familiar face.</h2>
-            <p>What should your little bear be called?</p>
+            <p>
+              Your invitation already has your name. Just bring your words for
+              Hanna.
+            </p>
           </div>
         </div>
-        <div className="form-columns">
+        <div>
           <label>
-            Your name <span>Required</span>
+            Your name <span>From your invitation</span>
             <input
-              name="displayName"
-              required
-              maxLength={80}
-              autoComplete="name"
-              placeholder="The name Bubu knows you by"
-              disabled={disabled}
-            />
-          </label>
-          <label>
-            Your connection <span>Optional</span>
-            <input
-              name="relationship"
-              maxLength={80}
-              placeholder="Family, friend, favorite person…"
+              readOnly
+              value={snapshot?.displayName ?? ""}
+              placeholder="Opening your invitation…"
               disabled={disabled}
             />
           </label>
@@ -281,7 +272,7 @@ export function ContributionForm({ configured }: { configured: boolean }) {
           </div>
         </div>
         <label>
-          Your message <span>Required</span>
+          Your message for Hanna <span>Required</span>
           <textarea
             name="message"
             required
@@ -289,7 +280,7 @@ export function ContributionForm({ configured }: { configured: boolean }) {
             rows={7}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Dear Bubu…"
+            placeholder="Dear Hanna…"
             disabled={disabled}
           />
           <small className="character-count">
@@ -452,8 +443,8 @@ export function ContributionForm({ configured }: { configured: boolean }) {
             <p>Kept with care.</p>
             <span>
               Your words and media are private to you, Dudu as reviewer, and
-              Bubu once approved. Please leave out addresses, phone numbers, and
-              anything you don’t have permission to share.
+              Hanna once approved. Please leave out addresses, phone numbers,
+              and anything you don’t have permission to share.
             </span>
             <label>
               <input

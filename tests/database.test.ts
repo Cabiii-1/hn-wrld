@@ -25,13 +25,13 @@ async function scalar<T>(sql: string, params: unknown[] = []) {
   const result = await db.query<{ value: T }>(`select ${sql} as value`, params);
   return result.rows[0].value;
 }
-async function invite(expired = false) {
+async function invite(expired = false, label = "Synthetic invite") {
   await role("authenticated", ADMIN);
   const token = randomUUID(),
     session = randomUUID();
   const id = await scalar<string>("public.admin_create_invite($1,$2,null)", [
     token,
-    "Synthetic invite",
+    label,
   ]);
   await role("service_role");
   if (expired)
@@ -84,6 +84,7 @@ beforeAll(async () => {
     "0004_recipient_world.sql",
     "0005_three_places.sql",
     "0006_private_finale.sql",
+    "0007_invitation_assigned_names.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -114,6 +115,58 @@ afterEach(async () => {
 });
 afterAll(async () => {
   await db?.close();
+});
+
+describe("Invitation-assigned contributor names", () => {
+  it("returns only the authenticated invitation name and ignores submitted identity fields", async () => {
+    const own = await invite(false, "Synthetic Auntie"),
+      other = await invite(false, "Synthetic Other Friend");
+    const snapshot = await scalar<{ displayName: string; submitted: boolean }>(
+      "public.contributor_snapshot($1)",
+      [own.session],
+    );
+    expect(snapshot.displayName).toBe("Synthetic Auntie");
+    expect(JSON.stringify(snapshot)).not.toContain("Synthetic Other Friend");
+    const id = await scalar<string>(
+      "public.submit_contribution($1,'Forged name','Forged connection','Synthetic hello for Hanna','{}'::uuid[])",
+      [own.session],
+    );
+    const row = await db.query<{
+      display_name: string;
+      relationship_label: string | null;
+      status: string;
+    }>(
+      "select display_name,relationship_label,status from public.contributions where id=$1",
+      [id],
+    );
+    expect(row.rows[0]).toEqual({
+      display_name: "Synthetic Auntie",
+      relationship_label: null,
+      status: "pending",
+    });
+    expect(
+      await scalar("public.contributor_snapshot($1)", [own.session]),
+    ).toMatchObject({ displayName: "Synthetic Auntie", submitted: true });
+    expect(
+      await scalar("public.contributor_snapshot($1)", [other.session]),
+    ).toMatchObject({
+      displayName: "Synthetic Other Friend",
+      submitted: false,
+    });
+  });
+  it("does not require a name or relationship from the contributor", async () => {
+    const own = await invite(false, "Synthetic Friend");
+    const id = await scalar<string>(
+      "public.submit_contribution($1,null,null,'Just the message','{}'::uuid[])",
+      [own.session],
+    );
+    expect(
+      await scalar(
+        "(select display_name from public.contributions where id=$1)",
+        [id],
+      ),
+    ).toBe("Synthetic Friend");
+  });
 });
 
 describe("M2 PostgreSQL migrations, RLS and atomic workflows", () => {

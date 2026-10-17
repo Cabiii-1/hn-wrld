@@ -18,7 +18,8 @@ export const invitationSchema = z
   .strict();
 export const contributionSchema = z
   .object({
-    displayName: z.string().trim().min(1).max(80),
+    // Legacy clients may send these, but identity is always read from the invite.
+    displayName: z.string().trim().min(1).max(80).optional(),
     relationship: z.string().trim().max(80).default(""),
     message: z.string().trim().min(1).max(2000),
     consent: z.literal(true),

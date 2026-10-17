@@ -36,6 +36,13 @@ describe("M2 request and authorization boundaries", () => {
       uploadIds: [],
     };
     expect(contributionSchema.safeParse(valid).success).toBe(true);
+    expect(
+      contributionSchema.safeParse({
+        message: valid.message,
+        consent: true,
+        uploadIds: [],
+      }).success,
+    ).toBe(true);
     for (const forged of [
       { ...valid, status: "approved" },
       { ...valid, consent: false },

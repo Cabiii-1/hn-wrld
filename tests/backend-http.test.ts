@@ -367,6 +367,27 @@ describe("M2 HTTP authorization and privacy", () => {
     expect(await result.json()).toEqual({ received: true });
     expect(result.headers.get("cache-control")).toContain("no-store");
     expect(result.headers.get("vary")).toBe("Cookie");
+    expect(state.rpc).toHaveBeenCalledWith(
+      "submit_contribution",
+      expect.objectContaining({ p_name: "", p_relationship: "" }),
+    );
+  });
+  it("accepts message-only identity-free submissions", async () => {
+    state.jar.set("bubu-contributor", newSecret());
+    const result = await request("contributions", "POST", {
+      message: "A synthetic hello for Hanna",
+      consent: true,
+      uploadIds: [],
+    });
+    expect(result.status).toBe(201);
+    expect(state.rpc).toHaveBeenCalledWith(
+      "submit_contribution",
+      expect.objectContaining({
+        p_name: "",
+        p_relationship: "",
+        p_message: "A synthetic hello for Hanna",
+      }),
+    );
   });
   it("sanitizes backend failure messages and fails closed when rate storage fails", async () => {
     state.rpc.mockResolvedValue({

@@ -513,8 +513,8 @@ export async function handleBackend(request: Request, path: string[]) {
       const body = contributionSchema.parse(await readJson(request));
       const result = await db.rpc("submit_contribution", {
         p_session_hash: hash,
-        p_name: body.displayName,
-        p_relationship: body.relationship,
+        p_name: "",
+        p_relationship: "",
         p_message: body.message,
         p_upload_ids: body.uploadIds,
       });
