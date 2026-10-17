@@ -39,6 +39,23 @@ const recipientLinks = [];
 const browserFile = new URL("../test-results/m3-browser.json", import.meta.url),
   browserDone = new URL("../test-results/m3-browser.done", import.meta.url);
 let browserFixture = false;
+const finaleCheck = process.argv.includes("--finale-check");
+let finaleSnapshot,
+  finaleRevision,
+  finaleRestoreConflict = false;
+if (finaleCheck) {
+  finaleSnapshot = checked(
+    await db.from("finale_settings").select("*").eq("singleton", true).single(),
+    "Read finale test precondition",
+  );
+  assert.equal(
+    finaleSnapshot.revision,
+    0,
+    "Finale rehearsal requires an untouched draft; never overwrite authored content",
+  );
+  assert.equal(finaleSnapshot.published, null);
+  assert.equal(finaleSnapshot.draft.letter, "");
+}
 const originalAreas = checked(
   await db.from("areas").select("id,published"),
   "Read original area flags",
@@ -402,6 +419,81 @@ try {
   console.log(
     "PASS all three scene projections, correct placement isolation, media authorization and seen state across relocation",
   );
+  if (finaleCheck) {
+    for (const path of [
+      "admin/finale",
+      "recipient/ending",
+      "recipient/ending/status",
+    ])
+      await client()(path, "GET", undefined, 401);
+    await unprivileged("admin/finale", "GET", undefined, 401);
+    const content = {
+      title: "Synthetic rehearsal ending",
+      letter: "Synthetic private finale rehearsal letter. No personal content.",
+      threshold: 1,
+      conversation: [
+        { speaker: "Dudu", text: "Synthetic reunion conversation." },
+      ],
+    };
+    const write = async (action, value = content) => {
+      const state = await admin("admin/finale");
+      await admin("admin/finale", "POST", {
+        revision: state.revision,
+        action,
+        ...(action === "unpublish" ? {} : { content: value }),
+      });
+      finaleRevision = (await admin("admin/finale")).revision;
+    };
+    await write("save");
+    assert.equal((await recipient("recipient/ending/status")).available, false);
+    await recipient("recipient/ending", "GET", undefined, 403);
+    await write("publish");
+    const extraKey = await admin(
+      "admin/recipient-links",
+      "POST",
+      { passcode, expiresAt: null },
+      201,
+    );
+    recipientLinks.push(extraKey.id);
+    const fresh = client();
+    await fresh("recipient/unlock", "POST", {
+      token: new URL(extraKey.url).hash.slice(1),
+      passcode,
+    });
+    assert.equal((await fresh("recipient/ending/status")).unlocked, false);
+    await fresh("recipient/ending", "GET", undefined, 403);
+    await fresh(
+      "recipient/ending/complete",
+      "POST",
+      { revision: finaleRevision },
+      409,
+    );
+    await fresh(`recipient/seen/${contribution.id}`, "POST");
+    const ending = await fresh("recipient/ending");
+    assert.equal(ending.content.letter, content.letter);
+    await fresh("recipient/ending/complete", "POST", {
+      revision: ending.revision,
+    });
+    assert.equal((await fresh("recipient/ending/status")).completed, true);
+    await write("save", { ...content, letter: "Different synthetic draft" });
+    assert.equal(
+      (await fresh("recipient/ending")).content.letter,
+      content.letter,
+    );
+    await write("unpublish");
+    await fresh("recipient/ending", "GET", undefined, 403);
+    await fresh(
+      "recipient/ending/complete",
+      "POST",
+      { revision: ending.revision },
+      409,
+    );
+    await admin(`admin/recipient-links/${extraKey.id}`, "DELETE");
+    await fresh("recipient/ending/status", "GET", undefined, 401);
+    console.log(
+      "PASS private finale draft isolation, publication, progress unlock, completion, unpublish and revocation",
+    );
+  }
   if (process.argv.includes("--browser-check")) {
     mkdirSync(new URL("../test-results/", import.meta.url), {
       recursive: true,
@@ -457,14 +549,20 @@ try {
   checked(
     await db
       .from("storage_cleanup")
-      .update({ not_before: new Date().toISOString() })
+      .update({ not_before: new Date(Date.now() - 60000).toISOString() })
       .in("storage_path", finalPaths),
     "Make deleted test objects eligible",
   );
+  // The fixture is already deleted. A small past offset avoids client/DB clock
+  // skew making this immediate test run before its own eligibility timestamp.
   await admin("admin/cleanup", "POST");
   for (const path of finalPaths)
     assert.ok(
-      (await db.storage.from(bucket).download(path)).error,
+      (
+        await db.storage
+          .from(bucket)
+          .download(path, { cacheNonce: randomUUID() }, { cache: "no-store" })
+      ).error,
       "Cleanup must physically remove deleted test media",
     );
   await admin(`admin/invitations/${b.id}`, "DELETE");
@@ -478,6 +576,18 @@ try {
     "PASS concurrent submit, moderation gates, safe placement, RLS, rejection/unpublish, deletion and revocation",
   );
 } finally {
+  if (finaleRevision !== undefined) {
+    const restored = checked(
+      await db
+        .from("finale_settings")
+        .update(finaleSnapshot)
+        .eq("singleton", true)
+        .eq("revision", finaleRevision)
+        .select("singleton"),
+      "Restore untouched finale draft",
+    );
+    finaleRestoreConflict = restored.length !== 1;
+  }
   if (browserFixture) {
     unlinkSync(browserFile);
     if (existsSync(browserDone)) unlinkSync(browserDone);
@@ -551,5 +661,10 @@ try {
     checked(await db.auth.admin.deleteUser(id), "Remove temporary account");
   console.log(
     "Synthetic accounts, invitations, messages and objects removed; delayed cleanup jobs retained",
+  );
+  assert.equal(
+    finaleRestoreConflict,
+    false,
+    "Finale changed during rehearsal; preserved concurrent edits instead of overwriting",
   );
 }

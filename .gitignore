@@ -6,5 +6,6 @@ out/
 *.tsbuildinfo
 test-results/
 playwright-report/
+.vercel/
 supabase/.temp/
 supabase/.branches/

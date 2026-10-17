@@ -31,5 +31,7 @@
 
 ## Completion policy
 
+M5 defaults (2026-10-17): owner will author the letter/conversation later in the private admin editor. Initial finale is unpublished. Default hello threshold is 3, capped at the current eligible cast; 0 means immediate entry. Reunion uses the SLU entrance with Bubu and Dudu meeting beneath a heart, plus a still alternative. No ambient track or launch deadline was introduced. Deployment remains pending a Vercel connection and release QA.
+
 M4 implementation assumption (2026-10-17): SLU's lower central and lower left stair flights and connecting sidewalk are navigable. Upper stairs, building, retaining walls and road are blocked. The plaza is the preferred large gathering area; maintain room between real placements on SLU's narrow walkway.
 The agent must not re-ask the six confirmed choices above. Ask only if a new *blocking* contradiction emerges; otherwise implement the defaults and record them.

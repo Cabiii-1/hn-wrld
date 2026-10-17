@@ -1,5 +1,7 @@
 # Architecture proposal
 
+M5 update: `FinaleGateway` wraps protected exploration, fetches status without prose, and requests the published ending only when opened. `FinaleExperience` replaces exploration with letter/reunion/conversation/completion; `ReunionScene` owns the two-bear animation. `FinaleEditor` authors private drafts and explicitly publishes snapshots through allowlisted RPCs. See `MILESTONE_5.md` for the current endpoints and `DEPLOYMENT.md` for prepared CI/cron configuration and remaining release work.
+
 M4 update: `/play` uses `/api/manage/recipient/scenes/{mapKey}` for all three approved, published casts. Shared `PlaceScene`, `Crowd`, `scenes.ts` and `scene-geometry.json` supply rendering, spatial separation and safe foot movement. Active backgrounds load lazily as lossless WebP. Scene transitions clear previous data, validate responses, cancel stale requests and destroy the previous Phaser game. `/demo` independently generates synthetic casts up to 50. See `MILESTONE_4.md`; the proposals and earlier milestone notes below are historical.
 
 M3 update: `/` is the fragment/passcode gate, `/play` fetches a protected house projection, and `/demo` preserves the synthetic M1 scene. `/api/manage/recipient/` handles unlock/session/logout, house, messages, media and seen writes; every private operation checks a link-bound session. `/api/manage/admin/recipient-links` manages salted passcode hashes and revocable links. Media remains an authorized no-store proxy. See `MILESTONE_3.md`; historical M1/M2 notes below describe earlier checkpoints.

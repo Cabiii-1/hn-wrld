@@ -5,8 +5,11 @@ if (!["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname))
   throw new Error("This smoke check is for local previews only.");
 for (const path of [
   "admin/dashboard",
+  "admin/finale",
   "contributor",
   "recipient/house",
+  "recipient/ending",
+  "recipient/ending/status",
   "recipient/scenes/sta_ana_house",
   "recipient/scenes/tuguegarao_park",
   "recipient/scenes/slu_baguio",

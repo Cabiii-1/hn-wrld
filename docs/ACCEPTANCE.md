@@ -2,6 +2,8 @@
 
 M1 phone layout was confirmed by the project owner before M2. M2 automated/database verification and remaining live-stack checks are tracked in `verification/M2_RESULTS.md`; unchecked release items below are not implied complete by that implementation.
 
+M5 finale implementation and synthetic automated/hosted/browser checks are tracked in `verification/M5_RESULTS.md`. Real-phone touch/performance, authored personal text, artwork rights and the HTTPS deployment rehearsal remain open release criteria. The list below remains the release checklist, not a claim that unperformed device/deployment checks passed.
+
 ## Playable experience
 - [ ] WASD/arrow controls move Bubu; left/right display appropriate mirrored walk/idle; no sticky input after tab blur.
 - [ ] D-pad or joystick + action button work on portrait phone without unintended page scroll.
