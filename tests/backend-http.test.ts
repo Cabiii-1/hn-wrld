@@ -1,5 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { newSecret } from "../src/lib/backend/security";
+import { hashPasscode } from "../src/lib/backend/passcode";
 const state = vi.hoisted(() => ({
   jar: new Map<string, string>(),
   setters: vi.fn(),
@@ -257,5 +258,60 @@ describe("M2 HTTP authorization and privacy", () => {
     expect(result.status).toBe(503);
     expect(JSON.stringify(await result.json())).not.toContain("SECRET");
     expect((await request("internal/cleanup", "POST")).status).toBe(401);
+  });
+  it("requires recipient cookies on every private read", async () => {
+    for (const path of [
+      "recipient/house",
+      "recipient/messages/11111111-1111-4111-8111-111111111111",
+      "recipient/media/11111111-1111-4111-8111-111111111111",
+    ]) {
+      expect((await request(path)).status).toBe(401);
+    }
+    state.jar.set("bubu-recipient", newSecret());
+    expect((await request("recipient/house")).status).toBe(401);
+  });
+  it("validates both factors and issues an opaque HttpOnly recipient cookie only on success", async () => {
+    const verifier = await hashPasscode("synthetic-passcode");
+    state.rpc.mockImplementation(async (name: string) => ({
+      data:
+        name === "consume_rate_limit"
+          ? true
+          : name === "recipient_verifier"
+            ? verifier
+            : null,
+      error: null,
+    }));
+    const token = newSecret();
+    expect(
+      (await request("recipient/unlock", "POST", { token, passcode: "wrong" }))
+        .status,
+    ).toBe(401);
+    expect(state.setters).not.toHaveBeenCalled();
+    const response = await request("recipient/unlock", "POST", {
+      token,
+      passcode: "synthetic-passcode",
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+    expect(state.setters).toHaveBeenCalledWith(
+      "bubu-recipient",
+      expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: "strict",
+        maxAge: 28800,
+      }),
+    );
+    expect(state.jar.get("bubu-recipient")).not.toBe(token);
+  });
+  it("rate limits unlock before passcode verification and denies a foreign Origin", async () => {
+    state.rpc.mockResolvedValue({ data: false, error: null });
+    const body = { token: newSecret(), passcode: "synthetic-passcode" };
+    expect((await request("recipient/unlock", "POST", body)).status).toBe(429);
+    expect(
+      (await request("recipient/unlock", "POST", body, "https://foreign.test"))
+        .status,
+    ).toBe(403);
+    expect(state.setters).not.toHaveBeenCalled();
   });
 });

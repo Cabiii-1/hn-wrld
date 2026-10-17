@@ -24,7 +24,9 @@ jwt_expiry = 3600
 enable_signup = false
 
 [auth.email]
-enable_signup = false
+# Keep the email provider enabled for existing admin password logins.
+# The global auth.enable_signup=false blocks public account registration.
+enable_signup = true
 enable_confirmations = true
 
 [storage]

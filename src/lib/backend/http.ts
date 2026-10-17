@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { backendEnv, serviceClient, userClient } from "../supabase/server";
+import { hashPasscode, verifyPasscode } from "./passcode";
+import { houseSchema, messageSchema } from "../../game/connected";
 import {
   contributionSchema,
   idSchema,
@@ -35,6 +37,7 @@ import {
 const BUCKET = "bubu-contributions";
 const CONTRIBUTOR_COOKIE = "bubu-contributor";
 const ADMIN_COOKIE = "bubu-admin";
+const RECIPIENT_COOKIE = "bubu-recipient";
 type CookieJar = Awaited<ReturnType<typeof cookies>>;
 const cookieOptions = () => ({
   httpOnly: true,
@@ -200,7 +203,10 @@ async function media(request: Request, id: string, jar: CookieJar) {
     path = intent.data.final_path;
     mime = intent.data.final_mime;
   }
-  const file = await db.storage.from(BUCKET).download(path);
+  return privateFile(request, path, mime);
+}
+async function privateFile(request: Request, path: string, mime: string) {
+  const file = await serviceClient().storage.from(BUCKET).download(path);
   if (file.error || !file.data) throw new HttpError(404, "Media unavailable.");
   const bytes = Buffer.from(await file.data.arrayBuffer());
   const range = byteRange(request.headers.get("range"), bytes.byteLength);
@@ -237,6 +243,145 @@ export async function handleBackend(request: Request, path: string[]) {
       throw new HttpError(401, "Please sign in as an administrator.");
     if (method !== "GET" && route !== "internal/cleanup")
       assertSameOrigin(request, backendEnv().APP_ORIGIN);
+
+    if (route === "admin/recipient-links" && method === "GET") {
+      const db = await admin(jar);
+      const result = await db
+        .from("recipient_access_links")
+        .select("id,created_at,expires_at,revoked_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      check(result.error);
+      return json(result.data);
+    }
+    if (route === "admin/recipient-links" && method === "POST") {
+      const db = await admin(jar);
+      await limit(request, "recipient-link-create", 10);
+      const body = z
+        .object({
+          passcode: z.string().min(8).max(128),
+          expiresAt: z.iso.datetime({ offset: true }).nullable(),
+        })
+        .strict()
+        .parse(await readJson(request));
+      const token = newSecret();
+      const result = await db.rpc("admin_create_recipient_link", {
+        p_hash: digest(token, backendEnv().INVITE_TOKEN_PEPPER),
+        p_passcode_hash: await hashPasscode(body.passcode),
+        p_expires: body.expiresAt,
+      });
+      check(result.error);
+      return json(
+        { id: result.data, url: `${backendEnv().APP_ORIGIN}/#${token}` },
+        201,
+      );
+    }
+    if (
+      path[0] === "admin" &&
+      path[1] === "recipient-links" &&
+      path.length === 3 &&
+      method === "DELETE"
+    ) {
+      const db = await admin(jar);
+      const result = await db.rpc("admin_revoke_recipient_link", {
+        p_id: idSchema.parse(path[2]),
+      });
+      check(result.error);
+      return ok();
+    }
+    if (route === "recipient/unlock" && method === "POST") {
+      await limit(request, "recipient-unlock", 20);
+      const body = z
+        .object({ token: tokenSchema, passcode: z.string().min(1).max(128) })
+        .strict()
+        .parse(await readJson(request));
+      const hash = digest(body.token, backendEnv().INVITE_TOKEN_PEPPER);
+      await limit(request, "recipient-unlock-link", 8, hash);
+      const db = serviceClient();
+      const verifier = await db.rpc("recipient_verifier", { p_hash: hash });
+      const matches = await verifyPasscode(
+        body.passcode,
+        typeof verifier.data === "string" ? verifier.data : null,
+      );
+      if (verifier.error || !matches)
+        throw new HttpError(
+          401,
+          "The link or passcode is unavailable. Please check both with Dudu.",
+        );
+      const secret = newSecret();
+      const result = await db.rpc("open_recipient_session", {
+        p_hash: hash,
+        p_verifier: verifier.data,
+        p_session_hash: digest(secret, backendEnv().INVITE_TOKEN_PEPPER),
+      });
+      if (result.error)
+        throw new HttpError(
+          401,
+          "The link or passcode is unavailable. Please check both with Dudu.",
+        );
+      jar.set(RECIPIENT_COOKIE, secret, { ...cookieOptions(), maxAge: 28800 });
+      return ok();
+    }
+    if (path[0] === "recipient") {
+      const token = jar.get(RECIPIENT_COOKIE)?.value;
+      if (!token || !tokenSchema.safeParse(token).success)
+        throw new HttpError(
+          401,
+          "Please open your private link and unlock your world.",
+        );
+      const db = serviceClient(),
+        hash = digest(token, backendEnv().INVITE_TOKEN_PEPPER);
+      const session = await db.rpc("active_recipient", {
+        p_session_hash: hash,
+      });
+      if (session.error || !session.data)
+        throw new HttpError(
+          401,
+          "Your visit has ended. Please open your private link again.",
+        );
+      if (route === "recipient/session" && method === "GET") return ok();
+      if (route === "recipient/logout" && method === "POST") {
+        check(
+          (
+            await db
+              .from("recipient_sessions")
+              .update({ revoked_at: new Date().toISOString() })
+              .eq("session_hash", hash)
+          ).error,
+        );
+        jar.set(RECIPIENT_COOKIE, "", { ...cookieOptions(), maxAge: 0 });
+        return ok();
+      }
+      if (route === "recipient/house" && method === "GET") {
+        const result = await db.rpc("recipient_house", {
+          p_session_hash: hash,
+        });
+        check(result.error);
+        return json(houseSchema.parse(result.data));
+      }
+      if (path.length === 3) {
+        const id = idSchema.parse(path[2]);
+        const params = { p_session_hash: hash, p_id: id };
+        if (path[1] === "messages" && method === "GET") {
+          const result = await db.rpc("recipient_message", params);
+          if (result.error || !result.data)
+            throw new HttpError(404, "This hello is no longer available.");
+          return json(messageSchema.parse(result.data));
+        }
+        if (path[1] === "seen" && method === "POST") {
+          const result = await db.rpc("recipient_mark_seen", params);
+          check(result.error);
+          return ok();
+        }
+        if (path[1] === "media" && method === "GET") {
+          const result = await db.rpc("recipient_media", params);
+          if (result.error || !result.data)
+            throw new HttpError(404, "Media unavailable.");
+          return await privateFile(request, result.data.path, result.data.mime);
+        }
+      }
+      throw new HttpError(404, "Not found.");
+    }
 
     if (route === "admin/login" && method === "POST") {
       await limit(request, "admin-login", 10);

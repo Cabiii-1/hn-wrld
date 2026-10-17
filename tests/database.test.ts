@@ -71,6 +71,7 @@ beforeAll(async () => {
     "0001_initial.sql",
     "0002_media_recipient_gate.sql",
     "0003_contributor_admin_workflows.sql",
+    "0004_recipient_world.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -446,5 +447,161 @@ describe("M2 PostgreSQL migrations, RLS and atomic workflows", () => {
         )
       ).rows.map((r) => r.storage_path),
     ).toContain(aPath);
+  });
+});
+
+async function recipient() {
+  const hash = randomUUID().replaceAll("-", "").repeat(2),
+    verifier = "scrypt$synthetic-test-verifier",
+    session = randomUUID();
+  await role("authenticated", ADMIN);
+  const id = await scalar<string>(
+    "public.admin_create_recipient_link($1,$2,null)",
+    [hash, verifier],
+  );
+  await role("service_role");
+  await scalar("public.open_recipient_session($1,$2,$3)", [
+    hash,
+    verifier,
+    session,
+  ]);
+  return { id, hash, verifier, session };
+}
+describe("M3 recipient database authorization", () => {
+  it("denies browser-role access to verifiers, sessions, progress and projections", async () => {
+    await role("anon");
+    await expect(scalar("public.recipient_house('forged')")).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_verifier('guessed')"),
+    ).rejects.toThrow();
+    await expect(
+      db.query("select * from public.recipient_seen"),
+    ).rejects.toThrow();
+    await role("authenticated", OTHER);
+    await expect(
+      scalar("public.admin_create_recipient_link($1,'scrypt$test',null)", [
+        "0".repeat(64),
+      ]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_message('forged',$1::uuid)", [ADMIN]),
+    ).rejects.toThrow();
+  });
+  it("rechecks verifier, link and session expiration instead of trusting cookies", async () => {
+    const r = await recipient();
+    await expect(
+      scalar("public.open_recipient_session($1,'wrong','forged')", [r.hash]),
+    ).rejects.toThrow();
+    expect(await scalar("public.active_recipient($1)", [r.session])).toBe(r.id);
+    await db.query(
+      "update public.recipient_sessions set expires_at=now()-interval '1 second' where session_hash=$1",
+      [r.session],
+    );
+    await expect(
+      scalar("public.recipient_house($1)", [r.session]),
+    ).rejects.toThrow();
+    await db.query(
+      "update public.recipient_access_links set expires_at=now()-interval '1 second' where id=$1",
+      [r.id],
+    );
+    expect(await scalar("public.recipient_verifier($1)", [r.hash])).toBeNull();
+    await expect(
+      scalar("public.open_recipient_session($1,$2,'another')", [
+        r.hash,
+        r.verifier,
+      ]),
+    ).rejects.toThrow();
+  });
+  it("projects only published approved house NPCs and explicitly approved media", async () => {
+    const i = await invite(),
+      r = await recipient();
+    const photo = await reserve(i.session);
+    await validate(i.session, photo.id, i.id);
+    const c = await submit(i.session, [photo.id]);
+    await expect(
+      scalar("public.recipient_message($1,$2::uuid)", [r.session, c]),
+    ).rejects.toThrow();
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_review_media($1::uuid,'rejected')", [photo.id]);
+    await scalar("public.admin_review($1::uuid,'approved',null)", [c]);
+    const area = await scalar<string>(
+      "(select id from public.areas where map_key='sta_ana_house')",
+    );
+    await scalar(
+      "public.admin_place_npc($1::uuid,$2::uuid,'npc-cream-1',425,352,20,true)",
+      [c, area],
+    );
+    await role("service_role");
+    const house = await scalar<{ npcs: { id: string; seen: boolean }[] }>(
+      "public.recipient_house($1)",
+      [r.session],
+    );
+    expect(house.npcs.some((n) => n.id === c)).toBe(true);
+    const message = await scalar<{ media: unknown[] }>(
+      "public.recipient_message($1,$2::uuid)",
+      [r.session, c],
+    );
+    expect(message.media).toEqual([]);
+    await expect(
+      scalar("public.recipient_media($1,$2::uuid)", [r.session, photo.id]),
+    ).rejects.toThrow();
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_review_media($1::uuid,'approved')", [photo.id]);
+    await scalar(
+      "public.admin_place_npc($1::uuid,$2::uuid,'npc-cream-1',425,352,20,true)",
+      [c, area],
+    );
+    await role("service_role");
+    expect(
+      await scalar("public.recipient_media($1,$2::uuid)", [
+        r.session,
+        photo.id,
+      ]),
+    ).toHaveProperty("path");
+    await scalar("public.recipient_mark_seen($1,$2::uuid)", [r.session, c]);
+    await scalar("public.open_recipient_session($1,$2,'new-visit')", [
+      r.hash,
+      r.verifier,
+    ]);
+    const revisited = await scalar<{ npcs: { id: string; seen: boolean }[] }>(
+      "public.recipient_house('new-visit')",
+    );
+    expect(revisited.npcs.find((n) => n.id === c)?.seen).toBe(true);
+    const other = await recipient();
+    expect(
+      (
+        await scalar<{ npcs: { id: string; seen: boolean }[] }>(
+          "public.recipient_house($1)",
+          [other.session],
+        )
+      ).npcs.find((n) => n.id === c)?.seen,
+    ).toBe(false);
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_review($1::uuid,'hidden',null)", [c]);
+    await role("service_role");
+    await expect(
+      scalar("public.recipient_message($1,$2::uuid)", [r.session, c]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_media($1,$2::uuid)", [r.session, photo.id]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_mark_seen($1,$2::uuid)", [r.session, c]),
+    ).rejects.toThrow();
+  });
+  it("revoking a recipient link invalidates every existing visit", async () => {
+    const r = await recipient();
+    await scalar("public.open_recipient_session($1,$2,'second-visit')", [
+      r.hash,
+      r.verifier,
+    ]);
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_revoke_recipient_link($1::uuid)", [r.id]);
+    await role("service_role");
+    for (const session of [r.session, "second-visit"])
+      await expect(
+        scalar("public.recipient_house($1)", [session]),
+      ).rejects.toThrow();
+    expect(await scalar("public.recipient_verifier($1)", [r.hash])).toBeNull();
   });
 });
