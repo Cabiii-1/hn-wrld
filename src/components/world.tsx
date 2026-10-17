@@ -1,7 +1,16 @@
 "use client";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type PointerEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type PointerEvent,
+} from "react";
+import type { WorldNpc } from "@/game/connected";
+import { RecipientDialogue } from "./recipient-dialogue";
+import { api } from "@/lib/backend/browser-api";
 import {
   ArrowDown,
   ArrowLeft,
@@ -34,16 +43,34 @@ const directions = [
   { direction: "right", Icon: ArrowRight },
 ] as const;
 
-export function World() {
-  const [bridge] = useState(() => new GameBridge());
-  const [near, setNear] = useState(false);
+export function World({ npcs }: { npcs?: WorldNpc[] }) {
+  const connected = npcs !== undefined;
+  const [bridge] = useState(() => new GameBridge(npcs));
+  const [nearId, setNearId] = useState("");
+  const [talkId, setTalkId] = useState("");
+  const [privateSeen, setPrivateSeen] = useState(
+    () => new Set(npcs?.filter((n) => n.seen).map((n) => n.id)),
+  );
+  const markSeen = useCallback(
+    (id: string) => setPrivateSeen((s) => new Set([...s, id])),
+    [],
+  );
+  const near = !!nearId;
+  const nearName = npcs?.find((n) => n.id === nearId)?.name ?? "Teddy";
   const [dialogue, setDialogue] = useState(false);
   const [help, setHelp] = useState(false);
   const [status, setStatus] = useState<GameStatus>("loading");
   const [seen, setSeen] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    bridge.connect(setNear, () => setDialogue(true), setStatus);
+    bridge.connect(
+      () => setNearId(bridge.nearId),
+      (id) => {
+        setTalkId(id);
+        setDialogue(true);
+      },
+      setStatus,
+    );
     return () => {
       bridge.connect(
         () => {},
@@ -70,7 +97,7 @@ export function World() {
   );
   function closeDialogue(open: boolean) {
     setDialogue(open);
-    if (!open) setSeen(true);
+    if (!open && !connected) setSeen(true);
   }
   return (
     <main className="world-shell">
@@ -108,7 +135,7 @@ export function World() {
                 direction pad.
               </li>
               <li>
-                <strong>Talk</strong> when you’re near Teddy. Press E, Space,
+                <strong>Talk</strong> when you’re near a bear. Press E, Space,
                 Enter, or tap Talk.
               </li>
               <li>
@@ -117,7 +144,9 @@ export function World() {
               </li>
             </ul>
             <p className="sample-note">
-              Milestone 1 preview · all dialogue is synthetic.
+              {connected
+                ? "Your hellos are saved as you open them. You can always read them again."
+                : "Milestone 1 preview · all dialogue is synthetic."}
             </p>
           </DialogContent>
         </Dialog>
@@ -146,7 +175,9 @@ export function World() {
             <MapPin size={15} /> Sta. Ana House
           </span>
           <span className="sun-label">☀ A lovely day to wander</span>
-          <span className="preview-tag">PLAYABLE PREVIEW</span>
+          <span className="preview-tag">
+            {connected ? "YOUR LITTLE WORLD" : "PLAYABLE PREVIEW"}
+          </span>
         </div>
         <div className="game-stage">
           <GameCanvas key={attempt} bridge={bridge} />
@@ -174,7 +205,11 @@ export function World() {
                 <Sparkles size={16} />
                 <span>
                   You’re home, Bubu.
-                  <small>Take a little walk. Someone’s here for you.</small>
+                  <small>
+                    {connected && !npcs.length
+                      ? "A quiet moment at home. More hellos will arrive soon."
+                      : "Take a little walk. Someone’s here for you."}
+                  </small>
                 </span>
               </div>
               <div className="yard-caption">
@@ -215,7 +250,7 @@ export function World() {
             <Button
               className="touch-talk"
               disabled={!near}
-              aria-label="Talk to Teddy"
+              aria-label={`Talk to ${nearName}`}
               onClick={() => {
                 bridge.requestTalk();
               }}
@@ -237,7 +272,7 @@ export function World() {
           </div>
           <p className="near-status" role="status">
             {near
-              ? "Teddy is nearby. Say hello!"
+              ? `${nearName} is nearby. Say hello!`
               : "Follow your feet. Find a familiar face."}
           </p>
           <Button
@@ -268,13 +303,37 @@ export function World() {
         </p>
         <span className="seen-count">
           <MessageCircle size={16} />{" "}
-          {seen ? "1 hello shared" : "A hello is waiting"}
+          {connected
+            ? `${privateSeen.size} of ${npcs.length} hellos shared`
+            : seen
+              ? "1 hello shared"
+              : "A hello is waiting"}
         </span>
       </footer>
-      <p className="preview-note">
-        <Trees size={14} /> Milestone 1 · A cozy prototype with sample
-        characters and dialogue.
-      </p>
+      {connected ? (
+        <div className="preview-note recipient-actions">
+          <Button variant="outline" onClick={() => location.reload()}>
+            Refresh the world
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              try {
+                await api("recipient/logout", "POST");
+              } finally {
+                location.replace("/");
+              }
+            }}
+          >
+            Leave for now
+          </Button>
+        </div>
+      ) : (
+        <p className="preview-note">
+          <Trees size={14} /> Milestone 1 · A cozy prototype with sample
+          characters and dialogue.
+        </p>
+      )}
       <Dialog open={dialogue} onOpenChange={closeDialogue}>
         <DialogContent
           className="message-dialog"
@@ -285,45 +344,59 @@ export function World() {
               ?.focus({ preventScroll: true });
           }}
         >
-          <div className="dialog-eyebrow">
-            <MessageCircle size={16} /> A LITTLE HELLO · SAMPLE MESSAGE
-          </div>
-          <div className="sender">
-            <span className="bear-avatar" aria-hidden>
-              ʕ•ᴥ•ʔ
-            </span>
-            <div>
-              <DialogTitle>Teddy</DialogTitle>
-              <span>Your friendly yard companion</span>
-            </div>
-            <Heart size={23} className="message-heart" />
-          </div>
-          <DialogDescription asChild>
-            <div className="message-body">
-              <p>Welcome home, Bubu! 🌼</p>
-              <p>
-                This is a little practice hello from your sample bear friend.
-                Take a walk around the yard, enjoy the sunshine, and make
-                yourself at home.
-              </p>
-              <p>
-                Walang nagmamadali dito. There’s always time for a little rest
-                and a friendly hello. ♡
-              </p>
-              <p className="sample-note">
-                Synthetic demo text — personal messages will arrive in a later
-                milestone.
-              </p>
-            </div>
-          </DialogDescription>
-          <div className="message-footer">
-            <span>
-              <Leaf size={14} /> The world can wait.
-            </span>
-            <Button onClick={() => closeDialogue(false)}>
-              Back to the sunshine <ArrowRight size={17} />
-            </Button>
-          </div>
+          {connected ? (
+            <>
+              <RecipientDialogue key={talkId} id={talkId} onSeen={markSeen} />
+              <div className="message-footer">
+                <span>The world can wait.</span>
+                <Button onClick={() => closeDialogue(false)}>
+                  Back to the sunshine
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="dialog-eyebrow">
+                <MessageCircle size={16} /> A LITTLE HELLO · SAMPLE MESSAGE
+              </div>
+              <div className="sender">
+                <span className="bear-avatar" aria-hidden>
+                  ʕ•ᴥ•ʔ
+                </span>
+                <div>
+                  <DialogTitle>Teddy</DialogTitle>
+                  <span>Your friendly yard companion</span>
+                </div>
+                <Heart size={23} className="message-heart" />
+              </div>
+              <DialogDescription asChild>
+                <div className="message-body">
+                  <p>Welcome home, Bubu! 🌼</p>
+                  <p>
+                    This is a little practice hello from your sample bear
+                    friend. Take a walk around the yard, enjoy the sunshine, and
+                    make yourself at home.
+                  </p>
+                  <p>
+                    Walang nagmamadali dito. There’s always time for a little
+                    rest and a friendly hello. ♡
+                  </p>
+                  <p className="sample-note">
+                    Synthetic demo text — personal messages will arrive in a
+                    later milestone.
+                  </p>
+                </div>
+              </DialogDescription>
+              <div className="message-footer">
+                <span>
+                  <Leaf size={14} /> The world can wait.
+                </span>
+                <Button onClick={() => closeDialogue(false)}>
+                  Back to the sunshine <ArrowRight size={17} />
+                </Button>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </main>

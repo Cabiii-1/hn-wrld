@@ -1,6 +1,21 @@
 # M2 verification — 2026-10-17
 
-**Status: implementation and automated checks pass; full local Supabase integration is not yet verified.** Docker Desktop is not installed. The owner confirmed the M1 phone layout before approving this phase. No hosted project, real messages, private media or credentials were introduced.
+**Status: implementation, automated checks and the hosted synthetic Auth/PostgREST/Storage rehearsal pass.** The owner created `hn-wrld` and authorized connecting it after Docker was unavailable. Physical-device media/recording and browser recovery checks remain before M2 is fully verified. No real contributor content or public deployment was introduced; M3 has not begun.
+
+Follow-up: the owner subsequently approved M3 and exercised invitation/review flows. Recipient implementation and current evidence are in `M3_RESULTS.md`. The pending physical-device release checks below remain open; the historical M2 status above describes that checkpoint.
+
+## Hosted integration follow-up
+
+- Linked only `hxvcbwhaqtpqaokgwojz`; confirmed the fresh project had zero public tables, buckets and Storage policies before migration. `db push --dry-run` listed 0001–0003, then all three applied successfully. All 12 application tables report RLS enabled. The contributions bucket is private.
+- Retrieved publishable/secret keys directly into ignored `.env.local` without printing them. Generated invitation pepper and cleanup secret locally. Configured loopback origin `http://127.0.0.1:3000`; this is a local app with a hosted backend, not a deployed site.
+- Applied reviewed config changes: public signup disabled globally, email provider enabled for existing administrator password login, Storage limit 15 MiB. Live verification caught that setting `[auth.email].enable_signup=false` disables the email provider too. Corrected the config; real administrator login succeeds while a fresh public signup returns `signup_disabled`.
+- `node scripts/smoke-hosted.mjs hxvcbwhaqtpqaokgwojz --allow-test-writes`: **PASS** against real GoTrue/PostgREST/Storage and the running Next development server. Temporary allowlisted admin login succeeds; authenticated non-admin and anonymous admin access fail; foreign Origin writes fail.
+- **PASS** invitation exchange for two independently scoped clients; direct signed upload and completion for three synthetic JPEGs and one synthetic two-second MP3; fourth-photo denial; normalized WebP without EXIF; audio Range response; anonymous Storage denial; anonymous and other-contributor media denial; used non-upsert upload token replay denial. Storage OPTIONS accepts the app origin and PUT; actual browser CORS/microphone behavior remains a separate device check.
+- **PASS** wrong-invitation attachment submission denial, two concurrent identical HTTP submissions producing exactly one receipt and one conflict, pending parent/media defaults, attachment-review prerequisite, approved safe house placement, anonymous table read denial, rejected-media denial and automatic unpublish, single-file deletion denial, whole-message deletion, and active-session denial after revocation.
+- **PASS** cleanup endpoint physically removes eligible synthetic final objects. Only this run's deleted final-object jobs were advanced to eligibility to exercise cleanup; production delays and staging jobs were not shortened. Rehearsal removes its temporary Auth users, invitations, messages, intents and files, and restores scene publication flags. Delayed staging cleanup jobs remain intentionally. No permanent app administrator exists yet.
+- Follow-up lint and strict TypeScript checks pass. No application TypeScript changes were needed; this follow-up changes Auth config, adds the repeatable rehearsal and updates documentation.
+
+The following sections retain the original pre-connection verification evidence and its test-layer distinctions.
 
 ## Commands and results
 
@@ -45,9 +60,9 @@ Screenshots: `m2-contributor-desktop.jpg`, `m2-contributor-phone.jpg`, `m2-admin
 
 ## Remaining M2 gate
 
-1. Install/start Docker Desktop; run `npm run db:setup`; create a synthetic allowlisted admin using `docs/MILESTONE_2.md`.
-2. Rehearse invitation → scoped contributor session → actual signed direct uploads → byte validation → pending receipt → admin text/media review → safe placement, using separate browser profiles.
-3. Verify real Auth JWT expiry/non-admin access, anon private Storage reads, Supabase Storage CORS and signed-upload replay/revoke behavior, all four supported real audio containers, browser recording/cancel/retry, and actual object cleanup. Confirm Safari and physical phone file/recording behavior.
-4. Verify anonymous/different-contributor access and deleted/rejected media denial against the running stack. Do not connect the game to real data or start M3 until this gate passes.
+1. The owner has created a confirmed permanent app admin; its allowlist membership was saved and verified after the rehearsal. Test the owner's authenticated desk in the browser with separate contributor profiles. The owner's password has not been requested or handled by the agent.
+2. Verify all four supported real audio containers, microphone recording/cancel/retry and interrupted-upload recovery in desktop browsers and on a physical phone, including Safari where available. M1's phone layout confirmation does not verify M2's media workflows.
+3. Verify real JWT/session expiry and delayed quarantine cleanup after upload capabilities expire. Immediate replay denial, revocation authorization and eligible final-object cleanup are already covered by the hosted rehearsal.
+4. Do not connect the game to real data or start M3 until the remaining device/integration gate passes.
 
-See `docs/SECURITY_M2.md` for the permission model and retained-audio-metadata limitation. The two original seed migrations are preserved; only 0003 adds the audited M2 operations. No live database migrations have been applied in this environment.
+See `docs/SECURITY_M2.md` for the permission model and retained-audio-metadata limitation. The two original seed migrations are preserved; 0003 adds the audited M2 operations. All three are now applied to the explicitly selected hosted development project.

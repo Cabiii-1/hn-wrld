@@ -3,8 +3,7 @@ import "./globals.css";
 import "./keepsake.css";
 export const metadata: Metadata = {
   title: "Bubu’s Little World · A little place to feel loved",
-  description:
-    "A cozy house and a little hello. Milestone 1 synthetic preview.",
+  description: "A private little place to feel loved.",
   robots: { index: false, follow: false },
 };
 export const viewport: Viewport = {

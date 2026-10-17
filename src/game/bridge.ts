@@ -1,13 +1,16 @@
 import type { Direction } from "./world";
+import type { WorldNpc } from "./connected";
 export type GameStatus = "loading" | "ready" | "error";
 export class GameBridge {
+  constructor(public readonly npcs?: WorldNpc[]) {}
   held = new Set<Direction>();
   paused = false;
   interact = false;
   resetRequested = false;
   near = false;
+  nearId = "";
   onNear: (near: boolean) => void = () => {};
-  onTalk: () => void = () => {};
+  onTalk: (id: string) => void = () => {};
   onStatus: (status: GameStatus) => void = () => {};
   connect(
     onNear: typeof this.onNear,
@@ -32,9 +35,10 @@ export class GameBridge {
     this.held.clear();
     this.interact = false;
   }
-  setNear(near: boolean) {
-    if (near !== this.near) {
+  setNear(near: boolean, id = "") {
+    if (near !== this.near || id !== this.nearId) {
       this.near = near;
+      this.nearId = id;
       this.onNear(near);
     }
   }

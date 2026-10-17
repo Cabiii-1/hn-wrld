@@ -3,7 +3,6 @@ import { GameBridge } from "./bridge";
 import { makeBearTextures } from "./bear-art";
 import {
   WORLD,
-  WANDER,
   PLAYER_START,
   NPC_START,
   moveFeet,
@@ -12,19 +11,23 @@ import {
   type Point,
   type Direction,
 } from "./world";
-
+import type { WorldNpc } from "./connected";
+type Actor = {
+  data: WorldNpc;
+  sprite: Phaser.GameObjects.Sprite;
+  label: Phaser.GameObjects.Text;
+  target: Point;
+  facing: Direction;
+  seed: number;
+  next: number;
+};
 export class HouseScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Sprite;
-  private npc!: Phaser.GameObjects.Sprite;
   private playerLabel!: Phaser.GameObjects.Text;
-  private npcLabel!: Phaser.GameObjects.Text;
+  private actors: Actor[] = [];
   private marker!: Phaser.GameObjects.Text;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private facing: Direction = "down";
-  private npcFacing: Direction = "down";
-  private seed = 42;
-  private target: Point = NPC_START;
-  private nextWander = 1800;
   private elapsed = 0;
   private activeWindow = true;
   private debugOutput?: HTMLElement;
@@ -42,12 +45,11 @@ export class HouseScene extends Phaser.Scene {
       .setOrigin(0)
       .setDisplaySize(WORLD.width, WORLD.height);
     makeBearTextures(this, "bubu", "#f8e8c9", "#d88182");
-    makeBearTextures(this, "npc", "#b78459", "#778b63");
+    makeBearTextures(this, "npc-cream-1", "#f1d8b0", "#778b63");
+    makeBearTextures(this, "npc-brown-scarf", "#b78459", "#778b63");
+    makeBearTextures(this, "npc-rose-bow", "#f3dfc5", "#ce8796");
     this.player = this.add
       .sprite(PLAYER_START.x, PLAYER_START.y, "bubu")
-      .setOrigin(0.5, 30 / 32);
-    this.npc = this.add
-      .sprite(NPC_START.x, NPC_START.y, "npc")
       .setOrigin(0.5, 30 / 32);
     const style = {
       fontFamily: "monospace",
@@ -57,9 +59,27 @@ export class HouseScene extends Phaser.Scene {
       padding: { x: 7, y: 4 },
     };
     this.playerLabel = this.add.text(0, 0, "Bubu ♡", style).setOrigin(0.5, 1);
-    this.npcLabel = this.add
-      .text(0, 0, "Teddy · sample", style)
-      .setOrigin(0.5, 1);
+    const npcs = this.bridge.npcs ?? [
+      {
+        id: "sample",
+        name: "Teddy · sample",
+        variant: "npc-brown-scarf" as const,
+        ...NPC_START,
+        radius: 20,
+        seen: false,
+      },
+    ];
+    this.actors = npcs.map((data, i) => ({
+      data,
+      sprite: this.add
+        .sprite(data.x, data.y, data.variant)
+        .setOrigin(0.5, 30 / 32),
+      label: this.add.text(0, 0, data.name, style).setOrigin(0.5, 1),
+      target: { x: data.x, y: data.y },
+      facing: "down",
+      seed: 42 + i * 7919,
+      next: 500 + i * 137,
+    }));
     this.marker = this.add
       .text(0, 0, "E / Talk", {
         ...style,
@@ -87,7 +107,6 @@ export class HouseScene extends Phaser.Scene {
     window.addEventListener("blur", blur);
     window.addEventListener("focus", focus);
     document.addEventListener("visibilitychange", visibility);
-    // Read-only diagnostics are explicitly opt-in for browser verification.
     if (new URLSearchParams(location.search).has("debug")) {
       this.debugOutput = document.createElement("output");
       this.debugOutput.id = "game-debug";
@@ -110,13 +129,11 @@ export class HouseScene extends Phaser.Scene {
   }
   private resize() {
     const { width, height } = this.scale;
-    // Integer zoom; portrait crops scenery and follows the player across the yard.
     const zoom = Math.max(
       1,
       Math.ceil(Math.max(width / WORLD.width, height / WORLD.height)),
     );
-    this.cameras.main.setZoom(zoom);
-    this.cameras.main.startFollow(this.player, true, 1, 1);
+    this.cameras.main.setZoom(zoom).startFollow(this.player, true, 1, 1);
     if (width / zoom >= WORLD.width && height / zoom >= WORLD.height)
       this.cameras.main
         .stopFollow()
@@ -136,19 +153,22 @@ export class HouseScene extends Phaser.Scene {
     if (
       !walking &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
+    )
       sprite.anims.pause();
-    } else {
-      sprite.anims.resume();
-    }
+    else sprite.anims.resume();
     sprite.setDepth(sprite.y);
   }
   update(_time: number, delta: number) {
     if (!this.player) return;
-    const dt = Math.min(delta, 40) / 1000;
-    let moving = false,
-      npcMoving = false;
-    const paused = this.bridge.paused || !this.activeWindow;
+    const dt = Math.min(delta, 40) / 1000,
+      paused = this.bridge.paused || !this.activeWindow;
+    // Let native dialogue scrolling and audio keyboard controls receive arrows
+    // and Space while React owns the interaction.
+    if (this.input.keyboard) {
+      this.input.keyboard.enabled = !this.bridge.paused;
+      this.input.keyboard.manager.preventDefault = !this.bridge.paused;
+    }
+    let moving = false;
     if (this.bridge.resetRequested) {
       this.player.setPosition(PLAYER_START.x, PLAYER_START.y);
       this.bridge.resetRequested = false;
@@ -157,8 +177,8 @@ export class HouseScene extends Phaser.Scene {
     if (!paused) {
       this.elapsed += dt * 1000;
       const down = (...names: string[]) =>
-        names.some((n) => this.keys[n].isDown);
-      const held = this.bridge.held;
+          names.some((n) => this.keys[n].isDown),
+        held = this.bridge.held;
       const input = normalizedInput(
         Number(down("D", "RIGHT") || held.has("right")) -
           Number(down("A", "LEFT") || held.has("left")),
@@ -166,90 +186,107 @@ export class HouseScene extends Phaser.Scene {
           Number(down("W", "UP") || held.has("up")),
       );
       moving = input.x !== 0 || input.y !== 0;
-      if (moving)
-        this.facing =
-          Math.abs(input.x) > Math.abs(input.y)
-            ? input.x > 0
-              ? "right"
-              : "left"
-            : input.y > 0
-              ? "down"
-              : "up";
+      if (moving) this.facing = this.direction(input);
       const p = moveFeet(
         this.player,
         input.x * 95 * dt,
         input.y * 95 * dt,
-        this.npc,
+        this.actors.map((a) => a.sprite),
       );
       this.player.setPosition(p.x, p.y);
-      if (this.elapsed > this.nextWander) {
-        this.seed = nextRandom(this.seed);
-        const x = WANDER.left + (this.seed % (WANDER.right - WANDER.left));
-        this.seed = nextRandom(this.seed);
-        const y = WANDER.top + (this.seed % (WANDER.bottom - WANDER.top));
-        this.target = { x, y };
-        this.nextWander = this.elapsed + 2400 + (this.seed % 1800);
-      }
-      const distance = Phaser.Math.Distance.BetweenPoints(
-        this.npc,
-        this.target,
-      );
-      if (distance > 2) {
-        const d = normalizedInput(
-          this.target.x - this.npc.x,
-          this.target.y - this.npc.y,
-        );
-        const n = moveFeet(this.npc, d.x * 20 * dt, d.y * 20 * dt, this.player);
-        npcMoving = n.x !== this.npc.x || n.y !== this.npc.y;
-        this.npcFacing =
-          Math.abs(d.x) > Math.abs(d.y)
-            ? d.x > 0
-              ? "right"
-              : "left"
-            : d.y > 0
-              ? "down"
-              : "up";
-        this.npc.setPosition(
-          Phaser.Math.Clamp(n.x, WANDER.left, WANDER.right),
-          Phaser.Math.Clamp(n.y, WANDER.top, WANDER.bottom),
-        );
-      }
-      const near =
-        Phaser.Math.Distance.BetweenPoints(this.player, this.npc) < 78;
-      this.bridge.setNear(near);
-      const action =
-        Phaser.Input.Keyboard.JustDown(this.keys.E) ||
-        Phaser.Input.Keyboard.JustDown(this.keys.SPACE) ||
-        Phaser.Input.Keyboard.JustDown(this.keys.ENTER) ||
-        this.bridge.interact;
-      this.bridge.interact = false;
-      if (near && action) {
-        this.clearInput();
-        this.bridge.paused = true;
-        this.bridge.onTalk();
-      }
     } else this.clearInput();
+    for (const actor of this.actors) {
+      let walking = false;
+      if (!paused && actor.data.radius > 0) {
+        if (this.elapsed > actor.next) {
+          actor.seed = nextRandom(actor.seed);
+          const x =
+            actor.data.x +
+            (actor.seed % (actor.data.radius * 2 + 1)) -
+            actor.data.radius;
+          actor.seed = nextRandom(actor.seed);
+          const y =
+            actor.data.y +
+            (actor.seed % (actor.data.radius * 2 + 1)) -
+            actor.data.radius;
+          actor.target = { x, y };
+          actor.next = this.elapsed + 2400 + (actor.seed % 1800);
+        }
+        if (
+          Phaser.Math.Distance.BetweenPoints(actor.sprite, actor.target) > 2
+        ) {
+          const d = normalizedInput(
+            actor.target.x - actor.sprite.x,
+            actor.target.y - actor.sprite.y,
+          );
+          const n = moveFeet(actor.sprite, d.x * 20 * dt, d.y * 20 * dt, [
+            this.player,
+            ...this.actors.filter((a) => a !== actor).map((a) => a.sprite),
+          ]);
+          walking = n.x !== actor.sprite.x || n.y !== actor.sprite.y;
+          actor.facing = this.direction(d);
+          actor.sprite.setPosition(n.x, n.y);
+        }
+      }
+      this.animate(actor.sprite, actor.data.variant, actor.facing, walking);
+      actor.label
+        .setPosition(
+          Math.round(actor.sprite.x),
+          Math.round(actor.sprite.y - 34),
+        )
+        .setDepth(1000);
+    }
+    const nearest = this.actors.reduce<Actor | undefined>(
+      (best, a) =>
+        !best ||
+        Phaser.Math.Distance.BetweenPoints(this.player, a.sprite) <
+          Phaser.Math.Distance.BetweenPoints(this.player, best.sprite)
+          ? a
+          : best,
+      undefined,
+    );
+    const near =
+      !!nearest &&
+      Phaser.Math.Distance.BetweenPoints(this.player, nearest.sprite) < 78;
+    this.bridge.setNear(near, near ? nearest!.data.id : "");
+    const action =
+      Phaser.Input.Keyboard.JustDown(this.keys.E) ||
+      Phaser.Input.Keyboard.JustDown(this.keys.SPACE) ||
+      Phaser.Input.Keyboard.JustDown(this.keys.ENTER) ||
+      this.bridge.interact;
+    this.bridge.interact = false;
+    if (!paused && near && action) {
+      this.clearInput();
+      this.bridge.paused = true;
+      this.bridge.onTalk(nearest!.data.id);
+    }
     this.animate(this.player, "bubu", this.facing, moving && !paused);
-    this.animate(this.npc, "npc", this.npcFacing, npcMoving && !paused);
     this.playerLabel
       .setPosition(Math.round(this.player.x), Math.round(this.player.y - 34))
       .setDepth(1000);
-    this.npcLabel
-      .setPosition(Math.round(this.npc.x), Math.round(this.npc.y - 34))
-      .setDepth(1000);
-    this.marker
-      .setPosition(Math.round(this.npc.x), Math.round(this.npc.y - 59))
-      .setDepth(1001)
-      .setVisible(this.bridge.near && !this.bridge.paused);
+    this.marker.setVisible(near && !paused).setDepth(1001);
+    if (nearest)
+      this.marker.setPosition(
+        Math.round(nearest.sprite.x),
+        Math.round(nearest.sprite.y - 59),
+      );
     if (this.debugOutput)
       this.debugOutput.textContent = JSON.stringify({
         player: { x: this.player.x, y: this.player.y },
-        npc: { x: this.npc.x, y: this.npc.y },
-        near: this.bridge.near,
-        paused: this.bridge.paused,
+        npcCount: this.actors.length,
+        near,
+        paused,
         facing: this.facing,
-        animation: this.player.anims.currentAnim?.key,
         fps: Math.round(this.game.loop.actualFps),
       });
+  }
+  private direction(d: Point): Direction {
+    return Math.abs(d.x) > Math.abs(d.y)
+      ? d.x > 0
+        ? "right"
+        : "left"
+      : d.y > 0
+        ? "down"
+        : "up";
   }
 }

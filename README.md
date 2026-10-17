@@ -20,15 +20,19 @@ Next.js App Router / React / TypeScript / Tailwind / shadcn/ui / Phaser 3 / Supa
 
 ## Milestone 1 implemented
 
-Run `npm ci` then `npm run dev` from this folder and open http://localhost:3000. This synthetic house preview includes keyboard/touch controls, original animated bear placeholders, explicit collisions, one wandering NPC, and accessible React dialogue. No Supabase project or secrets are required yet.
+Run `npm ci` then `npm run dev` from this folder and open http://localhost:3000/demo. This synthetic house preview includes keyboard/touch controls, original animated bear placeholders, explicit collisions, one wandering NPC, and accessible React dialogue. No Supabase project or secrets are required for the demo.
 
 Validate with `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. See [Milestone 1 notes](docs/MILESTONE_1.md) and [verification results](docs/verification/RESULTS.md). Production preview: `npm run build` then `npm start`.
 
 ## Important
-The game still uses synthetic content. Never put contributor messages/uploads in public assets or connect them to the game before M3's recipient gate. Background PNGs do not include walkability/collisions. See PRD for safeguards.
+The public demo uses only synthetic content. Contributor content appears only after M3's recipient gate and explicit publication. Never put private messages/uploads in public assets. Background PNGs do not include walkability/collisions. See PRD for safeguards.
 
 ## Milestone 2 implementation
 
-Contributor invitations, text/photo/voice submission, private file validation, Dudu's authenticated review desk and NPC assignment are implemented. **Live Supabase integration verification is pending Docker Desktop**, which is not installed in the current environment.
+Contributor invitations, text/photo/voice submission, private file validation, Dudu's authenticated review desk and NPC assignment are implemented. **The owner's hosted `hn-wrld` project is connected and the synthetic live Auth/Storage rehearsal passes.** Physical-phone recording and recovery checks remain tracked for release.
 
-Install/start Docker Desktop, run `npm run db:setup`, create a local test admin as described in [M2 setup](docs/MILESTONE_2.md), then restart `npm run dev`. Open `/admin` to create invitations. The setup script preserves existing environment files and never prints keys. `npm run test:db` runs SQL/RLS tests without Docker. See [M2 security audit](docs/SECURITY_M2.md) and [M2 verification](docs/verification/M2_RESULTS.md). No hosted project or deployment is required or performed.
+## Milestone 3 implementation
+
+The root page now requires a private recipient link plus passcode. In `/admin`, publish approved house placements under **Their little places**, then create a recipient link under **Bubu's little key**. Open that link and unlock to see contributor bears at `/play`, with approved messages/photos/audio and saved seen state. The sample house moved to `/demo`. See [M3 usage and security](docs/MILESTONE_3.md) and [verification](docs/verification/M3_RESULTS.md). Park/SLU are still M4; no deployment is included.
+
+Follow [M2 setup](docs/MILESTONE_2.md) to create your permanent allowlisted app administrator, then run `npm.cmd run dev` and open http://127.0.0.1:3000/admin. Docker remains an optional local backend. Configuration stays in ignored `.env.local`; setup preserves existing files and never prints keys. `npm run test:db` runs SQL/RLS tests without Docker. See [M2 security audit](docs/SECURITY_M2.md) and [M2 verification](docs/verification/M2_RESULTS.md). The frontend is not deployed and generated loopback invitation links are for local testing only.

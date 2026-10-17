@@ -6,6 +6,9 @@ if (!["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname))
 for (const path of [
   "admin/dashboard",
   "contributor",
+  "recipient/house",
+  "recipient/messages/11111111-1111-4111-8111-111111111111",
+  "recipient/media/11111111-1111-4111-8111-111111111111",
   "media/11111111-1111-4111-8111-111111111111",
 ]) {
   const response = await fetch(`${base}/api/manage/${path}`, {
@@ -19,7 +22,7 @@ for (const path of [
   assert.equal(response.headers.get("referrer-policy"), "no-referrer");
   console.log(`PASS anonymous ${path}: 401, private/no-store, no-referrer`);
 }
-for (const path of ["admin", "invite", "contribute"]) {
+for (const path of ["", "play", "admin", "invite", "contribute"]) {
   const response = await fetch(`${base}/${path}`);
   assert.equal(response.status, 200);
   assert.match(response.headers.get("cache-control") ?? "", /no-store/);

@@ -11,6 +11,7 @@ vi.mock("next/navigation", () => ({
 import { ContributionForm } from "../src/components/contribution-form";
 import { AdminDesk } from "../src/components/admin-desk";
 import { InviteWelcome } from "../src/components/invite-welcome";
+import { RecipientEntry } from "../src/components/recipient-entry";
 import { MAX, type AdminData } from "../src/lib/backend/contracts";
 
 beforeEach(() => {
@@ -22,6 +23,38 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("contributor and admin UI workflows", () => {
+  it("accepts a recipient fragment added to an already open entry page", async () => {
+    mock.api.mockRejectedValue(new Error("No session"));
+    render(<RecipientEntry />);
+    await waitFor(() =>
+      expect(mock.api).toHaveBeenCalledWith("recipient/session"),
+    );
+    history.replaceState(null, "", `/#${"c".repeat(43)}`);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    await screen.findByLabelText("Passcode");
+    expect(location.hash).toBe("");
+  });
+  it("keeps the recipient fragment out of history and survives React StrictMode", async () => {
+    const token = "b".repeat(43);
+    window.history.replaceState(null, "", `/#${token}`);
+    mock.api.mockResolvedValue({ ok: true });
+    render(
+      <React.StrictMode>
+        <RecipientEntry />
+      </React.StrictMode>,
+    );
+    const input = await screen.findByLabelText("Passcode");
+    expect(location.hash).toBe("");
+    expect(mock.api).not.toHaveBeenCalledWith("recipient/session");
+    await userEvent.type(input, "synthetic-passcode");
+    await userEvent.click(screen.getByRole("button", { name: "Come on in" }));
+    await waitFor(() => expect(mock.replace).toHaveBeenCalledWith("/play"));
+    expect(mock.api).toHaveBeenCalledWith("recipient/unlock", "POST", {
+      token,
+      passcode: "synthetic-passcode",
+    });
+    expect(localStorage.length).toBe(0);
+  });
   it("disables submission when the backend has not been configured", () => {
     render(<ContributionForm configured={false} />);
     expect(

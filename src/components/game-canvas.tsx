@@ -27,7 +27,7 @@ export default function GameCanvas({ bridge }: { bridge: GameBridge }) {
         });
         game.canvas.setAttribute(
           "aria-label",
-          "Sta. Ana house yard. Use WASD or arrow keys to move Bubu, and E to talk to Teddy.",
+          "Sta. Ana house yard. Use WASD or arrow keys to move Bubu, and E to talk to a nearby bear.",
         );
         game.canvas.setAttribute("role", "img");
       })

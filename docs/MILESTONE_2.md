@@ -1,8 +1,23 @@
 # Milestone 2 — contributions and Dudu’s desk
 
-Implemented 2026-10-17 after the owner confirmed the phone layout and approved M2. **Code and automated verification are ready; full Supabase Auth/Storage integration remains pending Docker Desktop.** No hosted project, real contributor data, admin credentials or recipient gate has been created. The M1 house remains synthetic.
+Follow-up: the owner approved M3 after the hosted rehearsal and their invitation/review use. See `MILESTONE_3.md` for the now-connected recipient house; the M2 device-check limitations below remain tracked for release.
 
-## Local setup
+Implemented 2026-10-17 after the owner confirmed the phone layout and approved M2. **Hosted Auth/PostgREST/Storage integration now passes against the owner's fresh `hn-wrld` project.** Physical-device recording and recovery checks remain before M2 is fully verified. The M1 house remains synthetic; no recipient gate or public deployment has been added.
+
+## Hosted development setup (current)
+
+The owner created `hn-wrld` (`hxvcbwhaqtpqaokgwojz`) and authorized its use instead of Docker. The checkout is linked, migrations 0001–0003 are applied, all 12 public tables have RLS, and the `bubu-contributions` bucket is private. Keys were retrieved by the authenticated CLI directly into ignored `.env.local`; never paste them into chat or commit them. `APP_ORIGIN` is `http://127.0.0.1:3000`.
+
+Public signup is disabled globally. Keep `[auth.email].enable_signup=true`: this enables the email provider needed for existing administrator password logins; `[auth].enable_signup=false` blocks new public registrations. This distinction was verified with real login and rejected signup requests. See [Supabase's Auth configuration](https://supabase.com/docs/guides/auth/general-configuration).
+
+1. Create your permanent administrator in [Supabase Authentication → Users](https://supabase.com/dashboard/project/hxvcbwhaqtpqaokgwojz/auth/users), using **Add user → Create new user**, an email/password you choose privately, and email confirmation. A dashboard owner account is separate from an app Auth user.
+2. Add its UUID to `public.admin_members` with the SQL shown in local setup step 4 below. Keep passwords and API keys out of chat.
+3. Run `npm.cmd run dev` and open **http://127.0.0.1:3000/admin**. Use that exact origin for invitation links and mutations. This remains a local app using the hosted backend; localhost invitation links cannot be sent to other people's devices yet.
+4. Repeat the synthetic integration rehearsal when needed with `node scripts/smoke-hosted.mjs hxvcbwhaqtpqaokgwojz --allow-test-writes` while the app runs in development mode. It checks the explicit project URL and loopback app origin, creates temporary accounts and fixtures, tests live authorization/media/moderation, and removes its data afterward. It uses the authenticated CLI to allowlist only its temporary test admin. Delayed staging cleanup jobs remain because issued upload capabilities can outlive revocation. Run only against a development project; do not use it with real contributors.
+
+On Windows, use `npx.cmd supabase login --agent no --output-format text` if PowerShell blocks the `.ps1` launcher. No execution-policy change is needed. The owner has now created a confirmed permanent app user and its admin membership has been saved and verified. All rehearsal accounts were removed. Sign in at the app's `/admin` page with the credentials chosen in Supabase.
+
+## Optional local setup with Docker
 
 1. Install and start Docker Desktop on this computer. No Docker command is currently available here. Node 20.9+ and npm are also required.
 2. In this project directory run `npm ci`, then `npm run db:setup`. The project-local Supabase CLI starts the local services and applies pending migrations. This may download large Docker images on first start. No database reset is performed.
@@ -16,7 +31,7 @@ Implemented 2026-10-17 after the owner confirmed the phone layout and approved M
 
 5. Restart `npm run dev`; open **http://localhost:3000/admin** and sign in. Use the exact `APP_ORIGIN` from `.env.local`: localhost and 127.0.0.1 are distinct origins for mutation checks. Production requires HTTPS; production cookies are Secure. `npm run db:stop` stops containers while preserving local data.
 
-No hosted Supabase account is needed for local development. Do not paste keys/passwords into chat or commit `.env.local`. If a hosted project is configured later, apply migrations to that explicitly selected project only after the local integration gate passes; no deployment is included here.
+No hosted Supabase account is needed for the Docker option. Do not paste keys/passwords into chat or commit `.env.local`. The setup script preserves an existing environment file; switch configuration deliberately when changing backends. The owner selected the fresh hosted development project above for the live integration gate; no deployment is included here.
 
 ## Rehearse with synthetic content
 
@@ -51,4 +66,4 @@ Raw uploads are only under randomized `staging/` paths. Verified bytes go to a s
 
 See `verification/M2_RESULTS.md` and `SECURITY_M2.md`. Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. `npm run test:db` exercises actual PostgreSQL via PGlite without Docker.
 
-**Before M2 can be called fully verified:** start Docker and rehearse the synthetic invitation → direct upload → validation → receipt → admin review → placement sequence against local Supabase Auth/PostgREST/Storage. Verify Storage token replay behavior, browser CORS, private bucket access, actual MP3/M4A/OGG/WebM recordings, cancellation/network recovery, and revoke/delete cleanup. Component tests use mocked HTTP; HTTP tests mock Supabase; SQL tests use real embedded PostgreSQL with minimal Auth/Storage schema shims, not a full Supabase stack. Do not substitute these for the live integration gate or proceed to M3 yet.
+**Before M2 can be called fully verified:** complete browser and physical-phone file/recording checks, including actual MP3/M4A/OGG/WebM recordings, cancellation/network recovery and expiry behavior. The hosted rehearsal passes the synthetic invitation → direct upload → validation → receipt → admin review → placement sequence, Storage preflight headers, replay denial, private bucket access and physical deletion of eligible synthetic final files. It uses HTTP requests, not a browser enforcing CORS or accessing a microphone. See the verification report for precise limits. Do not proceed to M3 yet.

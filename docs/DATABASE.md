@@ -1,5 +1,7 @@
 # Data model and security posture
 
+M3 migration `0004_recipient_world.sql` adds per-link passcode verifiers, link-bound sessions, RLS-protected seen state and service-only projections. Admin link RPCs are JWT-scoped and allowlisted. Every recipient function rechecks expiry/revocation, approved parent, published safe house placement and published area; media additionally requires approval. See `MILESTONE_3.md`; earlier notes retain the seed/M2 history.
+
 ## Tables
 - `areas` (three areas, publish flag, map key)
 - `invitations` (hashed token, label, expiry, revoked and limit; never expose to clients)

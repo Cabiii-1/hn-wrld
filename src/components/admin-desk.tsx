@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { ContributionShell, SetupNotice } from "./contribution-shell";
+import { RecipientAccess } from "./recipient-access";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -213,6 +214,7 @@ export function AdminDesk({ configured }: { configured: boolean }) {
           ["review", "Review messages"],
           ["invitations", "Invitations"],
           ["placements", "Their little places"],
+          ["recipient", "Bubu’s little key"],
         ].map(([id, name]) => (
           <button
             key={id}
@@ -237,6 +239,7 @@ export function AdminDesk({ configured }: { configured: boolean }) {
           {notice}
         </p>
       )}
+      {tab === "recipient" && <RecipientAccess />}
       {tab === "invitations" && (
         <section className="invitation-layout">
           <form className="letter-card" onSubmit={createInvite}>

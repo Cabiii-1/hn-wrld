@@ -6,6 +6,8 @@ const config: NextConfig = {
   async headers() {
     return [
       ...[
+        "/",
+        "/play/:path*",
         "/admin/:path*",
         "/invite/:path*",
         "/contribute/:path*",

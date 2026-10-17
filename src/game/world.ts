@@ -30,10 +30,15 @@ export function moveFeet(
   from: Point,
   dx: number,
   dy: number,
-  other?: Point,
+  other?: Point | Point[],
 ): Point {
   const separated = (x: number, y: number) =>
-    !other || Math.hypot(x - other.x, y - other.y) >= 19;
+    !other ||
+    (Array.isArray(other) ? other : [other]).every(
+      (p) =>
+        Math.hypot(x - p.x, y - p.y) >= 19 ||
+        Math.hypot(x - p.x, y - p.y) > Math.hypot(from.x - p.x, from.y - p.y),
+    );
   let { x, y } = from;
   if (canStand(x + dx, y) && separated(x + dx, y)) x += dx;
   if (canStand(x, y + dy) && separated(x, y + dy)) y += dy;
