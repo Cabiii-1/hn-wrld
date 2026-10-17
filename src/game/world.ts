@@ -1,4 +1,5 @@
 // Background coordinates normalized to an 836 × 470 world (source: 1672 × 941).
+import { safeBox, type SceneKey } from "./scenes";
 export const WORLD = { width: 836, height: 470 };
 export const YARD = { left: 32, right: 804, top: 242, bottom: 424 };
 export const OBSTACLES = [
@@ -11,19 +12,19 @@ export const WANDER = { left: 405, right: 490, top: 330, bottom: 395 };
 export const FOOT = { halfWidth: 7, height: 7 };
 export type Point = { x: number; y: number };
 export type Direction = "up" | "down" | "left" | "right";
-export function canStand(x: number, y: number) {
-  return (
-    x - FOOT.halfWidth >= YARD.left &&
-    x + FOOT.halfWidth <= YARD.right &&
-    y - FOOT.height >= YARD.top &&
-    y <= YARD.bottom &&
-    !OBSTACLES.some(
-      (o) =>
-        x + FOOT.halfWidth > o.x &&
-        x - FOOT.halfWidth < o.x + o.width &&
-        y > o.y &&
-        y - FOOT.height < o.y + o.height,
-    )
+export function canStand(
+  x: number,
+  y: number,
+  map: SceneKey = "sta_ana_house",
+) {
+  return safeBox(
+    {
+      left: x - FOOT.halfWidth,
+      right: x + FOOT.halfWidth,
+      top: y - FOOT.height,
+      bottom: y,
+    },
+    map,
   );
 }
 export function moveFeet(
@@ -31,6 +32,7 @@ export function moveFeet(
   dx: number,
   dy: number,
   other?: Point | Point[],
+  map: SceneKey = "sta_ana_house",
 ): Point {
   const separated = (x: number, y: number) =>
     !other ||
@@ -40,8 +42,17 @@ export function moveFeet(
         Math.hypot(x - p.x, y - p.y) > Math.hypot(from.x - p.x, from.y - p.y),
     );
   let { x, y } = from;
-  if (canStand(x + dx, y) && separated(x + dx, y)) x += dx;
-  if (canStand(x, y + dy) && separated(x, y + dy)) y += dy;
+  // Substeps also protect narrow sidewalk/stair boundaries after long frames.
+  const steps = Math.max(
+    1,
+    Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 4),
+  );
+  for (let i = 0; i < steps; i++) {
+    if (canStand(x + dx / steps, y, map) && separated(x + dx / steps, y))
+      x += dx / steps;
+    if (canStand(x, y + dy / steps, map) && separated(x, y + dy / steps))
+      y += dy / steps;
+  }
   return { x, y };
 }
 export function normalizedInput(x: number, y: number) {

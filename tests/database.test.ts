@@ -3,6 +3,8 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { isSafeHousePlacement } from "../src/lib/backend/contracts";
+import geometry from "../src/game/scene-geometry.json";
+import { SCENE_KEYS, SCENES, safePlacement } from "../src/game/scenes";
 
 let db: PGlite;
 const ADMIN = "11111111-1111-4111-8111-111111111111",
@@ -72,6 +74,7 @@ beforeAll(async () => {
     "0002_media_recipient_gate.sql",
     "0003_contributor_admin_workflows.sql",
     "0004_recipient_world.sql",
+    "0005_three_places.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -341,7 +344,7 @@ describe("M2 PostgreSQL migrations, RLS and atomic workflows", () => {
       ),
     ).toBe(1);
   });
-  it("rejects unsafe and unverified-scene publication, matching TS house geometry", async () => {
+  it("rejects unsafe spawns and allows verified park publication, matching TS house geometry", async () => {
     const i = await invite();
     const c = await submit(i.session);
     await role("authenticated", ADMIN);
@@ -358,12 +361,10 @@ describe("M2 PostgreSQL migrations, RLS and atomic workflows", () => {
         [c, house],
       ),
     ).rejects.toThrow("Unsafe");
-    await expect(
-      scalar(
-        "public.admin_place_npc($1::uuid,$2::uuid,'npc-brown-scarf',425,352,20,true)",
-        [c, park],
-      ),
-    ).rejects.toThrow("not yet verified");
+    await scalar(
+      "public.admin_place_npc($1::uuid,$2::uuid,'npc-brown-scarf',425,352,20,true)",
+      [c, park],
+    );
     await scalar(
       "public.admin_place_npc($1::uuid,$2::uuid,'npc-brown-scarf',425,352,20,false)",
       [c, park],
@@ -467,6 +468,149 @@ async function recipient() {
   ]);
   return { id, hash, verifier, session };
 }
+describe("M4 per-scene publication and exact geometry", () => {
+  it("keeps the PostgreSQL geometry identical to the canonical TS data, including union seams", async () => {
+    await role("postgres");
+    const rows = await db.query<{ map_key: string; geometry: unknown }>(
+      "select * from public.scene_geometry",
+    );
+    expect(
+      Object.fromEntries(rows.rows.map((r) => [r.map_key, r.geometry])),
+    ).toEqual(geometry);
+    let seed = 42;
+    const cases: { map: string; x: number; y: number; r: number }[] = [];
+    for (const map of SCENE_KEYS) {
+      for (let i = 0; i < 250; i++) {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        const x = 20 + (seed % 797);
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        const y = 160 + (seed % 271);
+        cases.push({ map, x, y, r: [0, 8, 20, 80][i % 4] });
+      }
+      for (const x of [190, 230, 292, 310, 327, 385, 430, 459])
+        for (const y of [332, 339, 378, 381, 384, 388, 395])
+          cases.push({ map, x, y, r: 0 });
+    }
+    const results = await db.query<{
+      map: string;
+      x: number;
+      y: number;
+      r: number;
+      safe: boolean;
+    }>(
+      "select t.*,public.scene_safe(t.map,t.x,t.y,t.r) as safe from jsonb_to_recordset($1::jsonb) as t(map text,x integer,y integer,r integer)",
+      [JSON.stringify(cases)],
+    );
+    for (const row of results.rows)
+      expect(row.safe, `${row.map} (${row.x},${row.y},${row.r})`).toBe(
+        safePlacement(
+          row.map as (typeof SCENE_KEYS)[number],
+          row.x,
+          row.y,
+          row.r,
+        ),
+      );
+  });
+  it("publishes in exactly the assigned scene and protects messages/media across all three places", async () => {
+    const i = await invite(),
+      r = await recipient(),
+      photo = await reserve(i.session);
+    await validate(i.session, photo.id, i.id);
+    const c = await submit(i.session, [photo.id]);
+    await role("authenticated", ADMIN);
+    const park = await scalar<string>(
+      "(select id from public.areas where map_key='tuguegarao_park')",
+    );
+    await expect(
+      scalar(
+        "public.admin_place_npc($1::uuid,$2::uuid,'npc-cream-1',470,290,20,true)",
+        [c, park],
+      ),
+    ).rejects.toThrow("Review");
+    await scalar("public.admin_review_media($1::uuid,'approved')", [photo.id]);
+    await scalar("public.admin_review($1::uuid,'approved',null)", [c]);
+    for (const map of SCENE_KEYS) {
+      await role("authenticated", ADMIN);
+      const area = await scalar<string>(
+        "(select id from public.areas where map_key=$1)",
+        [map],
+      );
+      const p = SCENES[map].npc;
+      await scalar(
+        "public.admin_place_npc($1::uuid,$2::uuid,'npc-rose-bow',$3,$4,$5,true)",
+        [c, area, p.x, p.y, p.radius],
+      );
+      await role("service_role");
+      for (const candidate of SCENE_KEYS) {
+        const data = await scalar<{ mapKey: string; npcs: { id: string }[] }>(
+          "public.recipient_scene($1,$2)",
+          [r.session, candidate],
+        );
+        expect(data.mapKey).toBe(candidate);
+        expect(data.npcs.some((n) => n.id === c)).toBe(map === candidate);
+      }
+      expect(
+        await scalar("public.recipient_message($1,$2::uuid)", [r.session, c]),
+      ).toHaveProperty("id", c);
+      expect(
+        await scalar("public.recipient_media($1,$2::uuid)", [
+          r.session,
+          photo.id,
+        ]),
+      ).toHaveProperty("path");
+    }
+    await db.query(
+      "update public.areas set published=false where map_key='slu_baguio'",
+    );
+    expect(
+      (
+        await scalar<{ npcs: { id: string }[] }>(
+          "public.recipient_scene($1,'slu_baguio')",
+          [r.session],
+        )
+      ).npcs.some((n) => n.id === c),
+    ).toBe(false);
+    await expect(
+      scalar("public.recipient_media($1,$2::uuid)", [r.session, photo.id]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_message($1,$2::uuid)", [r.session, c]),
+    ).rejects.toThrow();
+  });
+  it("denies anonymous/non-admin scene RPCs and unsafe stair/road publication", async () => {
+    await role("anon");
+    await expect(
+      scalar("public.recipient_scene('guessed','slu_baguio')"),
+    ).rejects.toThrow();
+    await role("authenticated", OTHER);
+    await expect(
+      scalar("public.recipient_scene('guessed','tuguegarao_park')"),
+    ).rejects.toThrow();
+    await role("service_role");
+    await expect(
+      scalar("public.recipient_scene('guessed','sta_ana_house')"),
+    ).rejects.toThrow();
+    const i = await invite(),
+      c = await submit(i.session);
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_review($1::uuid,'approved',null)", [c]);
+    const area = await scalar<string>(
+      "(select id from public.areas where map_key='slu_baguio')",
+    );
+    for (const [x, y, r] of [
+      [400, 420, 0],
+      [310, 360, 0],
+      [430, 360, 30],
+    ])
+      await expect(
+        scalar(
+          "public.admin_place_npc($1::uuid,$2::uuid,'npc-cream-1',$3,$4,$5,true)",
+          [c, area, x, y, r],
+        ),
+      ).rejects.toThrow("Unsafe");
+  });
+});
+
 describe("M3 recipient database authorization", () => {
   it("denies browser-role access to verifiers, sessions, progress and projections", async () => {
     await role("anon");

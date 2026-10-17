@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FOOT, OBSTACLES, YARD } from "../../game/world";
+import { safePlacement } from "../../game/scenes";
 
 export const MAX = {
   photoBytes: 5 * 1024 * 1024,
@@ -59,25 +59,7 @@ export const placementSchema = z
   })
   .strict();
 export function isSafeHousePlacement(x: number, y: number, radius: number) {
-  if (![x, y, radius].every(Number.isInteger) || radius < 0 || radius > 80)
-    return false;
-  const left = x - radius - FOOT.halfWidth,
-    right = x + radius + FOOT.halfWidth,
-    top = y - radius - FOOT.height,
-    bottom = y + radius;
-  return (
-    left >= YARD.left &&
-    right <= YARD.right &&
-    top >= YARD.top &&
-    bottom <= YARD.bottom &&
-    !OBSTACLES.some(
-      (o) =>
-        right > o.x &&
-        left < o.x + o.width &&
-        bottom > o.y &&
-        top < o.y + o.height,
-    )
-  );
+  return safePlacement("sta_ana_house", x, y, radius);
 }
 export type Contribution = {
   id: string;

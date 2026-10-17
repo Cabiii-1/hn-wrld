@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { SCENE_KEYS } from "./scenes";
+export const sceneKeySchema = z.enum(SCENE_KEYS);
 export const npcSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1).max(80),
@@ -9,6 +11,7 @@ export const npcSchema = z.object({
   seen: z.boolean(),
 });
 export const houseSchema = z.object({ npcs: z.array(npcSchema).max(200) });
+export const sceneSchema = houseSchema.extend({ mapKey: sceneKeySchema });
 export const messageSchema = z.object({
   id: z.uuid(),
   name: z.string().max(80),

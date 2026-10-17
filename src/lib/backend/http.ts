@@ -6,12 +6,17 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { backendEnv, serviceClient, userClient } from "../supabase/server";
 import { hashPasscode, verifyPasscode } from "./passcode";
-import { houseSchema, messageSchema } from "../../game/connected";
+import {
+  houseSchema,
+  messageSchema,
+  sceneSchema,
+  sceneKeySchema,
+} from "../../game/connected";
+import { isSceneKey, safePlacement } from "../../game/scenes";
 import {
   contributionSchema,
   idSchema,
   invitationSchema,
-  isSafeHousePlacement,
   mediaReviewSchema,
   placementSchema,
   reviewSchema,
@@ -358,6 +363,15 @@ export async function handleBackend(request: Request, path: string[]) {
         });
         check(result.error);
         return json(houseSchema.parse(result.data));
+      }
+      if (path[1] === "scenes" && path.length === 3 && method === "GET") {
+        const map = sceneKeySchema.parse(path[2]);
+        const result = await db.rpc("recipient_scene", {
+          p_session_hash: hash,
+          p_map: map,
+        });
+        check(result.error);
+        return json(sceneSchema.parse(result.data));
       }
       if (path.length === 3) {
         const id = idSchema.parse(path[2]);
@@ -735,12 +749,12 @@ export async function handleBackend(request: Request, path: string[]) {
         .single();
       check(area.error);
       if (
-        area.data?.map_key === "sta_ana_house" &&
-        !isSafeHousePlacement(body.x, body.y, body.radius)
+        !isSceneKey(area.data?.map_key ?? "") ||
+        !safePlacement(area.data!.map_key, body.x, body.y, body.radius)
       )
         throw new HttpError(
           422,
-          "The spawn and entire wander area must stay in the safe yard.",
+          "The spawn and entire wander area must stay on this scene’s safe paths, clear of scenery and road.",
         );
       const result = await db.rpc("admin_place_npc", {
         p_contribution: body.contributionId,
@@ -753,7 +767,7 @@ export async function handleBackend(request: Request, path: string[]) {
       });
       check(
         result.error,
-        "Approve the message and attachments before publishing. Other scenes may only be saved as drafts until M4.",
+        "Review the message and every attachment before publishing, and choose a safe placement for this scene.",
       );
       return ok();
     }
