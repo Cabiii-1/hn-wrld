@@ -14,6 +14,13 @@ import {
 } from "../../game/connected";
 import { isSceneKey, safePlacement } from "../../game/scenes";
 import {
+  finaleAdminSchema,
+  finaleDraftSchema,
+  finaleContentSchema,
+  finaleSchema,
+  finaleStatusSchema,
+} from "../../game/finale";
+import {
   contributionSchema,
   idSchema,
   invitationSchema,
@@ -345,6 +352,37 @@ export async function handleBackend(request: Request, path: string[]) {
           "Your visit has ended. Please open your private link again.",
         );
       if (route === "recipient/session" && method === "GET") return ok();
+      if (route === "recipient/ending/status" && method === "GET") {
+        const result = await db.rpc("recipient_finale_status", {
+          p_session_hash: hash,
+        });
+        check(result.error);
+        return json(finaleStatusSchema.parse(result.data));
+      }
+      if (route === "recipient/ending" && method === "GET") {
+        const result = await db.rpc("recipient_ending", {
+          p_session_hash: hash,
+        });
+        if (result.error)
+          throw new HttpError(403, "Dudu’s letter isn’t ready to open yet.");
+        return json(finaleSchema.parse(result.data));
+      }
+      if (route === "recipient/ending/complete" && method === "POST") {
+        const body = z
+          .object({ revision: z.number().int().min(1) })
+          .strict()
+          .parse(await readJson(request));
+        check(
+          (
+            await db.rpc("recipient_complete_finale", {
+              p_session_hash: hash,
+              p_revision: body.revision,
+            })
+          ).error,
+          "The ending changed or your visit ended. Reopen the letter to try again.",
+        );
+        return ok();
+      }
       if (route === "recipient/logout" && method === "POST") {
         check(
           (
@@ -617,6 +655,43 @@ export async function handleBackend(request: Request, path: string[]) {
     }
     if (path[0] === "media" && path.length === 2 && method === "GET")
       return await media(request, idSchema.parse(path[1]), jar);
+    if (route === "admin/finale") {
+      const db = await admin(jar);
+      if (method === "GET") {
+        const result = await db.rpc("admin_finale");
+        check(result.error);
+        return json(finaleAdminSchema.parse(result.data));
+      }
+      if (method === "POST") {
+        await limit(request, "finale-edit", 60);
+        const body = z
+          .object({
+            revision: z.number().int().min(0),
+            action: z.enum(["save", "publish", "unpublish"]),
+            content: finaleDraftSchema.optional(),
+          })
+          .strict()
+          .parse(await readJson(request, 320000));
+        const content =
+          body.action === "unpublish"
+            ? null
+            : (body.action === "publish"
+                ? finaleContentSchema
+                : finaleDraftSchema
+              ).parse(body.content);
+        check(
+          (
+            await db.rpc("admin_save_finale", {
+              p_content: content,
+              p_revision: body.revision,
+              p_action: body.action,
+            })
+          ).error,
+          "The finale changed or could not save. Reload the saved draft before trying again.",
+        );
+        return ok();
+      }
+    }
     if (route === "admin/dashboard" && method === "GET") {
       const db = await admin(jar);
       const results = await Promise.all([
@@ -775,7 +850,10 @@ export async function handleBackend(request: Request, path: string[]) {
       await admin(jar);
       return json(await cleanup(serviceClient()));
     }
-    if (route === "internal/cleanup" && method === "POST") {
+    if (
+      route === "internal/cleanup" &&
+      (method === "POST" || method === "GET")
+    ) {
       const expected = process.env.CRON_SECRET;
       if (
         !expected ||

@@ -38,6 +38,7 @@ vi.mock("../src/lib/supabase/server", () => ({
     storage: { from: () => ({ download: state.download }) },
   }),
   userClient: () => ({
+    rpc: state.rpc,
     auth: {
       getUser: async () => {
         state.userCalls();
@@ -116,6 +117,126 @@ beforeEach(() => {
   });
 });
 afterEach(() => vi.unstubAllEnvs());
+
+describe("M5 finale HTTP boundaries", () => {
+  it("protects both scheduler methods with the cleanup bearer secret", async () => {
+    vi.stubEnv("CRON_SECRET", "synthetic-cleanup-secret");
+    for (const method of ["GET", "POST"]) {
+      expect((await request("internal/cleanup", method)).status).toBe(401);
+      const response = await handleBackend(
+        new Request("https://world.test/api/manage/internal/cleanup", {
+          method,
+          headers: { Authorization: "Bearer synthetic-cleanup-secret" },
+        }),
+        ["internal", "cleanup"],
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ removed: 0 });
+    }
+  });
+  it("denies every finale route without the proper role cookie", async () => {
+    for (const path of [
+      "recipient/ending/status",
+      "recipient/ending",
+      "admin/finale",
+    ])
+      expect((await request(path)).status).toBe(401);
+    expect(
+      (await request("recipient/ending/complete", "POST", { revision: 1 }))
+        .status,
+    ).toBe(401);
+    expect(state.rpc).not.toHaveBeenCalled();
+  });
+  it("checks fresh recipient authorization and returns no letter when locked", async () => {
+    state.jar.set("bubu-recipient", newSecret());
+    state.rpc.mockImplementation(async (name: string) =>
+      name === "active_recipient"
+        ? { data: "link", error: null }
+        : name === "recipient_finale_status"
+          ? {
+              data: {
+                available: true,
+                unlocked: false,
+                seen: 0,
+                required: 2,
+                completed: false,
+              },
+              error: null,
+            }
+          : { data: null, error: { message: "Finale unavailable" } },
+    );
+    const status = await request("recipient/ending/status");
+    expect(status.status).toBe(200);
+    expect(await status.json()).toEqual({
+      available: true,
+      unlocked: false,
+      seen: 0,
+      required: 2,
+      completed: false,
+    });
+    const ending = await request("recipient/ending");
+    expect(ending.status).toBe(403);
+    expect(ending.headers.get("cache-control")).toContain("private, no-store");
+    expect(
+      (await request("recipient/ending/complete", "POST", { revision: 1 }))
+        .status,
+    ).toBe(409);
+    state.rpc.mockResolvedValue({ data: null, error: { message: "Revoked" } });
+    expect((await request("recipient/ending")).status).toBe(401);
+  });
+  it("requires allowlisted admin and validates authored publication before its RPC", async () => {
+    state.jar.set("bubu-admin", "jwt");
+    state.validUser = true;
+    expect((await request("admin/finale")).status).toBe(403);
+    state.member = true;
+    const draft = {
+      title: "Draft",
+      letter: "",
+      threshold: 3,
+      conversation: [],
+    };
+    expect(
+      (
+        await request("admin/finale", "POST", {
+          revision: 0,
+          action: "publish",
+          content: draft,
+        })
+      ).status,
+    ).toBe(400);
+    expect(state.rpc.mock.calls.some((c) => c[0] === "admin_save_finale")).toBe(
+      false,
+    );
+    expect(
+      (
+        await request("admin/finale", "POST", {
+          revision: 0,
+          action: "save",
+          content: draft,
+        })
+      ).status,
+    ).toBe(200);
+    expect(state.rpc).toHaveBeenCalledWith("admin_save_finale", {
+      p_content: draft,
+      p_revision: 0,
+      p_action: "save",
+    });
+  });
+  it("rejects a foreign Origin before ending completion", async () => {
+    state.jar.set("bubu-recipient", newSecret());
+    expect(
+      (
+        await request(
+          "recipient/ending/complete",
+          "POST",
+          { revision: 1 },
+          "https://foreign.test",
+        )
+      ).status,
+    ).toBe(403);
+    expect(state.rpc).not.toHaveBeenCalled();
+  });
+});
 describe("M2 HTTP authorization and privacy", () => {
   it("denies anonymous admin, contributor and private-media reads", async () => {
     for (const path of [

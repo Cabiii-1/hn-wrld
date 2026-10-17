@@ -1,4 +1,12 @@
-import { beforeAll, afterAll, afterEach, describe, expect, it } from "vitest";
+import {
+  beforeAll,
+  beforeEach,
+  afterAll,
+  afterEach,
+  describe,
+  expect,
+  it,
+} from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
@@ -75,6 +83,7 @@ beforeAll(async () => {
     "0003_contributor_admin_workflows.sql",
     "0004_recipient_world.sql",
     "0005_three_places.sql",
+    "0006_private_finale.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -747,5 +756,216 @@ describe("M3 recipient database authorization", () => {
         scalar("public.recipient_house($1)", [session]),
       ).rejects.toThrow();
     expect(await scalar("public.recipient_verifier($1)", [r.hash])).toBeNull();
+  });
+});
+
+describe("M5 private finale and progress", () => {
+  const content = {
+    title: "Synthetic private title",
+    letter: "Synthetic private finale sentinel 🌼",
+    threshold: 1,
+    conversation: [{ speaker: "Dudu", text: "Synthetic closing hello" }],
+  };
+  beforeEach(async () => {
+    await role("postgres");
+    await db.exec(
+      "update public.npc_placements set published=false; update public.finale_settings set revision=0,published=null,published_revision=null;",
+    );
+  });
+  async function save(
+    action = "publish",
+    revision = 0,
+    value: unknown = content,
+  ) {
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_save_finale($1::jsonb,$2,$3)", [
+      JSON.stringify(value),
+      revision,
+      action,
+    ]);
+    await role("service_role");
+  }
+  async function approvedBear() {
+    const i = await invite(),
+      c = await submit(i.session);
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_review($1::uuid,'approved',null)", [c]);
+    const area = await scalar<string>(
+      "(select id from public.areas where map_key='sta_ana_house')",
+    );
+    await scalar(
+      "public.admin_place_npc($1::uuid,$2::uuid,'npc-cream-1',425,352,20,true)",
+      [c, area],
+    );
+    await role("service_role");
+    return c;
+  }
+  it("denies direct tables and RPCs to anonymous and non-admin identities", async () => {
+    for (const who of ["anon", "authenticated"]) {
+      await role(who, OTHER);
+      for (const table of ["finale_settings", "recipient_finale"])
+        await expect(
+          db.query(`select * from public.${table}`),
+        ).rejects.toThrow();
+      await expect(scalar("public.admin_finale()")).rejects.toThrow();
+      await expect(
+        scalar("public.admin_save_finale($1::jsonb,0,'publish')", [
+          JSON.stringify(content),
+        ]),
+      ).rejects.toThrow();
+      await expect(
+        scalar("public.recipient_ending('forged')"),
+      ).rejects.toThrow();
+      await expect(
+        scalar("public.recipient_finale_status('forged')"),
+      ).rejects.toThrow();
+      await expect(
+        scalar("public.recipient_complete_finale('forged',1)"),
+      ).rejects.toThrow();
+    }
+  });
+  it("hides drafts and refuses incomplete publication at database boundary", async () => {
+    const r = await recipient();
+    await save("save");
+    expect(
+      await scalar("public.recipient_finale_status($1)", [r.session]),
+    ).toEqual({
+      available: false,
+      unlocked: false,
+      seen: 0,
+      required: 0,
+      completed: false,
+    });
+    await expect(
+      scalar("public.recipient_ending($1)", [r.session]),
+    ).rejects.toThrow();
+    await role("authenticated", ADMIN);
+    expect(
+      await scalar<{ draft: unknown }>("public.admin_finale()"),
+    ).toHaveProperty("draft", content);
+    await expect(
+      scalar("public.admin_save_finale($1::jsonb,1,'publish')", [
+        JSON.stringify({ ...content, letter: "" }),
+      ]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.admin_save_finale($1::jsonb,1,'publish')", [
+        JSON.stringify({
+          ...content,
+          conversation: [{ speaker: "Fake", text: "bad" }],
+        }),
+      ]),
+    ).rejects.toThrow();
+  });
+  it("unlocks from eligible seen hellos and persists completion across sessions", async () => {
+    const c = await approvedBear(),
+      r = await recipient();
+    await save();
+    expect(
+      await scalar("public.recipient_finale_status($1)", [r.session]),
+    ).toMatchObject({ unlocked: false, seen: 0, required: 1 });
+    await expect(
+      scalar("public.recipient_ending($1)", [r.session]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_complete_finale($1,1)", [r.session]),
+    ).rejects.toThrow();
+    await scalar("public.recipient_mark_seen($1,$2::uuid)", [r.session, c]);
+    expect(await scalar("public.recipient_ending($1)", [r.session])).toEqual({
+      revision: 1,
+      content,
+    });
+    await scalar("public.recipient_complete_finale($1,1)", [r.session]);
+    await scalar("public.recipient_complete_finale($1,1)", [r.session]);
+    const second = randomUUID();
+    await scalar("public.open_recipient_session($1,$2,$3)", [
+      r.hash,
+      r.verifier,
+      second,
+    ]);
+    expect(
+      await scalar("public.recipient_finale_status($1)", [second]),
+    ).toMatchObject({ completed: true });
+    const other = await recipient();
+    expect(
+      await scalar("public.recipient_finale_status($1)", [other.session]),
+    ).toMatchObject({ unlocked: false, seen: 0, completed: false });
+  });
+  it("caps the threshold at the published cast instead of awaiting every invitation", async () => {
+    const c = await approvedBear();
+    await invite();
+    const r = await recipient();
+    await save("publish", 0, { ...content, threshold: 50 });
+    expect(
+      await scalar("public.recipient_finale_status($1)", [r.session]),
+    ).toMatchObject({ required: 1, unlocked: false });
+    await scalar("public.recipient_mark_seen($1,$2::uuid)", [r.session, c]);
+    expect(
+      await scalar("public.recipient_finale_status($1)", [r.session]),
+    ).toMatchObject({ unlocked: true });
+  });
+  it("supports immediate entry with zero published contributors", async () => {
+    const r = await recipient();
+    await save("publish", 0, { ...content, threshold: 50 });
+    expect(
+      await scalar("public.recipient_finale_status($1)", [r.session]),
+    ).toMatchObject({ required: 0, unlocked: true });
+  });
+  it("keeps published text unchanged on draft save, rejects stale writes and old completion", async () => {
+    const r = await recipient();
+    await save();
+    await save("save", 1, { ...content, letter: "Different draft sentinel" });
+    expect(await scalar("public.recipient_ending($1)", [r.session])).toEqual({
+      revision: 1,
+      content,
+    });
+    await role("authenticated", ADMIN);
+    await expect(
+      scalar("public.admin_save_finale($1::jsonb,1,'publish')", [
+        JSON.stringify(content),
+      ]),
+    ).rejects.toThrow("changed");
+    await save("publish", 2, {
+      ...content,
+      letter: "New published synthetic letter",
+    });
+    await expect(
+      scalar("public.recipient_complete_finale($1,1)", [r.session]),
+    ).rejects.toThrow("changed");
+    expect(
+      await scalar("public.recipient_ending($1)", [r.session]),
+    ).toHaveProperty("revision", 3);
+  });
+  it("denies unpublished, expired and revoked finale reads and writes", async () => {
+    const r = await recipient();
+    await save();
+    await save("unpublish", 1, null);
+    await expect(
+      scalar("public.recipient_ending($1)", [r.session]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_complete_finale($1,1)", [r.session]),
+    ).rejects.toThrow();
+    await save("publish", 2);
+    await db.query(
+      "update public.recipient_sessions set expires_at=now()-interval '1 second' where session_hash=$1",
+      [r.session],
+    );
+    await expect(
+      scalar("public.recipient_finale_status($1)", [r.session]),
+    ).rejects.toThrow();
+    await db.query(
+      "update public.recipient_sessions set expires_at=now()+interval '1 hour' where session_hash=$1",
+      [r.session],
+    );
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_revoke_recipient_link($1::uuid)", [r.id]);
+    await role("service_role");
+    await expect(
+      scalar("public.recipient_ending($1)", [r.session]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_complete_finale($1,3)", [r.session]),
+    ).rejects.toThrow();
   });
 });
