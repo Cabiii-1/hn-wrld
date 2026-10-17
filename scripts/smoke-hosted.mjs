@@ -356,6 +356,52 @@ try {
   console.log(
     "PASS recipient two-factor entry, pending denial, connected NPC/message/media, persistent seen state and logout",
   );
+  const sceneSpots = {
+    sta_ana_house: { x: 425, y: 352, radius: 20 },
+    tuguegarao_park: { x: 470, y: 290, radius: 20 },
+    slu_baguio: { x: 430, y: 360, radius: 12 },
+  };
+  for (const map of Object.keys(sceneSpots)) {
+    await client()(`recipient/scenes/${map}`, "GET", undefined, 401);
+    const target = desk.areas.find((a) => a.map_key === map);
+    await admin("admin/placements", "POST", {
+      contributionId: contribution.id,
+      areaId: target.id,
+      variant: "npc-rose-bow",
+      ...sceneSpots[map],
+      published: true,
+    });
+    for (const candidate of Object.keys(sceneSpots)) {
+      const scene = await recipient(`recipient/scenes/${candidate}`);
+      assert.equal(scene.mapKey, candidate);
+      assert.equal(
+        scene.npcs.some((n) => n.id === contribution.id),
+        candidate === map,
+        "A bear belongs only to its assigned scene",
+      );
+      if (candidate === map)
+        assert.equal(
+          scene.npcs.find((n) => n.id === contribution.id).seen,
+          true,
+        );
+    }
+    assert.equal(
+      (await recipient(`recipient/messages/${contribution.id}`)).id,
+      contribution.id,
+    );
+    await recipient(`recipient/media/${first.id}`);
+  }
+  await recipient("recipient/scenes/unknown", "GET", undefined, 400);
+  await admin("admin/placements", "POST", {
+    contributionId: contribution.id,
+    areaId: area.id,
+    variant: "npc-cream-1",
+    ...sceneSpots.sta_ana_house,
+    published: true,
+  });
+  console.log(
+    "PASS all three scene projections, correct placement isolation, media authorization and seen state across relocation",
+  );
   if (process.argv.includes("--browser-check")) {
     mkdirSync(new URL("../test-results/", import.meta.url), {
       recursive: true,
@@ -425,6 +471,8 @@ try {
   await other("contributor", "GET", undefined, 401);
   await admin(`admin/recipient-links/${key.id}`, "DELETE");
   await recipient("recipient/house", "GET", undefined, 401);
+  for (const map of Object.keys(sceneSpots))
+    await recipient(`recipient/scenes/${map}`, "GET", undefined, 401);
   await client()("recipient/unlock", "POST", entry, 401);
   console.log(
     "PASS concurrent submit, moderation gates, safe placement, RLS, rejection/unpublish, deletion and revocation",

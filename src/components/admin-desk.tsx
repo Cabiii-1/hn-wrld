@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { RecipientAccess } from "./recipient-access";
+import { SCENES, isSceneKey } from "@/game/scenes";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -391,10 +392,10 @@ export function AdminDesk({ configured }: { configured: boolean }) {
             <h2>A little place for each person.</h2>
           </div>
           <p className="quiet-copy">
-            House coordinates use the 836 × 470 game world. The entire wander
-            area must stay clear of the house, car, and yard boundaries. Park
-            and SLU assignments can be saved as drafts while those places are
-            prepared.
+            All places use the 836 × 470 game world. Changing a scene suggests a
+            safe starting spot. Keep the whole wander area clear of scenery; use
+            separate spots for different bears. At SLU, only the lower
+            central/left stairs and sidewalk are walkable; the road is blocked.
           </p>
           {!data.contributions.length && (
             <p className="empty-copy">
@@ -658,6 +659,16 @@ function PlacementForm({
   busy: boolean;
 }) {
   const placement = data.placements.find((p) => p.contribution_id === c.id);
+  const [areaId, setAreaId] = useState(
+    placement?.area_id ??
+      data.areas.find((a) => a.map_key === "sta_ana_house")?.id ??
+      "",
+  );
+  const [point, setPoint] = useState({
+    x: placement?.spawn_x ?? 425,
+    y: placement?.spawn_y ?? 352,
+    radius: placement?.wander_radius ?? 20,
+  });
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -682,10 +693,14 @@ function PlacementForm({
           Scene
           <select
             name="areaId"
-            defaultValue={
-              placement?.area_id ??
-              data.areas.find((a) => a.map_key === "sta_ana_house")?.id
-            }
+            value={areaId}
+            onChange={(e) => {
+              setAreaId(e.target.value);
+              const map = data.areas.find(
+                (a) => a.id === e.target.value,
+              )?.map_key;
+              if (map && isSceneKey(map)) setPoint({ ...SCENES[map].npc });
+            }}
             disabled={busy}
           >
             {data.areas.map((a) => (
@@ -714,7 +729,10 @@ function PlacementForm({
             name="x"
             min={0}
             max={2000}
-            defaultValue={placement?.spawn_x ?? 425}
+            value={point.x}
+            onChange={(e) =>
+              setPoint((p) => ({ ...p, x: Number(e.target.value) }))
+            }
             required
             disabled={busy}
           />
@@ -726,7 +744,10 @@ function PlacementForm({
             name="y"
             min={0}
             max={2000}
-            defaultValue={placement?.spawn_y ?? 352}
+            value={point.y}
+            onChange={(e) =>
+              setPoint((p) => ({ ...p, y: Number(e.target.value) }))
+            }
             required
             disabled={busy}
           />
@@ -738,7 +759,10 @@ function PlacementForm({
             name="radius"
             min={0}
             max={80}
-            defaultValue={placement?.wander_radius ?? 20}
+            value={point.radius}
+            onChange={(e) =>
+              setPoint((p) => ({ ...p, radius: Number(e.target.value) }))
+            }
             required
             disabled={busy}
           />

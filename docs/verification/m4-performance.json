@@ -1,0 +1,87 @@
+{
+  "environment": "Desktop IAB Chromium, development server; viewport emulation only, not a physical phone",
+  "measurements": [
+    {
+      "viewport": "1280x900",
+      "canvas": 1,
+      "debug": 1,
+      "state": {
+        "facing": "right",
+        "fps": 179,
+        "mapKey": "sta_ana_house",
+        "measuredFps": 179,
+        "moving": true,
+        "near": true,
+        "npcCount": 30,
+        "paused": false,
+        "player": {
+          "x": 83.88970307357152,
+          "y": 342.34862980968734
+        },
+        "sampleSeconds": 22
+      }
+    },
+    {
+      "viewport": "1280x900",
+      "canvas": 1,
+      "debug": 1,
+      "state": {
+        "facing": "left",
+        "fps": 175,
+        "mapKey": "tuguegarao_park",
+        "measuredFps": 179,
+        "moving": true,
+        "near": true,
+        "npcCount": 50,
+        "paused": false,
+        "player": {
+          "x": 362.9028864843082,
+          "y": 289.5242826533244
+        },
+        "sampleSeconds": 13
+      }
+    },
+    {
+      "viewport": "360x800",
+      "canvas": 1,
+      "debug": 1,
+      "scrollWidth": 345,
+      "state": {
+        "facing": "right",
+        "fps": 174,
+        "mapKey": "tuguegarao_park",
+        "measuredFps": 173,
+        "moving": true,
+        "near": false,
+        "npcCount": 30,
+        "paused": false,
+        "player": {
+          "x": 515.2038588720674,
+          "y": 347.9981597831721
+        },
+        "sampleSeconds": 28
+      },
+      "width": 345
+    },
+    {
+      "viewport": "360x800",
+      "canvas": 1,
+      "debug": 1,
+      "state": {
+        "facing": "left",
+        "fps": 180,
+        "mapKey": "slu_baguio",
+        "measuredFps": 179,
+        "moving": true,
+        "near": true,
+        "npcCount": 50,
+        "paused": false,
+        "player": {
+          "x": 352.47134134646086,
+          "y": 349.5999875709804
+        },
+        "sampleSeconds": 21
+      }
+    }
+  ]
+}

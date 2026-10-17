@@ -1,5 +1,7 @@
 # Architecture proposal
 
+M4 update: `/play` uses `/api/manage/recipient/scenes/{mapKey}` for all three approved, published casts. Shared `PlaceScene`, `Crowd`, `scenes.ts` and `scene-geometry.json` supply rendering, spatial separation and safe foot movement. Active backgrounds load lazily as lossless WebP. Scene transitions clear previous data, validate responses, cancel stale requests and destroy the previous Phaser game. `/demo` independently generates synthetic casts up to 50. See `MILESTONE_4.md`; the proposals and earlier milestone notes below are historical.
+
 M3 update: `/` is the fragment/passcode gate, `/play` fetches a protected house projection, and `/demo` preserves the synthetic M1 scene. `/api/manage/recipient/` handles unlock/session/logout, house, messages, media and seen writes; every private operation checks a link-bound session. `/api/manage/admin/recipient-links` manages salted passcode hashes and revocable links. Media remains an authorized no-store proxy. See `MILESTONE_3.md`; historical M1/M2 notes below describe earlier checkpoints.
 
 M1 implementation: `/` serves a synthetic local house preview, with `GameBridge`, `HouseScene`, a pure TS foot-collision resolver and original runtime bear frames. No protected routes or database access are implemented yet. The following routes describe the later production design; `/` must become the recipient gate before real content is connected. See `MILESTONE_1.md`.

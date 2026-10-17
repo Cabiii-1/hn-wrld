@@ -1,5 +1,7 @@
 # Data model and security posture
 
+M4 migration `0005_three_places.sql` adds RLS-protected `scene_geometry`, exact-union `scene_safe` checks and a service-only `recipient_scene` projection. Admin publication, scene reads, messages and media enforce approved parent + published placement + published area + scene-specific safe bounds for all three maps. Geometry is mirrored from `src/game/scene-geometry.json` and tested for parity. Existing house reads remain compatible. No contributor records are automatically moved or published.
+
 M3 migration `0004_recipient_world.sql` adds per-link passcode verifiers, link-bound sessions, RLS-protected seen state and service-only projections. Admin link RPCs are JWT-scoped and allowlisted. Every recipient function rechecks expiry/revocation, approved parent, published safe house placement and published area; media additionally requires approval. See `MILESTONE_3.md`; earlier notes retain the seed/M2 history.
 
 ## Tables

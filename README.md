@@ -33,6 +33,10 @@ Contributor invitations, text/photo/voice submission, private file validation, D
 
 ## Milestone 3 implementation
 
-The root page now requires a private recipient link plus passcode. In `/admin`, publish approved house placements under **Their little places**, then create a recipient link under **Bubu's little key**. Open that link and unlock to see contributor bears at `/play`, with approved messages/photos/audio and saved seen state. The sample house moved to `/demo`. See [M3 usage and security](docs/MILESTONE_3.md) and [verification](docs/verification/M3_RESULTS.md). Park/SLU are still M4; no deployment is included.
+The root page now requires a private recipient link plus passcode. In `/admin`, publish approved placements under **Their little places**, then create a recipient link under **Bubu's little key**. Open that link and unlock to see contributor bears at `/play`, with approved messages/photos/audio and saved seen state. The sample world moved to `/demo`. See [M3 usage and security](docs/MILESTONE_3.md) and [verification](docs/verification/M3_RESULTS.md).
+
+## Milestone 4 implementation
+
+House, open Tuguegarao Plaza and SLU Baguio now have scene navigation, separate safe geometry, published contributor casts and bear variants. `/demo` offers synthetic 1/20/30/50-bear casts for crowd checks. Migration `0005_three_places.sql` is applied to the hosted project. See [M4 usage](docs/MILESTONE_4.md) and [verification](docs/verification/M4_RESULTS.md). Physical-phone performance remains release QA; the finale and deployment are M5.
 
 Follow [M2 setup](docs/MILESTONE_2.md) to create your permanent allowlisted app administrator, then run `npm.cmd run dev` and open http://127.0.0.1:3000/admin. Docker remains an optional local backend. Configuration stays in ignored `.env.local`; setup preserves existing files and never prints keys. `npm run test:db` runs SQL/RLS tests without Docker. See [M2 security audit](docs/SECURITY_M2.md) and [M2 verification](docs/verification/M2_RESULTS.md). The frontend is not deployed and generated loopback invitation links are for local testing only.

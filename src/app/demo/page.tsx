@@ -1,4 +1,4 @@
-import { World } from "@/components/world";
+import { DemoWorld } from "@/components/demo-world";
 export default function Demo() {
-  return <World />;
+  return <DemoWorld />;
 }

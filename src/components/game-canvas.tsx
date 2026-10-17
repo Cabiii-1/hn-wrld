@@ -2,13 +2,14 @@
 import { useEffect, useRef } from "react";
 import type * as Phaser from "phaser";
 import { GameBridge } from "@/game/bridge";
+import { SCENES } from "@/game/scenes";
 export default function GameCanvas({ bridge }: { bridge: GameBridge }) {
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let game: Phaser.Game | undefined;
     let cancelled = false;
     void Promise.all([import("phaser"), import("@/game/house-scene")])
-      .then(([Phaser, { HouseScene }]) => {
+      .then(([Phaser, { PlaceScene }]) => {
         if (cancelled || !container.current) return;
         game = new Phaser.Game({
           type: Phaser.AUTO,
@@ -22,12 +23,12 @@ export default function GameCanvas({ bridge }: { bridge: GameBridge }) {
             width: container.current.clientWidth,
             height: container.current.clientHeight,
           },
-          scene: [new HouseScene(bridge)],
+          scene: [new PlaceScene(bridge)],
           render: { antialias: false, pixelArt: true, roundPixels: true },
         });
         game.canvas.setAttribute(
           "aria-label",
-          "Sta. Ana house yard. Use WASD or arrow keys to move Bubu, and E to talk to a nearby bear.",
+          `${SCENES[bridge.mapKey].name}. Use WASD or arrow keys to move Bubu, and E to talk to a nearby bear.`,
         );
         game.canvas.setAttribute("role", "img");
       })

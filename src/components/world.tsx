@@ -9,6 +9,7 @@ import {
   type PointerEvent,
 } from "react";
 import type { WorldNpc } from "@/game/connected";
+import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
 import { RecipientDialogue } from "./recipient-dialogue";
 import { api } from "@/lib/backend/browser-api";
 import {
@@ -43,9 +44,20 @@ const directions = [
   { direction: "right", Icon: ArrowRight },
 ] as const;
 
-export function World({ npcs }: { npcs?: WorldNpc[] }) {
-  const connected = npcs !== undefined;
-  const [bridge] = useState(() => new GameBridge(npcs));
+export function World({
+  npcs,
+  mapKey = "sta_ana_house",
+  preview = false,
+  onSceneChange,
+}: {
+  npcs?: WorldNpc[];
+  mapKey?: SceneKey;
+  preview?: boolean;
+  onSceneChange?: (map: SceneKey) => void;
+}) {
+  const connected = npcs !== undefined && !preview;
+  const place = SCENES[mapKey];
+  const [bridge] = useState(() => new GameBridge(npcs, mapKey));
   const [nearId, setNearId] = useState("");
   const [talkId, setTalkId] = useState("");
   const [privateSeen, setPrivateSeen] = useState(
@@ -146,7 +158,7 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
             <p className="sample-note">
               {connected
                 ? "Your hellos are saved as you open them. You can always read them again."
-                : "Milestone 1 preview · all dialogue is synthetic."}
+                : "Sample world · all characters and dialogue are synthetic."}
             </p>
           </DialogContent>
         </Dialog>
@@ -154,10 +166,10 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
       <section className="intro">
         <div>
           <div className="eyebrow">
-            <span /> CHAPTER ONE · WHERE IT ALL BEGAN
+            <span /> CHAPTER {place.chapter} · {place.eyebrow}
           </div>
           <h1>
-            A little closer to <em>home.</em>
+            {place.title} <em>{place.accent}</em>
             <Heart className="title-heart" size={26} />
           </h1>
           <p>Familiar places. Your favorite people. A whole lot of love.</p>
@@ -165,18 +177,36 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
         <div className="chapter-mark">
           <House size={20} />
           <span>
-            Sta. Ana, Cagayan<small>Home is a feeling ♡</small>
+            {place.location}
+            <small>{place.description}</small>
           </span>
         </div>
       </section>
-      <section className="game-frame" aria-label="Explore the Sta. Ana house">
+      {onSceneChange && (
+        <nav className="scene-picker" aria-label="Places in your little world">
+          {SCENE_KEYS.map((key) => (
+            <Button
+              key={key}
+              variant="outline"
+              aria-pressed={mapKey === key}
+              aria-label={`Visit ${SCENES[key].name}`}
+              disabled={dialogue || help || mapKey === key}
+              onClick={() => onSceneChange(key)}
+            >
+              <span>CHAPTER {SCENES[key].chapter}</span>
+              {SCENES[key].name}
+            </Button>
+          ))}
+        </nav>
+      )}
+      <section className="game-frame" aria-label={`Explore ${place.name}`}>
         <div className="stage-top">
           <span>
-            <MapPin size={15} /> Sta. Ana House
+            <MapPin size={15} /> {place.name}
           </span>
           <span className="sun-label">☀ A lovely day to wander</span>
           <span className="preview-tag">
-            {connected ? "YOUR LITTLE WORLD" : "PLAYABLE PREVIEW"}
+            {connected ? "YOUR LITTLE WORLD" : "SAMPLE WORLD"}
           </span>
         </div>
         <div className="game-stage">
@@ -188,7 +218,7 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
           )}
           {status === "error" && (
             <div className="loading-state" role="alert">
-              <p>The yard couldn’t load. Let’s try again.</p>
+              <p>This little place couldn’t load. Let’s try again.</p>
               <Button
                 onClick={() => {
                   setStatus("loading");
@@ -204,16 +234,16 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
               <div className="welcome-chip">
                 <Sparkles size={16} />
                 <span>
-                  You’re home, Bubu.
+                  {place.welcome}
                   <small>
                     {connected && !npcs.length
-                      ? "A quiet moment at home. More hellos will arrive soon."
+                      ? "A quiet little moment. More hellos will arrive soon."
                       : "Take a little walk. Someone’s here for you."}
                   </small>
                 </span>
               </div>
               <div className="yard-caption">
-                <span /> THE FAMILY YARD
+                <span /> {place.caption}
               </div>
             </>
           )}
@@ -294,7 +324,8 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
             <House size={19} />
           </span>
           <span>
-            Sta. Ana House<small>CHAPTER 01</small>
+            {place.name}
+            <small>CHAPTER {place.chapter}</small>
           </span>
           <span className="here-label">YOU ARE HERE</span>
         </div>
@@ -304,7 +335,7 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
         <span className="seen-count">
           <MessageCircle size={16} />{" "}
           {connected
-            ? `${privateSeen.size} of ${npcs.length} hellos shared`
+            ? `${npcs.filter((n) => n.seen || privateSeen.has(n.id)).length} of ${npcs.length} hellos shared`
             : seen
               ? "1 hello shared"
               : "A hello is waiting"}
@@ -330,8 +361,8 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
         </div>
       ) : (
         <p className="preview-note">
-          <Trees size={14} /> Milestone 1 · A cozy prototype with sample
-          characters and dialogue.
+          <Trees size={14} /> Sample characters and dialogue · Open your private
+          recipient link for published hellos.
         </p>
       )}
       <Dialog open={dialogue} onOpenChange={closeDialogue}>
@@ -364,8 +395,8 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
                   ʕ•ᴥ•ʔ
                 </span>
                 <div>
-                  <DialogTitle>Teddy</DialogTitle>
-                  <span>Your friendly yard companion</span>
+                  <DialogTitle>{nearName}</DialogTitle>
+                  <span>Your friendly sample companion</span>
                 </div>
                 <Heart size={23} className="message-heart" />
               </div>
@@ -382,8 +413,8 @@ export function World({ npcs }: { npcs?: WorldNpc[] }) {
                     rest and a friendly hello. ♡
                   </p>
                   <p className="sample-note">
-                    Synthetic demo text — personal messages will arrive in a
-                    later milestone.
+                    Synthetic demo text. Open your private recipient link to
+                    read published personal messages.
                   </p>
                 </div>
               </DialogDescription>
