@@ -37,4 +37,4 @@ Endpoints under `/api/manage`:
 
 Responses are private/no-store/no-referrer. Recipient content is fetched only when opening the ending; status refreshes after a hello, on return to the tab, on demand and every minute. Unpublication or access failure clears an open finale on the next status check. Already read content cannot be made unseen; all new reads and writes enforce current access.
 
-See [verification](verification/M5_RESULTS.md) and [deployment handoff](DEPLOYMENT.md). GitHub CI and Vercel configuration are prepared; a Vercel project is not linked on this machine.
+See [verification](verification/M5_RESULTS.md), [deployment handoff](DEPLOYMENT.md) and the subsequent [Production verification](verification/VERCEL_RESULTS.md). The owner has now approved the Vercel project and deployment; local CLI linking is unnecessary for the GitHub-managed deployment.

@@ -1,10 +1,12 @@
 # Deployment and release handoff
 
-The app builds locally and the owner's hosted Supabase project has migrations through `0006_private_finale.sql`. No Vercel project link or local Vercel login was found during M5 implementation, so **no public deployment was created**. Physical-phone QA and background-rights confirmation remain required by PRD v3 before final publication. The owner will author the finale privately in admin.
+The owner approved creating and deploying `hn-wrld` on 2026-10-17. The app is live at [hn-wrld.vercel.app](https://hn-wrld.vercel.app) in [Cj Cabildo's Vercel workspace](https://vercel.com/cj-cabildos-projects/hn-wrld), connected to `Cabiii-1/hn-wrld` on `main`. Supabase has migrations through `0006_private_finale.sql`. Physical-phone QA, background-rights confirmation and personal finale authoring remain open before the final surprise release. See [Production verification](verification/VERCEL_RESULTS.md).
+
+With explicit owner confirmation, the existing Supabase connection keys, invitation pepper and cleanup secret were copied into **Production-only Secret variables**. `APP_ORIGIN` is `https://hn-wrld.vercel.app`; local `.env.local` remains unchanged. Preview and Development were not given these credentials. This browser-managed import does not create a local Vercel CLI login or `.vercel` link.
 
 ## Prepared configuration
 
-- GitHub Actions runs lint, tests, production build and typecheck on Node 24 with read-only repository permissions. It needs no production keys; embedded PostgreSQL tests run without Docker. The workflow is prepared locally and has not yet run on GitHub.
+- GitHub Actions is configured to run lint, tests, production build and typecheck on Node 24 with read-only repository permissions. It needs no production keys; embedded PostgreSQL tests run without Docker. Commits are pushed, but the remote CI result has not been independently verified; the Vercel Production build succeeded.
 - `vercel.json` selects Next.js, `npm ci`, the webpack production build and a daily cleanup request at 02:00 UTC. `package.json` pins Node 24.x, which [Vercel supports](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions).
 - `/api/manage/internal/cleanup` accepts GET for Vercel cron and retains POST for other trusted schedulers. Both require the matching `Authorization: Bearer …` secret. Missing/wrong credentials fail before backend work. [Vercel sends the configured CRON_SECRET](https://vercel.com/docs/cron-jobs/manage-cron-jobs) automatically for cron requests. Cleanup processes at most 100 eligible objects per run; the admin cleanup action remains available for an unusual backlog. Staging quarantine is not shortened.
 
