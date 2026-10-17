@@ -3,7 +3,7 @@
 ## Contributor workflow
 1. Admin creates personalized, high-entropy invite token and optional expiry/recipient label.
 2. Admin privately shares `https://<domain>/invite#<token>` (never publish in a group chat for someone else to reuse). The fragment is read only in the browser, removed from history on exchange, and sent in a no-store POST body rather than a server-logged request URL.
-3. Route exchanges the token for a scoped, httpOnly, short-lived submission session after server-side digest validation, then redirects to a non-token URL. Configure referrer policy `no-referrer`, no analytics on invite routes, no indexing.
+3. Opening the link automatically exchanges the token for a scoped, httpOnly, short-lived submission session after server-side digest validation, then redirects to `/contribute` without a CTA. Existing `/invite#token` links keep working. Invalid links show a clear error; failed exchanges offer an explicit retry. Configure referrer policy `no-referrer`, no analytics on invite routes, no indexing.
 4. Contributor sees a lightweight welcoming form: display name, relationship (optional), message, optional nickname/sprite variant. Explain recipient visibility and allow contributor to request deletion.
 5. Submission is `pending`; show thank-you confirmation without any raw token or privileged detail.
 6. Admin verifies text, confirms name, sets `approved`, assigns zone and safe NPC spawn. No auto-publish.
