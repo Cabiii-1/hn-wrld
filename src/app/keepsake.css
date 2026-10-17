@@ -1062,6 +1062,131 @@
 .recipient-actions {
   flex-wrap: wrap;
 }
+.finale-invitation {
+  max-width: 1160px;
+  margin: 18px auto 0;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #655c46;
+}
+.finale-invitation > p {
+  flex-basis: 100%;
+  text-align: center;
+}
+.finale-shell {
+  max-width: 820px;
+  margin: auto;
+  padding: 20px 24px 40px;
+}
+.finale-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.finale-top > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #73734f;
+}
+.finale-card h1 {
+  display: block;
+  font-size: clamp(28px, 4vw, 38px);
+  margin: 24px 0;
+  outline-offset: 6px;
+}
+.finale-card .eyebrow {
+  font-size: 9px;
+}
+.finale-prose {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font:
+    18px/1.9 Georgia,
+    serif;
+  color: #554d3c;
+}
+.finale-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.finale-actions button {
+  min-height: 44px;
+}
+.reunion-canvas {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #f3ecd2;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.reunion-canvas canvas {
+  image-rendering: pixelated;
+}
+.finale-narration {
+  line-height: 1.8;
+  color: #655c46;
+}
+.finale-still {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.finale-editor {
+  max-width: 820px;
+  margin: auto;
+}
+.finale-editor fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.finale-editor label {
+  margin: 18px 0 10px;
+}
+.finale-editor input[type="number"] {
+  max-width: 130px;
+}
+.finale-turn {
+  padding: 4px 16px 18px;
+  background: #f4f0e2;
+  border: 1px solid #ded6bf;
+  border-radius: 8px;
+  margin: 18px 0;
+}
+@media (max-width: 600px) {
+  .finale-shell {
+    padding: 12px 12px 30px;
+  }
+  .finale-card {
+    padding: 22px 18px;
+  }
+  .finale-prose {
+    font-size: 17px;
+    line-height: 1.8;
+  }
+  .finale-actions {
+    gap: 8px;
+  }
+  .finale-top {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+}
 .scene-picker {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

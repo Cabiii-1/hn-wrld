@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { RecipientAccess } from "./recipient-access";
+import { FinaleEditor } from "./finale-editor";
 import { SCENES, isSceneKey } from "@/game/scenes";
 import { Button } from "./ui/button";
 import {
@@ -216,6 +217,7 @@ export function AdminDesk({ configured }: { configured: boolean }) {
           ["invitations", "Invitations"],
           ["placements", "Their little places"],
           ["recipient", "Bubu’s little key"],
+          ["finale", "Dudu’s little ending"],
         ].map(([id, name]) => (
           <button
             key={id}
@@ -241,6 +243,7 @@ export function AdminDesk({ configured }: { configured: boolean }) {
         </p>
       )}
       {tab === "recipient" && <RecipientAccess />}
+      {tab === "finale" && <FinaleEditor />}
       {tab === "invitations" && (
         <section className="invitation-layout">
           <form className="letter-card" onSubmit={createInvite}>

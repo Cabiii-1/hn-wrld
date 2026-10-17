@@ -63,10 +63,10 @@ export function World({
   const [privateSeen, setPrivateSeen] = useState(
     () => new Set(npcs?.filter((n) => n.seen).map((n) => n.id)),
   );
-  const markSeen = useCallback(
-    (id: string) => setPrivateSeen((s) => new Set([...s, id])),
-    [],
-  );
+  const markSeen = useCallback((id: string) => {
+    setPrivateSeen((s) => new Set([...s, id]));
+    window.dispatchEvent(new Event("bubu:seen"));
+  }, []);
   const near = !!nearId;
   const nearName = npcs?.find((n) => n.id === nearId)?.name ?? "Teddy";
   const [dialogue, setDialogue] = useState(false);

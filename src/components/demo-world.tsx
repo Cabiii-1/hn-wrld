@@ -3,11 +3,12 @@ import { useState } from "react";
 import { World } from "./world";
 import { demoNpcs } from "@/game/demo-fixtures";
 import type { SceneKey } from "@/game/scenes";
+import { FinaleGateway } from "./finale-gateway";
 export function DemoWorld() {
   const [map, setMap] = useState<SceneKey>("sta_ana_house"),
     [count, setCount] = useState(1);
   return (
-    <>
+    <FinaleGateway sample>
       <div className="demo-cast">
         <label>
           Sample cast{" "}
@@ -35,6 +36,6 @@ export function DemoWorld() {
         preview
         onSceneChange={setMap}
       />
-    </>
+    </FinaleGateway>
   );
 }
