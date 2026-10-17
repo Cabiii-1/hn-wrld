@@ -26,7 +26,7 @@ Create **three separate compact scene backgrounds**, with scene navigation throu
 
 ## 4. Audience and roles
 1. **Bubu (sole intended recipient):** unlocks with secret link + passcode; explores, interacts, reads and listens, replays scenes and ending.
-2. **Contributors (15–30):** each receives a unique secret invitation URL; submits a message, optional photos/audio, and preferred NPC display name; no account.
+2. **Contributors (15–30):** each receives a unique secret invitation URL; submits a message and optional photos/audio; the administrator assigns their display name through the invitation; no account.
 3. **Dudu (admin):** Supabase Auth + allowlisted admin privileges; issues/revokes invitations, previews, edits/moderates/hides submissions, assigns sprite variants/scenes/spawns, configures finale and publishes.
 
 ## 5. Game UX and interactions
@@ -41,7 +41,7 @@ Create **three separate compact scene backgrounds**, with scene navigation throu
 
 ## 6. Contributor submission and moderation
 - Admin generates unique unguessable invite, copies/shares it individually (no account creation).
-- Invite redeem/validation occurs server-side. Show a mobile-friendly form with the administrator-assigned contributor name from the invitation label (pre-filled, read-only), a message for Hanna, images and voice upload/record where supported. Do not request connection or other identity details from invitees. Provide content warnings about privacy and consent; contributors confirm they have permission to share submitted media. This contributor-identity flow was updated at the owner's request on 2026-10-17; the game title and Bubu character nickname are unchanged.
+- Invite redeem/validation occurs server-side. Show a mobile-friendly form with the administrator-assigned contributor name from the invitation label in a personal greeting (no name input), a message for Hanna, images and voice upload/record where supported. Do not request connection or other identity details from invitees. Provide content warnings about privacy and consent; contributors confirm they have permission to share submitted media. This contributor-identity flow was updated at the owner's request on 2026-10-17; the game title and Bubu character nickname are unchanged.
 - Validate required fields, extension **and** actual file types, sizes, image decode, audio duration; strip image metadata where feasible and prevent active content or SVG uploads. Enforce request size limits/upload rules and rate limits; prefer signed scoped direct-to-private-storage uploads.
 - Submission remains **pending**, invisible to recipient; admin reviews **text and each attachment** before publishing, can reject/revoke/remove and choose scene, character and coordinates. If attachments are rejected, they are never served in recipient API. Admin can publish text-only if necessary.
 - Contributor success screen confirms receipt, **not publication**; no ability to list other contributors' messages.

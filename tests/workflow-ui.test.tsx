@@ -176,16 +176,10 @@ describe("contributor and admin UI workflows", () => {
       };
     });
     render(<ContributionForm configured />);
-    const name = await screen.findByLabelText(/Your name/);
-    await waitFor(() =>
-      expect((name as HTMLInputElement).disabled).toBe(false),
-    );
-    expect((name as HTMLInputElement).value).toBe("Synthetic Friend");
-    expect((name as HTMLInputElement).readOnly).toBe(true);
+    await screen.findByRole("heading", { name: "Hello, Synthetic Friend!" });
+    expect(screen.queryByLabelText(/Your name/)).toBeNull();
     expect(screen.queryByLabelText(/Your connection/)).toBeNull();
     expect(screen.getByPlaceholderText("Dear Hanna…")).toBeTruthy();
-    await userEvent.type(name, "Changed name");
-    expect((name as HTMLInputElement).value).toBe("Synthetic Friend");
     await userEvent.type(
       screen.getByLabelText(/Your message/),
       "A synthetic little hello.",
@@ -223,10 +217,7 @@ describe("contributor and admin UI workflows", () => {
       };
     });
     render(<ContributionForm configured />);
-    const name = await screen.findByLabelText(/Your name/);
-    await waitFor(() =>
-      expect((name as HTMLInputElement).disabled).toBe(false),
-    );
+    await screen.findByRole("heading", { name: "Hello, Sample Friend!" });
     await userEvent.type(
       screen.getByLabelText(/Your message/),
       "Synthetic retry test",

@@ -246,23 +246,16 @@ export function ContributionForm({ configured }: { configured: boolean }) {
         <div className="form-section-heading">
           <span>01</span>
           <div>
-            <h2>First, a familiar face.</h2>
+            <h2>
+              Hello{snapshot?.displayName ? `, ${snapshot.displayName}` : ""}!
+            </h2>
             <p>
-              Your invitation already has your name. Just bring your words for
-              Hanna.
+              You’re someone special to Hanna. As she follows her dream of
+              becoming a lawyer, a few words from you can remind her she’s never
+              alone—and that she has people cheering her on, every step of the
+              way.
             </p>
           </div>
-        </div>
-        <div>
-          <label>
-            Your name <span>From your invitation</span>
-            <input
-              readOnly
-              value={snapshot?.displayName ?? ""}
-              placeholder="Opening your invitation…"
-              disabled={disabled}
-            />
-          </label>
         </div>
         <div className="form-section-heading">
           <span>02</span>

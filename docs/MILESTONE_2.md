@@ -1,6 +1,6 @@
 # Milestone 2 — contributions and Dudu’s desk
 
-Contributor-name update (2026-10-17): the administrator enters **Contributor’s name** when creating an invitation. The contribution form displays this invitation label read-only, asks only for the message for Hanna and optional media/consent, and omits connection details. Migration `0007_invitation_assigned_names.sql` supplies the scoped name and enforces it for new submissions. Existing submitted names/relationships are preserved; old open forms may still send identity fields, which are ignored.
+Contributor-name update (2026-10-17): the administrator enters **Contributor’s name** when creating an invitation. The contribution form greets them by this name with a friendly note about supporting Hanna through law school, asks only for the message for Hanna and optional media/consent, and omits connection details. Migration `0007_invitation_assigned_names.sql` supplies the scoped name and enforces it for new submissions. Existing submitted names/relationships are preserved; old open forms may still send identity fields, which are ignored.
 
 Follow-up: the owner approved M3 after the hosted rehearsal and their invitation/review use. See `MILESTONE_3.md` for the now-connected recipient house; the M2 device-check limitations below remain tracked for release.
 
