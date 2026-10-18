@@ -33,6 +33,24 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe("M5 finale sequence and privacy", () => {
+  it("normalizes legacy finale speakers while preserving authored prose", () => {
+    const result = finaleDraftSchema.parse({
+      title: "A little letter from Dudu",
+      letter: "An authored letter stays exactly as written.",
+      threshold: 0,
+      conversation: [
+        { speaker: "Dudu", text: "A saved line." },
+        { speaker: "Bubu", text: "A saved reply." },
+      ],
+    });
+    expect(result.title).toBe("A little letter from Cj");
+    expect(result.conversation.map((line) => line.speaker)).toEqual([
+      "Cj",
+      "Hanna",
+    ]);
+    expect(result.letter).toBe("An authored letter stays exactly as written.");
+    expect(result.conversation[0].text).toBe("A saved line.");
+  });
   it("supports letter, skipped reunion, conversation, save retry and replay without timers", async () => {
     const complete = vi
         .fn()
@@ -82,7 +100,7 @@ describe("M5 finale sequence and privacy", () => {
       removeEventListener: vi.fn(),
     });
     render(<FinaleExperience ending={SAMPLE_FINALE} onExit={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Meet Dudu" }));
+    await userEvent.click(screen.getByRole("button", { name: "Meet Cj" }));
     expect(screen.getByTestId("reunion").textContent).toContain("Still");
     expect(screen.getByRole("checkbox").hasAttribute("disabled")).toBe(true);
     expect(
@@ -105,7 +123,7 @@ describe("M5 finale sequence and privacy", () => {
     await screen.findByText(/0 \/ 2/);
     expect(
       screen
-        .getByRole("button", { name: "Open Dudu’s letter" })
+        .getByRole("button", { name: "Open Cj’s letter" })
         .hasAttribute("disabled"),
     ).toBe(true);
     expect(mock.api.mock.calls.map((c) => c[0])).toEqual([
@@ -130,9 +148,9 @@ describe("M5 finale sequence and privacy", () => {
         <p>World canvas</p>
       </FinaleGateway>,
     );
-    await screen.findByText("A little letter from Dudu is waiting.");
+    await screen.findByText("A little letter from Cj is waiting.");
     await userEvent.click(
-      screen.getByRole("button", { name: "Open Dudu’s letter" }),
+      screen.getByRole("button", { name: "Open Cj’s letter" }),
     );
     await screen.findByRole("heading", { name: SAMPLE_FINALE.content.title });
     expect(screen.queryByText("World canvas")).toBeNull();

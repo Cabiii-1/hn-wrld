@@ -1,6 +1,6 @@
-# Bubu's Little World — starter kit v3
+# Hanna's Little World — starter kit v3
 
-A private, cozy pixel-art world for Bubu: **Sta. Ana family house (with Raze)**, **open Tuguegarao park plaza**, and **SLU entrance in Baguio**. Up to 15–30 contributors share text/photos/voice privately; Bubu talks with their bear NPCs; Dudu's ending has a letter, animated reunion and conversation.
+A private, cozy pixel-art world for Hanna: **Sta. Ana family house (with Raze)**, **open Tuguegarao park plaza**, and **SLU entrance in Baguio**. Up to 15–30 contributors share text/photos/voice privately; Hanna talks with their bear NPCs; Cj's ending has a letter, animated reunion and conversation.
 
 ## Hosted app
 
@@ -33,11 +33,11 @@ The public demo uses only synthetic content. Contributor content appears only af
 
 ## Milestone 2 implementation
 
-Contributor invitations, text/photo/voice submission, private file validation, Dudu's authenticated review desk and NPC assignment are implemented. **The owner's hosted `hn-wrld` project is connected and the synthetic live Auth/Storage rehearsal passes.** Physical-phone recording and recovery checks remain tracked for release.
+Contributor invitations, text/photo/voice submission, private file validation, Cj's authenticated review desk and NPC assignment are implemented. **The owner's hosted `hn-wrld` project is connected and the synthetic live Auth/Storage rehearsal passes.** Physical-phone recording and recovery checks remain tracked for release.
 
 ## Milestone 3 implementation
 
-The root page now requires a private recipient link plus passcode. In `/admin`, publish approved placements under **Their little places**, then create a recipient link under **Bubu's little key**. Open that link and unlock to see contributor bears at `/play`, with approved messages/photos/audio and saved seen state. The sample world moved to `/demo`. See [M3 usage and security](docs/MILESTONE_3.md) and [verification](docs/verification/M3_RESULTS.md).
+The root page now requires a private recipient link plus passcode. In `/admin`, publish approved placements under **Their little places**, then create a recipient link under **Hanna's little key**. Open that link and unlock to see contributor bears at `/play`, with approved messages/photos/audio and saved seen state. The sample world moved to `/demo`. See [M3 usage and security](docs/MILESTONE_3.md) and [verification](docs/verification/M3_RESULTS.md).
 
 ## Milestone 4 implementation
 
@@ -45,6 +45,6 @@ House, open Tuguegarao Plaza and SLU Baguio now have scene navigation, separate 
 
 ## Milestone 5 implementation
 
-The private finale editor is under **Dudu's little ending** in `/admin`: save drafts, preview, publish a separate snapshot, or unpublish. Bubu's existing private entry unlocks the letter → animated reunion → conversation through a configurable hello threshold, with skip, replay, reduced motion and saved completion. `/demo` has a synthetic ending to try immediately. Migration `0006_private_finale.sql` is applied with an empty unpublished draft; the owner will add personal text later. See [M5 usage](docs/MILESTONE_5.md), [verification](docs/verification/M5_RESULTS.md), and [deployment handoff](docs/DEPLOYMENT.md). Vercel is now connected and deployed; physical-phone/rights release checks remain open.
+The private finale editor is under **Cj's little ending** in `/admin`: save drafts, preview, publish a separate snapshot, or unpublish. Hanna's existing private entry unlocks the letter → animated reunion → conversation through a configurable hello threshold, with skip, replay, reduced motion and saved completion. `/demo` has a synthetic ending to try immediately. Migration `0006_private_finale.sql` is applied with an empty unpublished draft; the owner will add personal text later. See [M5 usage](docs/MILESTONE_5.md), [verification](docs/verification/M5_RESULTS.md), and [deployment handoff](docs/DEPLOYMENT.md). Vercel is now connected and deployed; physical-phone/rights release checks remain open.
 
 Follow [M2 setup](docs/MILESTONE_2.md) to create your permanent allowlisted app administrator, then run `npm.cmd run dev` and open http://127.0.0.1:3000/admin. Docker remains an optional local backend. Configuration stays in ignored `.env.local`; setup preserves existing files and never prints keys. `npm run test:db` runs SQL/RLS tests without Docker. See [M2 security audit](docs/SECURITY_M2.md) and [M2 verification](docs/verification/M2_RESULTS.md). Local development remains available; generated loopback invitation links are for local testing only.

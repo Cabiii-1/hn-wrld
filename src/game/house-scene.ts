@@ -37,7 +37,7 @@ export class PlaceScene extends Phaser.Scene {
       .image(0, 0, "backdrop")
       .setOrigin(0)
       .setDisplaySize(WORLD.width, WORLD.height);
-    makeBearTextures(this, "bubu", "#f8e8c9", "#d88182");
+    makeBearTextures(this, "hanna", "#f8e8c9", "#d88182");
     makeBearTextures(this, "npc-cream-1", "#f1d8b0", "#778b63");
     makeBearTextures(this, "npc-brown-scarf", "#b78459", "#778b63");
     makeBearTextures(this, "npc-rose-bow", "#f3dfc5", "#ce8796");
@@ -49,7 +49,7 @@ export class PlaceScene extends Phaser.Scene {
       .sprite(
         this.crowd.player.x,
         this.crowd.player.y,
-        this.bridge.visitor?.variant ?? "bubu",
+        this.bridge.visitor?.variant ?? "hanna",
       )
       .setOrigin(0.5, 30 / 32);
     const style = {
@@ -65,7 +65,7 @@ export class PlaceScene extends Phaser.Scene {
         0,
         this.bridge.visitor
           ? `${this.bridge.visitor.name.length > 22 ? this.bridge.visitor.name.slice(0, 21) + "…" : this.bridge.visitor.name} (you)`
-          : "Bubu ♡",
+          : "Hanna ♡",
         style,
       )
       .setOrigin(0.5, 1);
@@ -237,7 +237,7 @@ export class PlaceScene extends Phaser.Scene {
     }
     this.animate(
       this.player,
-      this.bridge.visitor?.variant ?? "bubu",
+      this.bridge.visitor?.variant ?? "hanna",
       this.facing,
       moving,
     );

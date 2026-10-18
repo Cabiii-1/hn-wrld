@@ -8,12 +8,12 @@
 | Recipient access | **Private link + passcode**, required together |
 | Expected contributors | **15–30** invited people (capacity test at 50 NPCs) |
 | Contribution format | **Text with optional photo(s) and optional audio/voice recording** |
-| Dudu finale | **Personal letter + animated reunion scene + final interactive conversation** |
+| Cj finale | **Personal letter + animated reunion scene + final interactive conversation** |
 | Surprise date | Not decided: **no hard deadline**, keep milestones flexible |
 | Privacy | Recipient-only approved messages and attachments; pending submissions admin-only |
 
 ## Implementation defaults (not additional blocking questions)
-- Working title **Bubu's Little World**; three final locations: Sta. Ana family house (Raze car), open Tuguegarao park (no gazebo/foreground planters), SLU Baguio entrance.
+- Working title **Hanna's Little World**; three final locations: Sta. Ana family house (Raze car), open Tuguegarao park (no gazebo/foreground planters), SLU Baguio entrance.
 - Static, original, non-isometric three-quarter/front-view pixel maps with 16px terrain and 32px character frames; inspect art references as inspiration, not production-licensed assets.
 - Keyboard: WASD/arrows plus E/Enter to interact; mobile: virtual directional pad/joystick plus contextual interaction button. Touch controls must not obscure dialog.
 - Unique invited links, one submission per invite. Plain message required, 1–2000 characters; photo/audio optional. Upload **up to 3 photos**, each ≤5 MiB, JPEG/PNG/WebP; **one audio file** ≤15 MiB, ≤90 seconds, MP3/M4A/OGG/WebM (validate actual codecs, not just extension/MIME). Limits are design defaults adjustable via config.
@@ -25,13 +25,13 @@
 ## Remaining optional creative decisions (do not block vertical slice)
 - Exact House details, Tuguegarao park decorations, SLU entrance interaction bounds; day or sunset palette.
 - Sprite accessory set, nickname labels and dialogue languages (Filipino/English/Ilocano/Ibanag mixtures).
-- Exact reunion animation beats, timing and Dudu's final letter text; add editable placeholders.
+- Exact reunion animation beats, timing and Cj's final letter text; add editable placeholders.
 - Confirmed 2026-10-18: invitees may reopen active links and edit their letter text. Each edit returns the parent to pending and unpublishes its NPC; unchanged photos/audio are preserved. No duplicate letter is created. Admin can recover new links or explicitly replace older hash-only links.
 - Launch date, once known, determines freeze and test schedule, not product architecture.
 
 ## Completion policy
 
-M5 defaults (2026-10-17): owner will author the letter/conversation later in the private admin editor. Initial finale is unpublished. Default hello threshold is 3, capped at the current eligible cast; 0 means immediate entry. Reunion uses the SLU entrance with Bubu and Dudu meeting beneath a heart, plus a still alternative. No ambient track or launch deadline was introduced. Deployment remains pending a Vercel connection and release QA.
+M5 defaults (2026-10-17): owner will author the letter/conversation later in the private admin editor. Initial finale is unpublished. Default hello threshold is 3, capped at the current eligible cast; 0 means immediate entry. Reunion uses the SLU entrance with Hanna and Cj meeting beneath a heart, plus a still alternative. No ambient track or launch deadline was introduced. Deployment remains pending a Vercel connection and release QA.
 
 M4 implementation assumption (2026-10-17): SLU's lower central and lower left stair flights and connecting sidewalk are navigable. Upper stairs, building, retaining walls and road are blocked. The plaza is the preferred large gathering area; maintain room between real placements on SLU's narrow walkway.
 The agent must not re-ask the six confirmed choices above. Ask only if a new *blocking* contradiction emerges; otherwise implement the defaults and record them.
@@ -42,3 +42,6 @@ An invitation now has an administrator-selected place beside the contributor nam
 After a successful first submission, a short heart animation transitions to /contribute/visit. Reduced-motion visitors skip the delay. Returning contributors can choose Visit your place from their receipt and go back to edit their letter. The visitor controls their own named bear (assigned style when available, cream otherwise) using keyboard or touch in their designated scene. The visual cast includes only other approved, published, safely placed bears in published areas, with their saved contributor display names (owner update, 2026-10-18). The contributor’s pending letter does not publish their NPC to Hanna automatically.
 
 This is a narrow, visual-only contributor capability, separate from /play. Every contributor visit requires an active, unexpired, non-revoked contributor session AND an existing submission. The service-only contributor_visit RPC returns only map, own avatar name/style and named visual NPC projections using placement IDs. It returns other published contributors’ display names, but never contribution IDs, letters, media, seen state or finale data. Talk controls and interactions are disabled in the renderer and bridge. Recipient endpoints continue to require Hanna’s private link plus passcode session. Revalidate on tab return/every minute and clear the scene on denial. No cross-session or persistent private browser cache is added.
+
+## Character names (owner update, 2026-10-18)
+All product labels and character names use Hanna and Cj. Existing finale speaker identifiers are normalized on read, and the save validator accepts legacy and current names so old drafts remain editable. The untouched starter finale title is displayed as “A little letter from Cj”. Authored letters/contributions, publication state and progress are preserved. Historical cookie names, the private Storage bucket and the invitation encryption domain remain stable for existing sessions, uploads and links. Runtime sprite and animation keys are renamed together.

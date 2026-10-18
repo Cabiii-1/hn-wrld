@@ -5,7 +5,7 @@ Tasks must be shipped as small commits with tests; do not batch entire product i
 | ID | Priority | Task | Done when |
 |---|---|---|---|
 | BW-01 | P0 | Bootstrap strict Next.js + Phaser + shadcn scaffold | `dev`, typecheck, lint and tests run |
-| BW-02 | P0 | Sta. Ana house PNG + explicit safe-ground geometry + Bubu controls | Desktop keyboard and phone touch work |
+| BW-02 | P0 | Sta. Ana house PNG + explicit safe-ground geometry + Hanna controls | Desktop keyboard and phone touch work |
 | BW-03 | P0 | Collision, NPC wandering, deterministic spawns | No player trapping and scene transitions safe |
 | BW-04 | P0 | Accessible message dialogue UI | Short/long text and pause/resume interactions |
 | BW-05 | P0 | Recipient link+passcode unlock | Wrong/expired/revoked/one-factor access denied |

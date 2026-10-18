@@ -60,12 +60,12 @@ export function FinaleGateway({
     };
     const timer = setInterval(check, 60000);
     document.addEventListener("visibilitychange", check);
-    window.addEventListener("bubu:seen", check);
+    window.addEventListener("hanna:seen", check);
     return () => {
       mounted.current = false;
       clearInterval(timer);
       document.removeEventListener("visibilitychange", check);
-      window.removeEventListener("bubu:seen", check);
+      window.removeEventListener("hanna:seen", check);
     };
   }, [refresh, initialResolved]);
   async function open() {
@@ -113,16 +113,16 @@ export function FinaleGateway({
     <>
       <aside
         className="finale-invitation"
-        aria-label="A little moment with Dudu"
+        aria-label="A little moment with Cj"
       >
         <span>
           {sample
             ? "Try the sample letter, reunion and conversation."
             : status?.available
               ? status.unlocked
-                ? "A little letter from Dudu is waiting."
-                : `A few more hellos before Dudu’s letter · ${status.seen} / ${status.required}`
-              : "Dudu’s little letter will be here when it’s ready."}
+                ? "A little letter from Cj is waiting."
+                : `A few more hellos before Cj’s letter · ${status.seen} / ${status.required}`
+              : "Cj’s little letter will be here when it’s ready."}
         </span>
         <Button
           ref={entry}
@@ -134,8 +134,8 @@ export function FinaleGateway({
             : sample
               ? "Try sample ending"
               : status?.completed
-                ? "Revisit Dudu’s letter"
-                : "Open Dudu’s letter"}
+                ? "Revisit Cj’s letter"
+                : "Open Cj’s letter"}
         </Button>
         {!sample && (
           <Button variant="ghost" onClick={() => void refresh()}>

@@ -222,12 +222,12 @@ export function ContributionForm({
             A little love, <em>on its way.</em>
           </h1>
           <p>
-            Thank you for leaving something lovely for Hanna. Dudu will review
+            Thank you for leaving something lovely for Hanna. Cj will review
             your message and attachments before they appear in her world.
           </p>
           <p className="quiet-copy">
             Received does not mean published. You can return through your
-            invitation link to edit your letter. Changes go back to Dudu for
+            invitation link to edit your letter. Changes go back to Cj for
             review before Hanna can see them.
           </p>
           <Button asChild variant="outline">
@@ -566,7 +566,7 @@ export function ContributionForm({
           <div>
             <p>Kept with care.</p>
             <span>
-              Your words and media are private to you, Dudu as reviewer, and
+              Your words and media are private to you, Cj as reviewer, and
               Hanna once approved. Please leave out addresses, phone numbers,
               and anything you don’t have permission to share.
             </span>

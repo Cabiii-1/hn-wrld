@@ -67,7 +67,7 @@ export function World({
   );
   const markSeen = useCallback((id: string) => {
     setPrivateSeen((s) => new Set([...s, id]));
-    window.dispatchEvent(new Event("bubu:seen"));
+    window.dispatchEvent(new Event("hanna:seen"));
   }, []);
   const near = !!nearId;
   const nearName = npcs?.find((n) => n.id === nearId)?.name ?? "Teddy";
@@ -120,13 +120,13 @@ export function World({
         <Link
           className="brand"
           href={visitor ? "/contribute" : "/"}
-          aria-label="Bubu’s Little World home"
+          aria-label="Hanna’s Little World home"
         >
           <span className="brand-icon">
             <Heart size={22} fill="currentColor" />
           </span>
           <span>
-            Bubu’s <span className="brand-light">Little World</span>
+            Hanna’s <span className="brand-light">Little World</span>
             <small>A LITTLE PLACE TO FEEL LOVED</small>
           </span>
         </Link>
@@ -345,7 +345,7 @@ export function World({
             aria-label={
               visitor
                 ? "Return your bear to the starting spot"
-                : "Return Bubu to the starting spot"
+                : "Return Hanna to the starting spot"
             }
             onClick={() => {
               bridge.requestReset();
@@ -447,7 +447,7 @@ export function World({
               </div>
               <DialogDescription asChild>
                 <div className="message-body">
-                  <p>Welcome home, Bubu! 🌼</p>
+                  <p>Welcome home, Hanna! 🌼</p>
                   <p>
                     This is a little practice hello from your sample bear
                     friend. Take a walk around the yard, enjoy the sunshine, and

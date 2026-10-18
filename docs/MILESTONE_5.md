@@ -1,20 +1,20 @@
-# M5 — Dudu's little ending
+# M5 — Cj's little ending
 
 The finale implementation is ready for private authoring. The owner chose to add personal text in admin later. Nothing personal or synthetic is automatically published. Production deployment and physical-device release checks remain outstanding; this document does not declare the surprise ready to launch.
 
 ## Author privately
 
-1. Open `/admin` and select **Dudu's little ending**. Add the title and letter (up to 12,000 characters), choose the hello threshold (0–50), and add up to 30 conversation lines. Each line has a Dudu/Bubu speaker and up to 2,000 characters; use **Move up** to reorder.
+1. Open `/admin` and select **Cj's little ending**. Add the title and letter (up to 12,000 characters), choose the hello threshold (0–50), and add up to 30 conversation lines. Each line has a Cj/Hanna speaker and up to 2,000 characters; use **Move up** to reorder.
 2. **Save private draft** stores your work without changing the published version. **Preview draft** plays your current complete letter, reunion and conversation privately without writing recipient progress. Incomplete drafts may have no letter or no conversation; complete any added lines or remove them before saving.
 3. **Publish ending** explicitly publishes a snapshot. **Unpublish ending** hides it while retaining the draft. Saving later edits does not expose them. Concurrent edits are rejected; **Reload saved draft** deliberately replaces unsaved changes with the stored draft.
-4. Bubu uses her existing private link and passcode. The ending invitation appears above the world. Its threshold counts only approved, published, safely placed bears in published scenes, and only hellos opened by that recipient link. The requirement is capped at the available cast, so unsubmitted invitations never block it. With zero published bears, a published ending is immediately reachable; choose 0 for immediate access regardless of cast size.
-5. Open the letter → **Meet Dudu** → **Talk with Dudu** → advance the conversation → **Keep this little moment**. Completion persists per recipient link and published revision. Replay stays available; publishing a new version makes that version a fresh ending. Draft saves do not reset completion. Newly published bears may change progress eligibility; the server always checks the current requirement.
+4. Hanna uses her existing private link and passcode. The ending invitation appears above the world. Its threshold counts only approved, published, safely placed bears in published scenes, and only hellos opened by that recipient link. The requirement is capped at the available cast, so unsubmitted invitations never block it. With zero published bears, a published ending is immediately reachable; choose 0 for immediate access regardless of cast size.
+5. Open the letter → **Meet Cj** → **Talk with Cj** → advance the conversation → **Keep this little moment**. Completion persists per recipient link and published revision. Replay stays available; publishing a new version makes that version a fresh ending. Draft saves do not reset completion. Newly published bears may change progress eligibility; the server always checks the current requirement.
 
 No personal text is stored in repository assets, client fixtures or browser storage. Plain text is rendered with preserved line breaks and wrapping, not interpreted as HTML. The public `/demo` has **Try sample ending**, which uses clearly labelled synthetic content and makes no private API calls.
 
 ## Motion, controls and failure recovery
 
-The reunion is a dedicated Phaser scene using the SLU backdrop and original 32px Bubu/Dudu bear frames. Bubu and Dudu approach and stop together beneath a heart. It replaces exploration while open; Phaser owns animation and React owns reading/buttons. Integer camera zoom and nearest-neighbour sprites preserve the pixel style.
+The reunion is a dedicated Phaser scene using the SLU backdrop and original 32px Hanna/Cj bear frames. Hanna and Cj approach and stop together beneath a heart. It replaces exploration while open; Phaser owns animation and React owns reading/buttons. Integer camera zoom and nearest-neighbour sprites preserve the pixel style.
 
 - **Skip letter**, **Skip animation**, back, replay and conversation controls are user-driven, with no required wait or deadline.
 - System reduced motion displays a still reunion; anyone can choose **Use a still scene**. The equivalent narrative is readable without canvas or sound.

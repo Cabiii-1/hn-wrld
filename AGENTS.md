@@ -1,6 +1,6 @@
 # Agent instructions (Claude Code / Codex)
 
-You are building **Bubu's Little World**, a sentimental, calm browser pixel-art exploration game for one intended recipient. The goal is an emotionally thoughtful, polished experience, not a complex RPG.
+You are building **Hanna's Little World**, a sentimental, calm browser pixel-art exploration game for one intended recipient. The goal is an emotionally thoughtful, polished experience, not a complex RPG.
 
 ## Source of truth
 Read README.md and all docs before coding. If implementation conflicts with docs, surface it and update the docs after approval. `docs/DECISIONS.md` lists defaults and blockers.
@@ -36,7 +36,7 @@ See `docs/ACCEPTANCE.md`. Demonstrate keyboard/touch movement, collisions, messa
 4. Updated docs and next task suggestions.
 
 ## Confirmed directives (2026-10-16)
-Never ask again whether device priority, access method, contributor count, media support, finale form, or launch date are decided: **desktop/mobile equal; private link PLUS passcode; 15–30 contributors; text + optional photos/audio; Dudu letter + animated reunion + conversation; launch date TBD**. These supersede stale defaults in earlier docs. Treat rich media and dual-device QA as required release scope, not optional enhancements. See `docs/DECISIONS.md` and migration 0002. Start with Sta. Ana scene, but do not declare MVP complete until the media/moderation/privacy tests pass. Implement all content reads behind server-side recipient session checks; never mistake possession of a private URL for authorization.
+Never ask again whether device priority, access method, contributor count, media support, finale form, or launch date are decided: **desktop/mobile equal; private link PLUS passcode; 15–30 contributors; text + optional photos/audio; Cj letter + animated reunion + conversation; launch date TBD**. These supersede stale defaults in earlier docs. Treat rich media and dual-device QA as required release scope, not optional enhancements. See `docs/DECISIONS.md` and migration 0002. Start with Sta. Ana scene, but do not declare MVP complete until the media/moderation/privacy tests pass. Implement all content reads behind server-side recipient session checks; never mistake possession of a private URL for authorization.
 
 ## Version 3 scene and source-of-truth override
 `docs/PRD.md` (v3) and `agent/MASTER_PROMPT.md` are authoritative. First scene is **Sta. Ana HOUSE**, not beach. Park must be an OPEN PLAZA with no gazebo or foreground plant pots; SLU entrance is the third scene. Use supplied scene PNGs under `assets/backgrounds/`, and create collision geometry separately. When any earlier document disagrees, update it to match PRD v3 before implementing that phase.

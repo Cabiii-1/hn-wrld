@@ -26,7 +26,7 @@ export function ContributionArrival() {
           You’re part of <em>her little world.</em>
         </h1>
         <p>
-          Your words are safe with Dudu. Let’s take you to your little place.
+          Your words are safe with Cj. Let’s take you to your little place.
         </p>
         <p className="quiet-copy">
           Received does not mean published. Your letter will be reviewed before

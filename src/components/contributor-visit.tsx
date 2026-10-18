@@ -68,7 +68,7 @@ export function ContributorVisitView({
     <div className="contributor-visit">
       <nav className="visitor-actions" aria-label="Your invitation">
         <Link href="/contribute">Back to my letter</Link>
-        <span>Your words are with Dudu. Your support belongs here.</span>
+        <span>Your words are with Cj. Your support belongs here.</span>
         <Button
           variant="ghost"
           onClick={async () => {

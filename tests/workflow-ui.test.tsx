@@ -125,7 +125,7 @@ describe("contributor and admin UI workflows", () => {
       mock.api.mockResolvedValue({ ok: true });
       render(<InviteWelcome configured />);
       await screen.findByText(
-        "Open the complete invitation link Dudu sent you.",
+        "Open the complete invitation link Cj sent you.",
       );
       expect(location.hash).toBe("");
       expect(mock.api).not.toHaveBeenCalled();

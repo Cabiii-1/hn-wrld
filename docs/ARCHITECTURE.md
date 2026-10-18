@@ -12,7 +12,7 @@ M2 update: `/admin`, `/invite#token` and `/contribute` are implemented with the 
 
 ## System boundaries
 ```
-Bubu browser ───────► Next.js App Router on Vercel ◄──── Contributor browser
+Hanna browser ───────► Next.js App Router on Vercel ◄──── Contributor browser
   Phaser canvas             │                          invitation form
   React UI/dialogue         │ secure route handlers
                             ▼
@@ -50,7 +50,7 @@ Supabase Postgres with RLS. Game fetches small JSON per scene; no direct open da
 Vercel Next.js frontend/API; Supabase managed DB/Auth/Storage. Environment example: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publishable), server-only `SUPABASE_SECRET_KEY` (if necessary), `APP_ORIGIN`, `SESSION_SIGNING_SECRET`, `INVITE_TOKEN_PEPPER`. Set environment separately for preview/prod; rotate secrets and revoke old sessions if compromised. If Supabase uses a newer publishable key variant, adapt names accordingly.
 
 ## Realtime not required
-Only approved content is loaded when player changes zone or reloads; editing while Bubu is playing need not push realtime updates.
+Only approved content is loaded when player changes zone or reloads; editing while Hanna is playing need not push realtime updates.
 
 ## Confirmed architecture extensions
 

@@ -5,7 +5,7 @@ M1 phone layout was confirmed by the project owner before M2. M2 automated/datab
 M5 finale implementation and synthetic automated/hosted/browser checks are tracked in `verification/M5_RESULTS.md`. Real-phone touch/performance, authored personal text, artwork rights and the HTTPS deployment rehearsal remain open release criteria. The list below remains the release checklist, not a claim that unperformed device/deployment checks passed.
 
 ## Playable experience
-- [ ] WASD/arrow controls move Bubu; left/right display appropriate mirrored walk/idle; no sticky input after tab blur.
+- [ ] WASD/arrow controls move Hanna; left/right display appropriate mirrored walk/idle; no sticky input after tab blur.
 - [ ] D-pad or joystick + action button work on portrait phone without unintended page scroll.
 - [ ] Player cannot walk into house, car, fence, trees or beyond yard bounds; NPCs remain inside allowed wander regions.
 - [ ] Player passes visually in front of/behind props consistently by foot Y-depth.

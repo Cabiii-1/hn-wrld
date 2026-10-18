@@ -32,7 +32,7 @@ Two initial runs passed the finale assertions but failed the old immediate media
 IAB Chromium at desktop 1280 × 900, portrait 360 × 800 and landscape 844 × 390; these are viewport checks, not physical phones.
 
 - Sample letter opens without private APIs. Heading focus moves into each phase.
-- Phaser shows Bubu and Dudu approach, stop together and display a heart at the SLU entrance. After loading, one canvas is present. Letter/conversation pages have zero exploration canvases.
+- Phaser shows Hanna and Cj approach, stop together and display a heart at the SLU entrance. After loading, one canvas is present. Letter/conversation pages have zero exploration canvases.
 - Portrait **Use a still scene** displays the equivalent still scene and written narrative; the full reunion, controls and text fit without horizontal overflow.
 - Keyboard Enter advances conversation; previous/next, completion and **Read it again** work. Replay returns to the letter. Landscape letter scrolls naturally and document width equals scroll width (844px).
 - Back to the world restores exploration. The existing real admin browser session had expired, so no private owner credentials were requested for an additional visual admin check. Editor behavior is covered by React tests and the real authenticated HTTP rehearsal above.

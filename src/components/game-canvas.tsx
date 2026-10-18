@@ -30,7 +30,7 @@ export default function GameCanvas({ bridge }: { bridge: GameBridge }) {
           "aria-label",
           bridge.visitor
             ? `${SCENES[bridge.mapKey].name}. Use WASD, arrow keys, or the direction pad to move your bear.`
-            : `${SCENES[bridge.mapKey].name}. Use WASD or arrow keys to move Bubu, and E to talk to a nearby bear.`,
+            : `${SCENES[bridge.mapKey].name}. Use WASD or arrow keys to move Hanna, and E to talk to a nearby bear.`,
         );
         game.canvas.setAttribute("role", "img");
       })

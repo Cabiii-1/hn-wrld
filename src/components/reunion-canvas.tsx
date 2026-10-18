@@ -37,7 +37,7 @@ export default function ReunionCanvas({ still }: { still: boolean }) {
         game.canvas.setAttribute("role", "img");
         game.canvas.setAttribute(
           "aria-label",
-          "Bubu and Dudu meet at the university entrance. A little heart rests above them.",
+          "Hanna and Cj meet at the university entrance. A little heart rests above them.",
         );
       })
       .catch(() => {
@@ -54,7 +54,7 @@ export default function ReunionCanvas({ still }: { still: boolean }) {
       {status !== "ready" && (
         <p role="status">
           {status === "error"
-            ? "The picture couldn’t load. Bubu and Dudu meet, side by side beneath a little heart. You can continue below."
+            ? "The picture couldn’t load. Hanna and Cj meet, side by side beneath a little heart. You can continue below."
             : "A familiar face is waiting…"}
         </p>
       )}

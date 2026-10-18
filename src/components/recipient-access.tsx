@@ -49,7 +49,7 @@ export function RecipientAccess() {
   return (
     <section className="invitation-layout">
       <form className="letter-card" onSubmit={create}>
-        <h2>Bubu’s little key</h2>
+        <h2>Hanna’s little key</h2>
         <p>
           Her private link and passcode are both needed to enter. Share them
           separately. A visit lasts up to eight hours.

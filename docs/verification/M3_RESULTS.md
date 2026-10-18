@@ -21,7 +21,7 @@ The dry run listed only `0004_recipient_world.sql`; it was applied only to expli
 ## Browser evidence
 
 - Gate at 360×800 has no horizontal overflow or game canvas/content before authorization. Temporary fragment opens the passcode form and disappears from the address bar. A link opened on an already-loaded entry page works too.
-- Connected house renders one Phaser canvas at phone/desktop sizes, shows the synthetic bear and persistent seen count. The disposable bear alone was moved near Bubu for dialogue testing; existing contributors were untouched.
+- Connected house renders one Phaser canvas at phone/desktop sizes, shows the synthetic bear and persistent seen count. The disposable bear alone was moved near Hanna for dialogue testing; existing contributors were untouched.
 - **Talk** opens the synthetic message. Opt-in diagnostics show the world paused while dialogue is open. All three normalized photos decode (`naturalWidth=16`), and the synthetic MP3 plays on request and reaches its 2.006813-second end. No autoplay.
 - Dialogue is scrollable, 328px wide at a 360px viewport, wraps long unbroken text and closes back to the house. Screenshots include only synthetic content: `m3-entry-phone.png`, `m3-world-phone.png`, `m3-dialogue-desktop.png`, `m3-dialogue-phone.png`.
 - After test-link revocation and fixture cleanup, the visible world automatically cleared and showed “Your visit has ended” with no canvas or message. Phaser releases keyboard capture while dialogue/help is open so native scrolling and audio controls can receive Space/arrows.

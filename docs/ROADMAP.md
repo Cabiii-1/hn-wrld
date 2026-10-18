@@ -4,7 +4,7 @@
 Resolve blockers in DECISIONS; setup Next.js TypeScript, shadcn/ui, Phaser 3, Supabase local CLI, environment example, lint/test tooling (Vitest and Playwright), preview deployment; add pixel-art rendering settings. Deliver: basic routes, CI, empty Phaser screen.
 
 ## Phase 1 — Game feel / one scene
-Use the supplied Sta. Ana house PNG with explicit TS collision geometry, Bubu 4-direction movement/idle/walk, foot-based Y sorting, nearest-neighbor camera scaling, touch/keyboard, one wandering sample NPC, interaction radius and React dialogue. Deliver: verified desktop/mobile synthetic slice. PRD v3's five milestones supersede the older phase grouping below; M2 is backend/moderation, M3 is recipient gate/connected data, M4 is scene rollout, M5 is finale/finish.
+Use the supplied Sta. Ana house PNG with explicit TS collision geometry, Hanna 4-direction movement/idle/walk, foot-based Y sorting, nearest-neighbor camera scaling, touch/keyboard, one wandering sample NPC, interaction radius and React dialogue. Deliver: verified desktop/mobile synthetic slice. PRD v3's five milestones supersede the older phase grouping below; M2 is backend/moderation, M3 is recipient gate/connected data, M4 is scene rollout, M5 is finale/finish.
 
 ## Phase 2 — Contribution lifecycle
 Implement DB migration, private invitation exchange, scoped message form (validation/rate limit), admin Supabase Auth with allowlist, submissions inbox, review/approve/reject, placements, recipient auth gate and safe scene API. Replace dummy NPC data with approved server responses. Deliver: end-to-end invite → submit → approve → meet NPC.
@@ -13,7 +13,7 @@ Implement DB migration, private invitation exchange, scoped message form (valida
 Build Tuguegarao and Baguio compact maps with consistent scale, map transitions, NPC assignments, variant/accessory generator. Profile NPC wandering/performance. Deliver: 3 navigable places.
 
 ## Phase 4 — Finale and polish
-Dudu scripted message/ending scene, optional visited-progress indicator, save/replay, animations/ambience, accessibility, response to slow loading, texture atlas optimization, on-device QA. Deliver: surprise-ready experience.
+Cj scripted message/ending scene, optional visited-progress indicator, save/replay, animations/ambience, accessibility, response to slow loading, texture atlas optimization, on-device QA. Deliver: surprise-ready experience.
 
 ## Phase 5 — Privacy + launch rehearsal
 Audit RLS, cookies, redirect/token leakage, sensitive network responses, app analytics settings, invite revocation and content deletion. Invite one test contributor; rehearse full recipient playthrough in incognito mobile. Freeze assets and text before launch; publish private URL and backups.

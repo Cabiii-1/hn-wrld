@@ -442,7 +442,7 @@ try {
       letter: "Synthetic private finale rehearsal letter. No personal content.",
       threshold: 1,
       conversation: [
-        { speaker: "Dudu", text: "Synthetic reunion conversation." },
+        { speaker: "Cj", text: "Synthetic reunion conversation." },
       ],
     };
     const write = async (action, value = content) => {

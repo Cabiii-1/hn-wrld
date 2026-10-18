@@ -147,7 +147,7 @@ export function AdminDesk({
         <section className="letter-intro">
           <span className="eyebrow">BEHIND EVERY LITTLE HELLO</span>
           <h1>
-            A little desk, <em>for Dudu.</em>
+            A little desk, <em>for Cj.</em>
           </h1>
           <p>
             A quiet place to gather the people and words that make her world.
@@ -252,8 +252,8 @@ export function AdminDesk({
           ["review", "Review messages"],
           ["invitations", "Invitations"],
           ["placements", "Their little places"],
-          ["recipient", "Bubu’s little key"],
-          ["finale", "Dudu’s little ending"],
+          ["recipient", "Hanna’s little key"],
+          ["finale", "Cj’s little ending"],
         ].map(([id, name]) => (
           <button
             key={id}

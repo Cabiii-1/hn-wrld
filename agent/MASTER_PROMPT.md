@@ -1,6 +1,6 @@
 # MASTER IMPLEMENTATION PROMPT — Claude Code / Codex
 
-You are the lead engineer implementing **Bubu's Little World**, a private single-player sentimental browser pixel-art game. This repository contains the product specification, sample artwork, and seed migrations.
+You are the lead engineer implementing **Hanna's Little World**, a private single-player sentimental browser pixel-art game. This repository contains the product specification, sample artwork, and seed migrations.
 
 ## Read first (mandatory)
 1. Inspect the repository and do NOT overwrite existing code.
@@ -13,14 +13,14 @@ You are the lead engineer implementing **Bubu's Little World**, a private single
 - Recipient access = private recipient link **PLUS** server-validated passcode; secure session.
 - 15–30 personally invited contributors, 50-NPC capacity fixture.
 - Each contributor submits required text and optional up to three photos and one voice clip. Admin moderates both message and media before publish.
-- Dudu's finale = personal letter → animated reunion → final conversation; reduced-motion option/replay.
+- Cj's finale = personal letter → animated reunion → final conversation; reduced-motion option/replay.
 - Surprise date is TBD; no date locks/countdowns.
 
 ## UPDATED scenes — do NOT use old beach/city/gazebo concepts
 - `sta_ana_house`: her house/yard with trees, fence, house and cream **Raze** car; broad walkable yard. This is the **first vertical slice** and the starting scene, replacing the beach.
 - `tuguegarao_park`: a huge **empty open plaza** for friend NPCs; trees and benches along edges; **NO central building/gazebo and NO foreground flowerpots/planters**.
-- `slu_baguio`: Saint Louis University entrance-inspired scene, stairs, sign, road/crosswalk, trees; safe paths for NPCs and Dudu.
-- Use background PNGs at `assets/backgrounds/{sta_ana_house,tuguegarao_park,slu_baguio}.png` as initial scenic content. Do not infer collision from opaque pixels. Create explicit walkable polygons, collision obstacles, NPC spawn/wander bounds, foot anchors and scene transitions; Phaser foreground layering only if needed. Maintain friendly cute blocky pixel art and matching chibi Bubu/Dudu/NPC bear sprites. Avoid true isometric engines/grids.
+- `slu_baguio`: Saint Louis University entrance-inspired scene, stairs, sign, road/crosswalk, trees; safe paths for NPCs and Cj.
+- Use background PNGs at `assets/backgrounds/{sta_ana_house,tuguegarao_park,slu_baguio}.png` as initial scenic content. Do not infer collision from opaque pixels. Create explicit walkable polygons, collision obstacles, NPC spawn/wander bounds, foot anchors and scene transitions; Phaser foreground layering only if needed. Maintain friendly cute blocky pixel art and matching chibi Hanna/Cj/NPC bear sprites. Avoid true isometric engines/grids.
 
 ## Stack (fixed)
 - Next.js App Router, React, strict TypeScript, Phaser 3, Tailwind, shadcn/ui, Zod.
@@ -32,12 +32,12 @@ You are the lead engineer implementing **Bubu's Little World**, a private single
 ## Execution protocol
 1. Report project state, available files, gaps and top risks; propose an ordered plan with acceptance tests.
 2. Work in small verifiable increments, starting with **Milestone 1 only**. Ask a question only if genuinely blocking; otherwise record a default and proceed.
-3. **M1 house slice:** boot Next.js + Phaser client; show actual house artwork, prevent movement outside a clearly visible front-yard ground region and through house/car; add Bubu bear placeholder with idle/walk facing directions; support WASD/arrows, mobile D-pad, `E` or touch interact; spawn one bounded wandering bear NPC; render mock personal message in a keyboard/touch accessible shadcn-styled React dialogue overlay. Pause movement while dialogue open. Include mobile landscape/portrait treatment, nearest-neighbor pixel scaling and cleanup of Phaser instance.
+3. **M1 house slice:** boot Next.js + Phaser client; show actual house artwork, prevent movement outside a clearly visible front-yard ground region and through house/car; add Hanna bear placeholder with idle/walk facing directions; support WASD/arrows, mobile D-pad, `E` or touch interact; spawn one bounded wandering bear NPC; render mock personal message in a keyboard/touch accessible shadcn-styled React dialogue overlay. Pause movement while dialogue open. Include mobile landscape/portrait treatment, nearest-neighbor pixel scaling and cleanup of Phaser instance.
 4. Run lint/typecheck/build and browser/manual checks where available. Document test results/screenshots, changed files, then STOP and propose M2. Do not claim milestone complete without verification.
 5. **M2** (after approval): implement contributor invites, upload authorization, private photo/audio storage, server-side validation, Supabase migrations/RLS, admin moderation and tests. Use existing migrations as a starting point, audit them; do not assume their RLS is comprehensive.
 6. **M3:** implement authenticated recipient link+passcode exchange, session protection on every API and short-lived media URLs; ensure unapproved content never leaves server; progress persistence.
 7. **M4:** install open-plaza Tuguegarao scene and SLU scene, collision zones, NPC variants and navigation. Test 30 NPCs and mobile responsiveness.
-8. **M5:** Dudu's authored three-phase finale and reduced motion/skip/replay; polish audio, accessibility, asset loading and deploy.
+8. **M5:** Cj's authored three-phase finale and reduced motion/skip/replay; polish audio, accessibility, asset loading and deploy.
 
 ## Security non-negotiables
 - No real messages/audio/photos in public assets, mocked client bundles or statically generated pages.

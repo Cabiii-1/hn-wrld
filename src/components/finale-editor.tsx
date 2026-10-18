@@ -50,7 +50,7 @@ export function FinaleEditor() {
       await load();
       setNotice(
         action === "publish"
-          ? "Published privately for Bubu. She can open it when the hello threshold is met."
+          ? "Published privately for Hanna. She can open it when the hello threshold is met."
           : action === "unpublish"
             ? "The finale is hidden. Your draft is still here."
             : "Draft saved. The published version was kept as it was.",
@@ -68,7 +68,7 @@ export function FinaleEditor() {
   if (!draft)
     return (
       <section className="letter-card">
-        <h2>Dudu’s little ending</h2>
+        <h2>Cj’s little ending</h2>
         {error ? (
           <>
             <p role="alert" className="form-error">
@@ -91,15 +91,15 @@ export function FinaleEditor() {
     );
   return (
     <section className="letter-card finale-editor">
-      <h2>Dudu’s little ending</h2>
+      <h2>Cj’s little ending</h2>
       <p>
         Write a letter, then a little conversation. Only you can see drafts.
         Publication is a separate step.
       </p>
       <p className="quiet-copy">
         {published
-          ? "A published version is available to Bubu. Saving a draft won’t change it."
-          : "The ending is currently hidden from Bubu."}
+          ? "A published version is available to Hanna. Saving a draft won’t change it."
+          : "The ending is currently hidden from Hanna."}
       </p>
       <form onSubmit={submit}>
         <fieldset disabled={busy}>
@@ -119,7 +119,7 @@ export function FinaleEditor() {
               maxLength={12000}
               value={draft.letter}
               onChange={(e) => setDraft({ ...draft, letter: e.target.value })}
-              placeholder="Dear Bubu,…"
+              placeholder="Dear Hanna,…"
             />
           </label>
           <label>
@@ -152,14 +152,14 @@ export function FinaleEditor() {
                       ...draft,
                       conversation: draft.conversation.map((t, j) =>
                         j === i
-                          ? { ...t, speaker: e.target.value as "Dudu" | "Bubu" }
+                          ? { ...t, speaker: e.target.value as "Cj" | "Hanna" }
                           : t,
                       ),
                     })
                   }
                 >
-                  <option>Dudu</option>
-                  <option>Bubu</option>
+                  <option>Cj</option>
+                  <option>Hanna</option>
                 </select>
               </label>
               <label>
@@ -219,7 +219,7 @@ export function FinaleEditor() {
                 ...draft,
                 conversation: [
                   ...draft.conversation,
-                  { speaker: "Dudu", text: "" },
+                  { speaker: "Cj", text: "" },
                 ],
               })
             }

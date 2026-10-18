@@ -15,7 +15,7 @@
 | F10 | Only approved, visible submissions can become recipient-facing NPC dialogue | Must |
 | F11 | Admin assigns scene, spawn, appearance to NPC | Must |
 | F12 | Scene switching between Sta. Ana, Tuguegarao and Baguio | Must |
-| F13 | Dudu's finale starts from a defined non-frustrating unlock condition | Should |
+| F13 | Cj's finale starts from a defined non-frustrating unlock condition | Should |
 | F14 | Seen messages are distinguished subtly, never hidden on replay | Should |
 | F15 | User can mute background music and SFX | Should |
 | F16 | Admin can revoke invites, unpublish NPCs and delete content | Must |

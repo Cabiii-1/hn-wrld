@@ -1,4 +1,4 @@
-# Milestone 2 — contributions and Dudu’s desk
+# Milestone 2 — contributions and Cj’s desk
 
 Contributor-name update (2026-10-17): the administrator enters **Contributor’s name** when creating an invitation. The contribution form greets them by this name with a friendly note about supporting Hanna through law school, asks only for the message for Hanna and optional media/consent, and omits connection details. Migration `0007_invitation_assigned_names.sql` supplies the scoped name and enforces it for new submissions. Existing submitted names/relationships are preserved; old open forms may still send identity fields, which are ignored.
 
@@ -37,7 +37,7 @@ No hosted Supabase account is needed for the Docker option. Do not paste keys/pa
 
 ## Rehearse with synthetic content
 
-1. On Dudu’s desk, create an invitation. Copy the fragment link privately; it can also be recovered later from Invitations → View invitation link. It is not sent to anybody automatically. Older hash-only invitations offer Replace link, which invalidates the old link and sessions while keeping the existing letter.
+1. On Cj’s desk, create an invitation. Copy the fragment link privately; it can also be recovered later from Invitations → View invitation link. It is not sent to anybody automatically. Older hash-only invitations offer Replace link, which invalidates the old link and sessions while keeping the existing letter.
 2. Open the link in a separate browser/profile. It automatically exchanges the token for a scoped HttpOnly cookie and opens the contribution form, with no extra invitation button. The fragment is removed immediately; a failed exchange offers **Try again**. There is no contributor account.
 3. Submit sample text with three test photos and one ≤90-second audio clip (or record where MediaRecorder is supported). The optional description/transcript applies to the next attachment. Check consent. Each file uploads directly to private quarantine storage, then is validated server-side; only validated, invitation-owned attachments can be submitted. A failed upload stays removable and retryable; refresh attachments after a network interruption.
 4. Confirm the receipt says **received, not published**. On the admin desk, preview the text and each attachment. **Keep** or **Exclude** each attachment before approving the message. You may edit text, reject/hide the parent, delete a single file, or delete the whole contribution.

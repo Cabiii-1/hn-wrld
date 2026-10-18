@@ -1,4 +1,4 @@
-# M3 — Bubu's key and connected house
+# M3 — Hanna's key and connected house
 
 The owner approved M3 on 2026-10-17 after the hosted M2 rehearsal and their own invitation/review use. Physical-phone recording and interrupted-upload checks remain release work; the earlier checklist was not silently marked complete. No M4 scenes or M5 finale are included.
 
@@ -6,7 +6,7 @@ The owner approved M3 on 2026-10-17 after the hosted M2 rehearsal and their own 
 
 1. Sign in at `http://127.0.0.1:3000/admin` with the confirmed, allowlisted app administrator.
 2. In **Their little places**, assign a reviewed, approved contribution to **Sta. Ana House**, select a bear style and safe foot coordinates/wander radius, check **Published**, then save. Use separate spawn positions for different bears. Approval alone is not publication. Park/SLU remain drafts until M4.
-3. Open **Bubu's little key**. Choose a passcode of at least eight characters, optionally set expiry, and create a recipient link. Copy the fragment link immediately; it is shown once. Keep the passcode privately and share it separately. Creating a link sends no message. Revocation ends all its sessions; forgotten passcodes require a new link.
+3. Open **Hanna's little key**. Choose a passcode of at least eight characters, optionally set expiry, and create a recipient link. Copy the fragment link immediately; it is shown once. Keep the passcode privately and share it separately. Creating a link sends no message. Revocation ends all its sessions; forgotten passcodes require a new link.
 4. Open that private link and enter the chosen passcode. The fragment is removed from history and sent only in a POST body. `/play` loads approved, published house bears. Approach one and press E/Space/Enter or tap **Talk**. The world pauses while the message is open. Approved photos and user-initiated audio appear only inside the dialogue.
 5. Opened hellos save per recipient link in PostgreSQL and survive repeat visits. **Refresh the world** reloads publication changes; returning to a browser tab revalidates access, and visible tabs check every minute. Every new message/media request checks current authorization. **Leave for now** revokes the current visit.
 

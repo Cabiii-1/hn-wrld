@@ -75,12 +75,12 @@ export function RecipientEntry({
       </section>
       <form className="letter-card recipient-entry" onSubmit={unlock}>
         <Heart size={30} aria-hidden />
-        <h2>Welcome home, Bubu.</h2>
+        <h2>Welcome home, Hanna.</h2>
         {initialSessionValid && !token ? (
           <p role="status">Opening your little world…</p>
         ) : token ? (
           <>
-            <p>Enter the passcode Dudu shared with you.</p>
+            <p>Enter the passcode Cj shared with you.</p>
             <label>
               Passcode
               <input
@@ -99,7 +99,7 @@ export function RecipientEntry({
           </>
         ) : (
           <p>
-            Open the private link Dudu shared with you to enter your world. Your
+            Open the private link Cj shared with you to enter your world. Your
             link and passcode are both needed.
           </p>
         )}

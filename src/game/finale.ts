@@ -2,14 +2,32 @@ import { z } from "zod";
 
 export const finaleDraftSchema = z
   .object({
-    title: z.string().trim().min(1).max(120),
+    title: z
+      .string()
+      .trim()
+      .min(1)
+      .max(120)
+      .transform((title) =>
+        title === "A little letter from Dudu"
+          ? "A little letter from Cj"
+          : title,
+      ),
     letter: z.string().trim().max(12000),
     threshold: z.number().int().min(0).max(50),
     conversation: z
       .array(
         z
           .object({
-            speaker: z.enum(["Dudu", "Bubu"]),
+            // Normalize saved legacy speaker IDs without rewriting authored text.
+            speaker: z
+              .enum(["Cj", "Hanna", "Dudu", "Bubu"])
+              .transform((speaker) =>
+                speaker === "Dudu"
+                  ? ("Cj" as const)
+                  : speaker === "Bubu"
+                    ? ("Hanna" as const)
+                    : speaker,
+              ),
             text: z.string().trim().min(1).max(2000),
           })
           .strict(),
@@ -48,16 +66,16 @@ export const SAMPLE_FINALE: Finale = {
   content: {
     title: "A little sample letter",
     letter:
-      "Dear Bubu,\n\nThis is a synthetic letter for trying the ending. Dudu will write the personal letter privately before publishing.\n\nFor now, take a little breath and meet your sample companion. ♡",
+      "Dear Hanna,\n\nThis is a synthetic letter for trying the ending. Cj will write the personal letter privately before publishing.\n\nFor now, take a little breath and meet your sample companion. ♡",
     threshold: 0,
     conversation: [
       {
-        speaker: "Dudu",
+        speaker: "Cj",
         text: "This is a practice reunion. You can return to the world whenever you like.",
       },
-      { speaker: "Bubu", text: "Let’s stay a little longer. ♡" },
+      { speaker: "Hanna", text: "Let’s stay a little longer. ♡" },
       {
-        speaker: "Dudu",
+        speaker: "Cj",
         text: "Every hello will still be here when you come back.",
       },
     ],

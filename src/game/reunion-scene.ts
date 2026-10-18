@@ -3,8 +3,8 @@ import { makeBearTextures } from "./bear-art";
 
 // A small, self-contained scene: no private prose enters the Phaser runtime.
 export class ReunionScene extends Phaser.Scene {
-  private bubu!: Phaser.GameObjects.Sprite;
-  private dudu!: Phaser.GameObjects.Sprite;
+  private hanna!: Phaser.GameObjects.Sprite;
+  private cj!: Phaser.GameObjects.Sprite;
   private heart!: Phaser.GameObjects.Text;
   private elapsed = 0;
   constructor(
@@ -22,13 +22,13 @@ export class ReunionScene extends Phaser.Scene {
     if (!this.textures.exists("reunion-place")) return;
     this.add.image(160, 90, "reunion-place").setDisplaySize(320, 180);
     this.add.rectangle(160, 90, 320, 180, 0xfff1cf, 0.16);
-    makeBearTextures(this, "bubu", "#f8e8c9", "#d88182");
-    makeBearTextures(this, "dudu", "#b78459", "#778b63");
-    this.bubu = this.add
-      .sprite(this.still ? 148 : 90, 137, "bubu")
+    makeBearTextures(this, "hanna", "#f8e8c9", "#d88182");
+    makeBearTextures(this, "cj", "#b78459", "#778b63");
+    this.hanna = this.add
+      .sprite(this.still ? 148 : 90, 137, "hanna")
       .setOrigin(0.5, 30 / 32);
-    this.dudu = this.add
-      .sprite(this.still ? 172 : 230, 137, "dudu")
+    this.cj = this.add
+      .sprite(this.still ? 172 : 230, 137, "cj")
       .setOrigin(0.5, 30 / 32)
       .setFlipX(true);
     this.heart = this.add
@@ -42,8 +42,8 @@ export class ReunionScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setVisible(this.still);
     if (!this.still) {
-      this.bubu.play("bubu-walk-side");
-      this.dudu.play("dudu-walk-side");
+      this.hanna.play("hanna-walk-side");
+      this.cj.play("cj-walk-side");
     }
     const resize = () => {
       const zoom = Math.max(
@@ -64,17 +64,17 @@ export class ReunionScene extends Phaser.Scene {
     this.onReady();
   }
   update(_time: number, delta: number) {
-    if (!this.bubu || this.still || document.hidden || !document.hasFocus())
+    if (!this.hanna || this.still || document.hidden || !document.hasFocus())
       return;
     this.elapsed += Math.min(delta, 50);
     const t = Math.min(1, this.elapsed / 3000);
-    this.bubu.x = Math.round(90 + 58 * t);
-    this.dudu.x = Math.round(230 - 58 * t);
+    this.hanna.x = Math.round(90 + 58 * t);
+    this.cj.x = Math.round(230 - 58 * t);
     if (t === 1) {
-      this.bubu.anims.stop();
-      this.dudu.anims.stop();
-      this.bubu.setFrame(8);
-      this.dudu.setFrame(8);
+      this.hanna.anims.stop();
+      this.cj.anims.stop();
+      this.hanna.setFrame(8);
+      this.cj.setFrame(8);
       this.heart.setVisible(true);
     }
   }

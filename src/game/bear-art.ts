@@ -50,7 +50,7 @@ export function makeBearTextures(
       rect(23, 17 + bob, 2, 2, "#edaaa0");
     }
     rect(10, 22 + bob, 13, 3, accessory);
-    if (key === "bubu" || key === "npc-rose-bow") {
+    if (key === "hanna" || key === "npc-rose-bow") {
       rect(23, 8 + bob, 4, 3, accessory);
       rect(25, 6 + bob, 3, 7, accessory);
     } else {

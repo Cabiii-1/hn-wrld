@@ -130,7 +130,7 @@ export function InviteWelcome({
         </p>
         <div className="letter-divider" />
         <p className="quiet-copy">
-          Your message will be reviewed by Dudu before Hanna can see it. Photos
+          Your message will be reviewed by Cj before Hanna can see it. Photos
           and voice notes are optional. No account needed.
         </p>
         {!configured && <SetupNotice />}
@@ -144,7 +144,7 @@ export function InviteWelcome({
         )}
         {phase === "missing" && (
           <p role="alert" className="form-error">
-            Open the complete invitation link Dudu sent you.
+            Open the complete invitation link Cj sent you.
           </p>
         )}
         {phase === "failed" && (

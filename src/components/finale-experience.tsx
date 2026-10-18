@@ -70,7 +70,7 @@ export function FinaleExperience({
           {preview ? "Back to the editor" : "Back to the world"}
         </Button>
       </div>
-      <article className="letter-card finale-card" aria-label="Dudu’s finale">
+      <article className="letter-card finale-card" aria-label="Cj’s finale">
         <p className="eyebrow" role="status">
           {phase === "letter"
             ? "01 · A LITTLE LETTER"
@@ -93,7 +93,7 @@ export function FinaleExperience({
           <>
             <div className="finale-prose">{content.letter}</div>
             <div className="finale-actions">
-              <Button onClick={() => setPhase("reunion")}>Meet Dudu</Button>
+              <Button onClick={() => setPhase("reunion")}>Meet Cj</Button>
               <Button variant="ghost" onClick={() => setPhase("reunion")}>
                 Skip letter
               </Button>
@@ -105,8 +105,8 @@ export function FinaleExperience({
             <ReunionCanvas still={still || systemStill} />
             <p className="finale-narration">
               {still || systemStill
-                ? "Bubu and Dudu are together at the entrance, side by side beneath a little heart."
-                : "Bubu and Dudu take a few small steps toward each other. A little heart says the rest."}
+                ? "Hanna and Cj are together at the entrance, side by side beneath a little heart."
+                : "Hanna and Cj take a few small steps toward each other. A little heart says the rest."}
             </p>
             <label className="finale-still">
               <input
@@ -120,7 +120,7 @@ export function FinaleExperience({
             </label>
             <div className="finale-actions">
               <Button onClick={() => setPhase("conversation")}>
-                Talk with Dudu
+                Talk with Cj
               </Button>
               <Button variant="ghost" onClick={() => setPhase("conversation")}>
                 Skip animation

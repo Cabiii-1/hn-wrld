@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./keepsake.css";
 export const metadata: Metadata = {
-  title: "Bubu’s Little World · A little place to feel loved",
+  title: "Hanna’s Little World · A little place to feel loved",
   description: "A private little place to feel loved.",
   robots: { index: false, follow: false },
 };

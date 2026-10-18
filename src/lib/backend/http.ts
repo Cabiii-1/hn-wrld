@@ -320,7 +320,7 @@ export async function handleBackend(request: Request, path: string[]) {
       if (verifier.error || !matches)
         throw new HttpError(
           401,
-          "The link or passcode is unavailable. Please check both with Dudu.",
+          "The link or passcode is unavailable. Please check both with Cj.",
         );
       const secret = newSecret();
       const result = await db.rpc("open_recipient_session", {
@@ -331,7 +331,7 @@ export async function handleBackend(request: Request, path: string[]) {
       if (result.error)
         throw new HttpError(
           401,
-          "The link or passcode is unavailable. Please check both with Dudu.",
+          "The link or passcode is unavailable. Please check both with Cj.",
         );
       jar.set(RECIPIENT_COOKIE, secret, { ...cookieOptions(), maxAge: 28800 });
       return ok();
@@ -366,7 +366,7 @@ export async function handleBackend(request: Request, path: string[]) {
           p_session_hash: hash,
         });
         if (result.error)
-          throw new HttpError(403, "Dudu’s letter isn’t ready to open yet.");
+          throw new HttpError(403, "Cj’s letter isn’t ready to open yet.");
         return json(finaleSchema.parse(result.data));
       }
       if (route === "recipient/ending/complete" && method === "POST") {

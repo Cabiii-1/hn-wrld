@@ -1,15 +1,15 @@
-# Product Requirements Document (PRD) — Bubu's Little World
+# Product Requirements Document (PRD) — Hanna's Little World
 **Version:** 3.0 · **Status:** Approved concept / implementation-ready specification · **Updated:** 2026-10-17
 
 ## 1. Product vision
-Build a private, cozy web-based pixel-art exploration keepsake for **Bubu**. She explores places important to her life and talks to cute bear NPCs representing her family, friends, and loved ones. Each NPC delivers an approved, personally submitted **text message with optional photos and voice recording**. **Dudu** appears in a scripted, replayable finale consisting of a letter, reunion animation, and conversation. The experience is peaceful and revisit-friendly, without combat, quests, monetization or urgency.
+Build a private, cozy web-based pixel-art exploration keepsake for **Hanna**. She explores places important to her life and talks to cute bear NPCs representing her family, friends, and loved ones. Each NPC delivers an approved, personally submitted **text message with optional photos and voice recording**. **Cj** appears in a scripted, replayable finale consisting of a letter, reunion animation, and conversation. The experience is peaceful and revisit-friendly, without combat, quests, monetization or urgency.
 
 ## 2. Locked decisions
 - **Target devices:** desktop and mobile are equally first-class; keyboard and touch controls and responsive reading UI are mandatory.
 - **Recipient privacy:** requires **both a private recipient link AND a passcode**, validated on the server. The game is not indexed or publicly browsable.
 - **Scale:** target 15–30 contributors/NPCs across all locations; test with 50 fixtures.
 - **Contributions:** required text (1–2,000 characters); optional up to three photos (≤5 MiB each), and optional one audio file (≤15 MiB / ≤90 seconds). File limits are configurable defaults; actual file type/size/duration validated server-side.
-- **Finale:** personal letter → animated Bubu/Dudu reunion → final interactive conversation; replay and reduced-motion alternative.
+- **Finale:** personal letter → animated Hanna/Cj reunion → final interactive conversation; replay and reduced-motion alternative.
 - **Launch date:** TBD; no countdown, expiration-by-launch-date, or hard-coded date locks.
 - **Deployment:** Vercel (Next.js) + Supabase; no separate Python backend, multiplayer server, or always-on process.
 
@@ -20,14 +20,14 @@ Create **three separate compact scene backgrounds**, with scene navigation throu
 | --- | --- | --- | --- |
 | `sta_ana_house` | **Her family house**, not the originally proposed beach. Tree(s) left, fence, house at right, and small cream-colored **Raze** car near the house. Warm homely yard. | Broad open sandy/yard space for player and home/family NPCs. Keep house/car/fence non-walkable. | Family and hometown loved ones |
 | `tuguegarao_park` | **Simple open public park/plaza** with trees, benches, lamps around edges, wide paved courtyard. **No central gazebo/building and no flower/plant pots in the foreground**. | Maximize unobstructed floor area for wandering friend NPCs; keep scenery to perimeter. | Friends / larger NPC gathering |
-| `slu_baguio` | **Saint Louis University (SLU) entrance-inspired scene**, recognizable covered sign/entrance, stairs, trees, road/crosswalk. | Clearly mark safe playable path/landing; treat road, steps, building as blocked unless deliberately navigable. | Dudu/present chapter and selected friends |
+| `slu_baguio` | **Saint Louis University (SLU) entrance-inspired scene**, recognizable covered sign/entrance, stairs, trees, road/crosswalk. | Clearly mark safe playable path/landing; treat road, steps, building as blocked unless deliberately navigable. | Cj/present chapter and selected friends |
 
 **Scene artwork sources included:** `assets/backgrounds/sta_ana_house.png`, `tuguegarao_park.png`, `slu_baguio.png`. They are provided game art references; confirm rights and optimization before final publication. Their rendered perspective does **not** define physics. Place invisible polygons/rectangles for walkable region, collider geometry, NPC spawn zones and interaction targets. Match sprite foot anchors, visual sizes and Y-sort. If a static PNG does not support foreground occlusion, use a small separate overlay asset only if needed. The original reference images remain in `assets/references/` for aesthetic guidance.
 
 ## 4. Audience and roles
-1. **Bubu (sole intended recipient):** unlocks with secret link + passcode; explores, interacts, reads and listens, replays scenes and ending.
+1. **Hanna (sole intended recipient):** unlocks with secret link + passcode; explores, interacts, reads and listens, replays scenes and ending.
 2. **Contributors (15–30):** each receives a unique secret invitation URL; submits a message and optional photos/audio; the administrator assigns their display name through the invitation; no account.
-3. **Dudu (admin):** Supabase Auth + allowlisted admin privileges; issues/revokes invitations, previews, edits/moderates/hides submissions, assigns sprite variants/scenes/spawns, configures finale and publishes.
+3. **Cj (admin):** Supabase Auth + allowlisted admin privileges; issues/revokes invitations, previews, edits/moderates/hides submissions, assigns sprite variants/scenes/spawns, configures finale and publishes.
 
 ## 5. Game UX and interactions
 - Entry: private link → passcode screen → authenticated recipient session → short welcome → **house scene** first by default (editable) → park/SLU by portal or scene picker → NPC interactions → finale unlocked by **configurable progress threshold**, not by waiting for all invitations.
@@ -41,7 +41,7 @@ Create **three separate compact scene backgrounds**, with scene navigation throu
 
 ## 6. Contributor submission and moderation
 - Admin generates unique unguessable invite, copies/shares it individually (no account creation).
-- Invite redeem/validation occurs server-side. Show a mobile-friendly form with the administrator-assigned contributor name from the invitation label in a personal greeting (no name input), a message for Hanna, images and voice upload/record where supported. Do not request connection or other identity details from invitees. Provide content warnings about privacy and consent; contributors confirm they have permission to share submitted media. This contributor-identity flow was updated at the owner's request on 2026-10-17; the game title and Bubu character nickname are unchanged.
+- Invite redeem/validation occurs server-side. Show a mobile-friendly form with the administrator-assigned contributor name from the invitation label in a personal greeting (no name input), a message for Hanna, images and voice upload/record where supported. Do not request connection or other identity details from invitees. Provide content warnings about privacy and consent; contributors confirm they have permission to share submitted media. This contributor-identity flow was updated at the owner's request on 2026-10-17; the display names were subsequently updated to Hanna and Cj at the owner’s request on 2026-10-18.
 - Validate required fields, extension **and** actual file types, sizes, image decode, audio duration; strip image metadata where feasible and prevent active content or SVG uploads. Enforce request size limits/upload rules and rate limits; prefer signed scoped direct-to-private-storage uploads.
 - Submission remains **pending**, invisible to recipient; admin reviews **text and each attachment** before publishing, can reject/revoke/remove and choose scene, character and coordinates. If attachments are rejected, they are never served in recipient API. Admin can publish text-only if necessary.
 - Contributor success screen confirms receipt, **not publication**; no ability to list other contributors' messages.
@@ -70,10 +70,10 @@ FR-01 protected two-factor-of-knowledge entry (unique link and independent passc
 - Performance goal: **≥30 FPS** on representative midrange phone with 20 active NPCs during movement; instrument and report, not promise without measurements.
 - Gate/privacy tests: wrong/missing link, wrong passcode, revoked link, unauthorized guest, invalid contributor token, rejected media, forged approved status, expired signed URLs all denied.
 - No crash if a contributor submits no audio, if an optional photo fails, or if an NPC has not yet been assigned a sprite.
-- Complete end-to-end test: contributor submits → admin reviews/approves → correct NPC appears in specified location → Bubu unlocks and speaks → message/media visible only to Bubu → ending reachable and replayable.
+- Complete end-to-end test: contributor submits → admin reviews/approves → correct NPC appears in specified location → Hanna unlocks and speaks → message/media visible only to Hanna → ending reachable and replayable.
 
 ## 11. Scope and implementation milestones
-1. **Vertical slice / house first:** Next.js + Phaser boot, use actual house background, Bubu temporary sprite, desktop/mobile controls, safe ground collision, one wandering NPC, React dialogue. Mock data only and **no real private messages in client fixtures**.
+1. **Vertical slice / house first:** Next.js + Phaser boot, use actual house background, Hanna temporary sprite, desktop/mobile controls, safe ground collision, one wandering NPC, React dialogue. Mock data only and **no real private messages in client fixtures**.
 2. **Contributor and admin backend:** Supabase schema, invite tokens, upload validation/private Storage, pending review, NPC assignment; unit/integration security tests.
 3. **Recipient gate and connected data:** link + passcode, recipient sessions, approved NPC loader, private media signed access, seen state.
 4. **Full scene roll-out:** wide open park scene, SLU scene, navigation, sprite variants, crowded NPC performance tests.
@@ -83,7 +83,7 @@ FR-01 protected two-factor-of-knowledge entry (unique link and independent passc
 Multiplayer, live chat, complex pathfinding, procedural maps, paid accounts, AI-generated contributor messages, automatic voice transcription, large RPG mechanics, public message feeds, open registration, monetization and arbitrary user-generated executable content.
 
 ## 13. Open non-blocking artistic questions
-Final sprite scale and accessories, wording of passcode hint, final Bubu/Dudu authored lines, scene transitions and ambient sound, exact number of NPCs per scene, and whether Bubu can walk up the SLU stairs. Select sensible placeholders without delaying the vertical slice and record assumptions. The surprise date remains unset.
+Final sprite scale and accessories, wording of passcode hint, final Hanna/Cj authored lines, scene transitions and ambient sound, exact number of NPCs per scene, and whether Hanna can walk up the SLU stairs. Select sensible placeholders without delaying the vertical slice and record assumptions. The surprise date remains unset.
 
 ### Returning invitation links (owner update, 2026-10-18)
 The admin Invitations tab must allow viewing and copying new invitation links through authenticated, no-store endpoints. Store only encrypted recovery copies alongside verification hashes, with the decryption key kept server-side. Older hash-only links require explicit replacement; preserve their letter, invalidate the old token and sessions, and retain expiry/revocation. Invitees can reopen active links and edit their existing letter text with fresh consent and optimistic concurrency. Updates return the letter to pending moderation and unpublish the NPC until reviewed again. Preserve attached photos/audio and continue to enforce one letter per invitation.

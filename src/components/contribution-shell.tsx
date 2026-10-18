@@ -15,12 +15,12 @@ export function ContributionShell({
             <Heart size={22} fill="currentColor" />
           </span>
           <span>
-            Bubu’s <span className="brand-light">Little World</span>
+            Hanna’s <span className="brand-light">Little World</span>
             <small>A LITTLE PLACE TO FEEL LOVED</small>
           </span>
         </Link>
         <span className="keepsake-label">
-          {admin ? "DUDU’S DESK" : "A LITTLE LOVE NOTE"}
+          {admin ? "CJ’S DESK" : "A LITTLE LOVE NOTE"}
         </span>
       </header>
       {children}

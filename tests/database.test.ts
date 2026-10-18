@@ -88,6 +88,7 @@ beforeAll(async () => {
     "0008_returning_contributors.sql",
     "0009_contributor_visits.sql",
     "0010_named_contributor_visits.sql",
+    "0011_character_display_names.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -820,7 +821,7 @@ describe("M5 private finale and progress", () => {
     title: "Synthetic private title",
     letter: "Synthetic private finale sentinel 🌼",
     threshold: 1,
-    conversation: [{ speaker: "Dudu", text: "Synthetic closing hello" }],
+    conversation: [{ speaker: "Cj", text: "Synthetic closing hello" }],
   };
   beforeEach(async () => {
     await role("postgres");

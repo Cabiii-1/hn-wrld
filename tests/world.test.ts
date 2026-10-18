@@ -58,7 +58,7 @@ describe("house feet geometry", () => {
     expect(nextRandom(42)).toBe(1083814273);
     expect(YARD.bottom).toBeLessThan(470);
   });
-  it("checks multiple bears and lets overlapping feet separate without trapping Bubu", () => {
+  it("checks multiple bears and lets overlapping feet separate without trapping Hanna", () => {
     expect(
       moveFeet({ x: 400, y: 350 }, 4, 0, [
         { x: 420, y: 350 },

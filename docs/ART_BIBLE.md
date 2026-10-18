@@ -11,7 +11,7 @@ PRD v3 is authoritative: the first scene is the **Sta. Ana family house and yard
 - Draw pixel tiles, original hand-crafted landmarks and modular props. Avoid tiny real-world logos or exact architecture until approved.
 
 ## Player sprite sheets
-- Bubu and Dudu: idle_down/up/side: 2–4 frames each; walk_down/up/side: 4–6 each; blink/small emote optional.
+- Hanna and Cj: idle_down/up/side: 2–4 frames each; walk_down/up/side: 4–6 each; blink/small emote optional.
 - NPC shared template: idle_down/up/side, walk_down/up/side; mirror left/right unless asymmetry requires dedicated art.
 - Make frame dimensions, origin (feet), fps and frame order explicit in a generated atlas JSON or TypeScript configuration.
 - Prototype suggestion: 32×32 frame, feet anchor (0.5,0.88), 8 FPS walking; adjust after visual test.
@@ -41,5 +41,5 @@ Use ORIGINAL programmer-art placeholders initially. Do not hold up data workflow
 - Test pixel camera on desktop 16:9 and mobile portrait/landscape; **neither device class may be treated as a fallback**. Consider alternate viewport framing and dynamically positioned input pad, rather than stretching native sprites.
 - Make all interactables comfortably tappable at **at least 44×44 CSS pixels** and avoid placing a joystick beneath home-indicator safe areas.
 - NPC message dialogue supports text, photo previews and an accessible audio control; photographs are regular responsive HTML media, not pixelated or rasterized into the Phaser texture atlas.
-- Finale sprites: Bubu and Dudu reunion idle, approach/walk, embrace/meet pose (if chosen), reaction/emote, end-frame. Animation may be 4–8 frames per short beat. Provide static storytelling for `prefers-reduced-motion`.
+- Finale sprites: Hanna and Cj reunion idle, approach/walk, embrace/meet pose (if chosen), reaction/emote, end-frame. Animation may be 4–8 frames per short beat. Provide static storytelling for `prefers-reduced-motion`.
 - Up to ~30 NPCs should share a template atlas/palette variants and distinctive optional accessories, not 30 unrelated animation rigs.
