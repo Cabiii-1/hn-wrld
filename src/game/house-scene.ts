@@ -5,6 +5,8 @@ import { WORLD, normalizedInput, type Direction } from "./world";
 import { Crowd, facingDirection, type BearState } from "./crowd";
 import { demoNpcs } from "./demo-fixtures";
 import { SCENES } from "./scenes";
+import { CAPYBARA } from "./characters/capybara";
+import { registerCapybaraAnimations } from "./characters/register";
 type Actor = {
   data: BearState;
   sprite: Phaser.GameObjects.Sprite;
@@ -31,6 +33,11 @@ export class PlaceScene extends Phaser.Scene {
   }
   preload() {
     this.load.image("backdrop", SCENES[this.bridge.mapKey].background);
+    if (this.bridge.artPreview)
+      this.load.spritesheet(CAPYBARA.key, CAPYBARA.src, {
+        frameWidth: CAPYBARA.frameSize,
+        frameHeight: CAPYBARA.frameSize,
+      });
     this.load.on("loaderror", () => this.bridge.onStatus("error"));
   }
   create() {
@@ -43,6 +50,12 @@ export class PlaceScene extends Phaser.Scene {
     makeBearTextures(this, "npc-cream-1", "#f1d8b0", "#778b63");
     makeBearTextures(this, "npc-brown-scarf", "#b78459", "#778b63");
     makeBearTextures(this, "npc-rose-bow", "#f3dfc5", "#ce8796");
+    if (this.bridge.artPreview) {
+      this.textures
+        .get(CAPYBARA.key)
+        .setFilter(Phaser.Textures.FilterMode.NEAREST);
+      registerCapybaraAnimations(this);
+    }
     this.crowd = new Crowd(
       this.bridge.mapKey,
       this.bridge.npcs ?? demoNpcs(this.bridge.mapKey, 1),
@@ -51,7 +64,7 @@ export class PlaceScene extends Phaser.Scene {
       .sprite(
         this.crowd.player.x,
         this.crowd.player.y,
-        this.bridge.visitor?.variant ?? "hanna",
+        this.bridge.artPreview ?? this.bridge.visitor?.variant ?? "hanna",
       )
       .setOrigin(0.5, 30 / 32);
     const style = {
@@ -67,7 +80,9 @@ export class PlaceScene extends Phaser.Scene {
         0,
         this.bridge.visitor
           ? `${this.bridge.visitor.name.length > 22 ? this.bridge.visitor.name.slice(0, 21) + "…" : this.bridge.visitor.name} (you)`
-          : "Hanna ♡",
+          : this.bridge.artPreview
+            ? "Capybara · art preview"
+            : "Hanna ♡",
         style,
       )
       .setOrigin(0.5, 1);
@@ -241,7 +256,7 @@ export class PlaceScene extends Phaser.Scene {
     }
     this.animate(
       this.player,
-      this.bridge.visitor?.variant ?? "hanna",
+      this.bridge.artPreview ?? this.bridge.visitor?.variant ?? "hanna",
       this.facing,
       moving,
     );

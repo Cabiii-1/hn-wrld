@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { GameBridge, type GameStatus } from "@/game/bridge";
 import type { Direction } from "@/game/world";
+import type { CAPYBARA } from "@/game/characters/capybara";
 const GameCanvas = dynamic(() => import("./game-canvas"), { ssr: false });
 const directions = [
   { direction: "up", Icon: ArrowUp },
@@ -53,6 +54,7 @@ export function World({
   onSceneChange,
   visitor,
   paused = false,
+  artPreview,
 }: {
   npcs?: WorldNpc[];
   mapKey?: SceneKey;
@@ -60,10 +62,14 @@ export function World({
   onSceneChange?: (map: SceneKey) => void;
   visitor?: ContributorVisit["visitor"];
   paused?: boolean;
+  artPreview?: typeof CAPYBARA.key;
 }) {
   const connected = npcs !== undefined && !preview && !visitor;
   const place = SCENES[mapKey];
-  const [bridge] = useState(() => new GameBridge(npcs, mapKey, visitor));
+  const [bridge] = useState(
+    () =>
+      new GameBridge(npcs, mapKey, visitor, preview ? artPreview : undefined),
+  );
   const [nearId, setNearId] = useState("");
   const [talkId, setTalkId] = useState("");
   const [privateSeen, setPrivateSeen] = useState(

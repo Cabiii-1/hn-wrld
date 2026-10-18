@@ -21,6 +21,29 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("M4 navigation and protected scene loading", () => {
+  it("opens the capybara art slice in the synthetic Park without reading private data", async () => {
+    render(<DemoWorld />);
+    await userEvent.selectOptions(
+      screen.getByLabelText("Sample character"),
+      "capybara",
+    );
+    expect(screen.getByRole("region", { name: "Explore Park" })).toBeTruthy();
+    expect(
+      screen.getByRole("region", { name: "A little capybara." }),
+    ).toBeTruthy();
+    expect(
+      screen.getAllByRole("img", { name: /Capybara (idle|walk)/ }),
+    ).toHaveLength(6);
+    expect(screen.getAllByTestId("game")).toHaveLength(1);
+    expect(mock.api).not.toHaveBeenCalled();
+    await userEvent.selectOptions(
+      screen.getByLabelText("Sample character"),
+      "hanna",
+    );
+    expect(
+      screen.queryByRole("region", { name: "A little capybara." }),
+    ).toBeNull();
+  });
   it("keeps the prepared world mounted during a tab-return check, then removes it if access is denied", async () => {
     let reject!: (error: Error) => void;
     mock.api.mockImplementation(

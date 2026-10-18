@@ -1,6 +1,8 @@
 # Product Requirements Document (PRD) — Hanna's Little World
 **Version:** 3.0 · **Status:** Approved concept / implementation-ready specification · **Updated:** 2026-10-17
 
+**Planned extension (2026-10-19):** [Crochet Friends Character Selection PRD](PRD_CHARACTER_SELECTION.md) specifies six simple 8-bit animals and a contributor selector. Implementation has started with the capybara art slice; the contributor selector and persistence remain pending.
+
 ## 1. Product vision
 Build a private, cozy web-based pixel-art exploration keepsake for **Hanna**. She explores places important to her life and talks to cute bear NPCs representing her family, friends, and loved ones. Each NPC delivers an approved, personally submitted **text message with optional photos and voice recording**. **Cj** appears in a scripted, replayable finale consisting of a letter, reunion animation, and conversation. The experience is peaceful and revisit-friendly, without combat, quests, monetization or urgency.
 

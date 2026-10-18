@@ -1,12 +1,14 @@
 import type { Direction } from "./world";
 import type { WorldNpc, ContributorVisit } from "./connected";
 import type { SceneKey } from "./scenes";
+import type { CAPYBARA } from "./characters/capybara";
 export type GameStatus = "loading" | "ready" | "error";
 export class GameBridge {
   constructor(
     public readonly npcs?: WorldNpc[],
     public readonly mapKey: SceneKey = "sta_ana_house",
     public readonly visitor?: ContributorVisit["visitor"],
+    public readonly artPreview?: typeof CAPYBARA.key,
   ) {}
   held = new Set<Direction>();
   paused = false;
