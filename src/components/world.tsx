@@ -303,18 +303,19 @@ export function World({
               ))}
               <span className="pad-center">♡</span>
             </div>
-            <Button
-              className="touch-talk"
-              hidden={!!visitor}
-              disabled={!near}
-              aria-label={`Talk to ${nearName}`}
-              onClick={() => {
-                bridge.requestTalk();
-              }}
-            >
-              <MessageCircle size={21} />
-              Talk
-            </Button>
+            {!visitor && (
+              <Button
+                className="touch-talk"
+                disabled={!near}
+                aria-label={`Talk to ${nearName}`}
+                onClick={() => {
+                  bridge.requestTalk();
+                }}
+              >
+                <MessageCircle size={21} />
+                Talk
+              </Button>
+            )}
           </div>
         </div>
         <div className="stage-bottom">

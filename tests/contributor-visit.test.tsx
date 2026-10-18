@@ -49,7 +49,9 @@ describe("Scoped contributor visits", () => {
     expect(screen.getByText("YOUR PLACE IN HER WORLD")).toBeTruthy();
     act(() => mock.bridge!.onStatus("ready"));
     expect(screen.getByRole("button", { name: "Move up" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /Talk to/ })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /Talk to/, hidden: true }),
+    ).toBeNull();
     mock.bridge!.requestTalk();
     expect(mock.bridge!.interact).toBe(false);
     act(() => mock.bridge!.onTalk("not-a-message-capability"));
