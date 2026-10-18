@@ -373,7 +373,7 @@ export function World({
         <span className="seen-count">
           <MessageCircle size={16} />{" "}
           {visitor
-            ? `${(npcs?.length ?? 0) + 1} little bears cheering Hanna on`
+            ? `${(npcs?.length ?? 0) + 1} little bear${npcs?.length ? "s" : ""} cheering Hanna on`
             : connected
               ? `${npcs.filter((n) => n.seen || privateSeen.has(n.id)).length} of ${npcs.length} hellos shared`
               : seen

@@ -63,7 +63,9 @@ export class PlaceScene extends Phaser.Scene {
       .text(
         0,
         0,
-        this.bridge.visitor ? `${this.bridge.visitor.name} (you)` : "Bubu ♡",
+        this.bridge.visitor
+          ? `${this.bridge.visitor.name.length > 22 ? this.bridge.visitor.name.slice(0, 21) + "…" : this.bridge.visitor.name} (you)`
+          : "Bubu ♡",
         style,
       )
       .setOrigin(0.5, 1);

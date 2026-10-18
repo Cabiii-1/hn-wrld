@@ -459,6 +459,11 @@
   font-size: 12px;
   color: #756e55;
 }
+.visitor-actions > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
 @keyframes support-heart {
   from {
     transform: scale(0.8);

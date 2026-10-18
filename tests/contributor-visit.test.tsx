@@ -47,6 +47,7 @@ describe("Scoped contributor visits", () => {
       screen.getByRole("region", { name: "Explore SLU Baguio" }),
     ).toBeTruthy();
     expect(screen.getByText("YOUR PLACE IN HER WORLD")).toBeTruthy();
+    expect(screen.getByText("1 little bear cheering Hanna on")).toBeTruthy();
     act(() => mock.bridge!.onStatus("ready"));
     expect(screen.getByRole("button", { name: "Move up" })).toBeTruthy();
     expect(
