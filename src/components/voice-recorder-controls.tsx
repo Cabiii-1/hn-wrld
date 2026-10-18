@@ -1,7 +1,7 @@
 "use client";
 
 import { LoaderCircle, Mic, Square } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Button } from "./ui/button";
 import { recordingTime, useVoiceRecorder } from "./use-voice-recorder";
 
@@ -10,11 +10,13 @@ export function VoiceRecorderControls({
   disabled,
   maxSeconds,
   savingMessage,
+  uploadControl,
 }: {
   recorder: ReturnType<typeof useVoiceRecorder>;
   disabled: boolean;
   maxSeconds: number;
   savingMessage: string;
+  uploadControl?: ReactNode;
 }) {
   const { phase, preview } = recorder;
   const recording = phase === "recording";
@@ -23,22 +25,30 @@ export function VoiceRecorderControls({
   useEffect(() => {
     if (recording) stopButton.current?.focus();
   }, [recording]);
-  if (!recorder.supported) return null;
+  if (!recorder.supported)
+    return uploadControl ? (
+      <div className="recording-row">{uploadControl}</div>
+    ) : null;
   return (
     <div className="voice-recorder">
-      {phase === "idle" && preview?.state !== "ready" && (
-        <div className="recording-row">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={disabled || preview?.state === "saving"}
-            onClick={() => void recorder.start()}
-          >
-            <Mic size={16} /> Record a voice note
-          </Button>
-          <span>Your microphone is used only after you tap Record.</span>
-        </div>
-      )}
+      <div className="recording-row voice-input-actions">
+        {uploadControl}
+        {phase === "idle" && preview?.state !== "ready" && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={disabled || preview?.state === "saving"}
+              onClick={() => void recorder.start()}
+            >
+              <Mic size={16} /> Record a voice note
+            </Button>
+          </>
+        )}
+      </div>
+      <p className="microphone-hint">
+        Your microphone is used only after you tap Record.
+      </p>
       {(recording || pending) && (
         <section
           className={`recording-panel ${recording ? "is-recording" : ""}`}

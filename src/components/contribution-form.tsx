@@ -14,6 +14,7 @@ import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { ContributionArrival } from "./contribution-arrival";
 import { useVoiceRecorder } from "./use-voice-recorder";
 import { VoiceRecorderControls } from "./voice-recorder-controls";
+import { ParkPreview } from "./park-preview";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
@@ -194,6 +195,70 @@ export function ContributionForm({
     setError("");
     setEditing(true);
   }
+  const renderAttachment = (u: (typeof attachments)[number]) => (
+    <article key={u.id} className="uploaded-item">
+      <div className="upload-preview">
+        {(u.state === "validated" || u.state === "attached") &&
+        !("status" in u && u.status === "rejected") ? (
+          u.kind === "photo" ? (
+            <img
+              src={`/api/manage/media/${u.id}`}
+              alt={u.description || "Your uploaded photo"}
+            />
+          ) : voice.preview?.uploadId === u.id ? (
+            <Mic size={24} aria-label="Listen to your recording above" />
+          ) : (
+            <audio
+              controls
+              preload="metadata"
+              src={`/api/manage/media/${u.id}`}
+            />
+          )
+        ) : (
+          <Camera size={24} />
+        )}
+      </div>
+      <div>
+        <strong>{u.kind === "photo" ? "Photo memory" : "Voice note"}</strong>
+        <span>
+          {"status" in u && u.status === "rejected"
+            ? "Excluded by Cj · remove or replace"
+            : u.state === "attached"
+              ? "Saved with your letter · private"
+              : u.state === "validated"
+                ? "Checked and ready · private"
+                : "Unfinished — remove and retry"}
+        </span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        aria-label={`Remove ${u.kind}`}
+        disabled={!!busy || recording}
+        onClick={async () => {
+          if (u.state === "attached") {
+            if (voice.preview?.uploadId === u.id) voice.discard();
+            setRetainedMedia((items) =>
+              items.filter((item) => item.id !== u.id),
+            );
+            return;
+          }
+          setBusy("Removing attachment…");
+          try {
+            await api(`uploads/${u.id}`, "DELETE");
+            if (voice.preview?.uploadId === u.id) voice.discard();
+            await refresh();
+          } catch (e) {
+            setError(e instanceof Error ? e.message : "Could not remove file.");
+          } finally {
+            setBusy("");
+          }
+        }}
+      >
+        <Trash2 size={17} />
+      </Button>
+    </article>
+  );
   if (arriving) return <ContributionArrival />;
   if (snapshot?.submitted && !editing)
     return (
@@ -326,9 +391,12 @@ export function ContributionForm({
               aria-label="Upload a photo"
             />
           </label>
-          <label className="attachment-choice">
+          <section
+            className="attachment-choice voice-choice"
+            aria-labelledby="voice-choice-heading"
+          >
             <Mic size={24} />
-            <strong>A hello in your voice</strong>
+            <strong id="voice-choice-heading">A hello in your voice</strong>
             <span>
               One recording · up to{" "}
               {snapshot?.limits.audioSeconds ?? MAX.audioSeconds} seconds
@@ -337,99 +405,41 @@ export function ContributionForm({
               MP3, M4A, OGG or WebM ·{" "}
               {(snapshot?.limits.audioBytes ?? MAX.audioBytes) / 1048576} MiB
             </small>
-            <input
-              type="file"
-              accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/ogg,audio/webm"
-              disabled={disabled || attachments.some((u) => u.kind === "audio")}
-              onChange={(e) => {
-                const file = e.currentTarget.files?.[0];
-                e.currentTarget.value = "";
-                if (file) void upload(file, "audio");
-              }}
-              aria-label="Upload a voice note"
+            <VoiceRecorderControls
+              uploadControl={
+                <input
+                  type="file"
+                  accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/ogg,audio/webm"
+                  disabled={
+                    disabled || attachments.some((u) => u.kind === "audio")
+                  }
+                  onChange={(e) => {
+                    const file = e.currentTarget.files?.[0];
+                    e.currentTarget.value = "";
+                    if (file) void upload(file, "audio");
+                  }}
+                  aria-label="Upload a voice note"
+                />
+              }
+              recorder={voice}
+              disabled={
+                !!busy ||
+                !snapshot ||
+                attachments.some((u) => u.kind === "audio")
+              }
+              maxSeconds={snapshot?.limits.audioSeconds ?? MAX.audioSeconds}
+              savingMessage={busy}
             />
-          </label>
+            <div className="uploaded-list">
+              {attachments
+                .filter((u) => u.kind === "audio")
+                .map(renderAttachment)}
+            </div>
+          </section>
         </div>
-        <VoiceRecorderControls
-          recorder={voice}
-          disabled={
-            !!busy || !snapshot || attachments.some((u) => u.kind === "audio")
-          }
-          maxSeconds={snapshot?.limits.audioSeconds ?? MAX.audioSeconds}
-          savingMessage={busy}
-        />
+
         <div className="uploaded-list">
-          {attachments.map((u) => (
-            <article key={u.id} className="uploaded-item">
-              <div className="upload-preview">
-                {(u.state === "validated" || u.state === "attached") &&
-                !("status" in u && u.status === "rejected") ? (
-                  u.kind === "photo" ? (
-                    <img
-                      src={`/api/manage/media/${u.id}`}
-                      alt={u.description || "Your uploaded photo"}
-                    />
-                  ) : voice.preview?.uploadId === u.id ? (
-                    <Mic
-                      size={24}
-                      aria-label="Listen to your recording above"
-                    />
-                  ) : (
-                    <audio
-                      controls
-                      preload="metadata"
-                      src={`/api/manage/media/${u.id}`}
-                    />
-                  )
-                ) : (
-                  <Camera size={24} />
-                )}
-              </div>
-              <div>
-                <strong>
-                  {u.kind === "photo" ? "Photo memory" : "Voice note"}
-                </strong>
-                <span>
-                  {"status" in u && u.status === "rejected"
-                    ? "Excluded by Cj · remove or replace"
-                    : u.state === "attached"
-                      ? "Saved with your letter · private"
-                      : u.state === "validated"
-                        ? "Checked and ready · private"
-                        : "Unfinished — remove and retry"}
-                </span>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                aria-label={`Remove ${u.kind}`}
-                disabled={!!busy || recording}
-                onClick={async () => {
-                  if (u.state === "attached") {
-                    if (voice.preview?.uploadId === u.id) voice.discard();
-                    setRetainedMedia((items) =>
-                      items.filter((item) => item.id !== u.id),
-                    );
-                    return;
-                  }
-                  setBusy("Removing attachment…");
-                  try {
-                    await api(`uploads/${u.id}`, "DELETE");
-                    if (voice.preview?.uploadId === u.id) voice.discard();
-                    await refresh();
-                  } catch (e) {
-                    setError(
-                      e instanceof Error ? e.message : "Could not remove file.",
-                    );
-                  } finally {
-                    setBusy("");
-                  }
-                }}
-              >
-                <Trash2 size={17} />
-              </Button>
-            </article>
-          ))}
+          {attachments.filter((u) => u.kind === "photo").map(renderAttachment)}
         </div>
         <fieldset className="letter-visibility" disabled={disabled}>
           <legend>Who can read your letter?</legend>
@@ -443,7 +453,7 @@ export function ContributionForm({
               onChange={() => setShareWithInvitees(false)}
             />
             <span>
-              <strong>Just Hanna and Cj</strong>
+              <strong>Just Hanna</strong>
               <small>Keep my words between us.</small>
             </span>
           </label>
@@ -463,8 +473,8 @@ export function ContributionForm({
             </span>
           </label>
           <p>
-            Only your letter text is shared when you send it. Photos and voice
-            notes stay private to you, Hanna and Cj. Nothing is public on the
+            Only your letter text can be shared with invited friends. Photos and
+            voice notes aren’t shared with them. Nothing is public on the
             internet. You can change this choice later.
           </p>
         </fieldset>
@@ -473,9 +483,10 @@ export function ContributionForm({
           <div>
             <p>Kept with care.</p>
             <span>
-              Your photos and voice note are private to you, Cj and Hanna. Your
-              letter follows the choice above. Please leave out addresses, phone
-              numbers, and anything you don’t have permission to share.
+              Your photos and voice note aren’t shared with other invited
+              friends. Your letter follows the choice above. Please leave out
+              addresses, phone numbers, and anything you don’t have permission
+              to share.
             </span>
             <label>
               <input
@@ -521,6 +532,7 @@ export function ContributionForm({
             {busy}
           </p>
         )}
+        <ParkPreview />
         <div className="submission-footer">
           <span>
             {editing

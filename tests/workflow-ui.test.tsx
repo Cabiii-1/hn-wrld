@@ -524,7 +524,7 @@ it("defaults sharing to private, removes attachment caption fields, and loads a 
   expect(
     (
       screen.getByRole("radio", {
-        name: /Just Hanna and Cj/,
+        name: /Just Hanna/,
       }) as HTMLInputElement
     ).checked,
   ).toBe(true);
@@ -543,9 +543,7 @@ it("defaults sharing to private, removes attachment caption fields, and loads a 
       }) as HTMLInputElement
     ).checked,
   ).toBe(true);
-  await userEvent.click(
-    screen.getByRole("radio", { name: /Just Hanna and Cj/ }),
-  );
+  await userEvent.click(screen.getByRole("radio", { name: /Just Hanna/ }));
   await userEvent.click(screen.getByRole("checkbox"));
   await userEvent.click(
     screen.getByRole("button", { name: "Save my changes" }),
