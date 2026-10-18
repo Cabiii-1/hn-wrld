@@ -13,6 +13,8 @@ export function VoiceRecorderControls({
   uploadControl,
   heading,
   previewActions,
+  savedAttachment,
+  compact = false,
 }: {
   recorder: ReturnType<typeof useVoiceRecorder>;
   disabled: boolean;
@@ -21,6 +23,8 @@ export function VoiceRecorderControls({
   uploadControl?: ReactNode;
   heading?: ReactNode;
   previewActions?: ReactNode;
+  savedAttachment?: ReactNode;
+  compact?: boolean;
 }) {
   const { phase, preview } = recorder;
   const recording = phase === "recording";
@@ -30,28 +34,40 @@ export function VoiceRecorderControls({
     if (recording) stopButton.current?.focus();
   }, [recording]);
   return (
-    <div className="voice-recorder">
+    <div
+      className={`voice-recorder ${compact ? "voice-recorder-compact" : ""} ${recording || pending || preview || savedAttachment || recorder.error ? "has-content" : ""}`}
+    >
       {heading}
+      {savedAttachment}
       <div className="recording-row voice-input-actions">
         {uploadControl}
-        {recorder.supported && phase === "idle" && !preview && (
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={disabled}
-              onClick={() => void recorder.start()}
-            >
-              <Mic size={16} /> Record a voice note
-            </Button>
-          </>
-        )}
+        {recorder.supported &&
+          phase === "idle" &&
+          !preview &&
+          !savedAttachment && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                aria-label="Record a voice note"
+                title="Record a voice note"
+                disabled={disabled}
+                onClick={() => void recorder.start()}
+              >
+                <Mic size={16} /> {compact ? "Record" : "Record a voice note"}
+              </Button>
+            </>
+          )}
       </div>
-      {recorder.supported && !preview && phase === "idle" && (
-        <p className="microphone-hint">
-          Your microphone is used only after you tap Record.
-        </p>
-      )}
+      {recorder.supported &&
+        !preview &&
+        !savedAttachment &&
+        phase === "idle" &&
+        !recorder.error && (
+          <p className="microphone-hint">
+            Your microphone is used only after you tap Record.
+          </p>
+        )}
       {(recording || pending) && (
         <section
           className={`recording-panel ${recording ? "is-recording" : ""}`}
@@ -93,9 +109,15 @@ export function VoiceRecorderControls({
                 max={maxSeconds}
               />
               <p>
-                Your microphone is on. Say your hello to Hanna.
-                <br />
-                Stops automatically before {recordingTime(maxSeconds)}.
+                {compact ? (
+                  `Stops before ${recordingTime(maxSeconds)}.`
+                ) : (
+                  <>
+                    Your microphone is on. Say your hello to Hanna.
+                    <br />
+                    Stops automatically before {recordingTime(maxSeconds)}.
+                  </>
+                )}
               </p>
               <Button
                 type="button"
@@ -110,7 +132,9 @@ export function VoiceRecorderControls({
             <>
               <p>
                 {phase === "requesting"
-                  ? "Allow microphone access in your browser to begin. The timer starts when recording does."
+                  ? compact
+                    ? "Allow microphone access to begin."
+                    : "Allow microphone access in your browser to begin. The timer starts when recording does."
                   : "Your microphone is off. Your preview will appear here in a moment."}
               </p>
               {phase === "requesting" && (
@@ -146,7 +170,9 @@ export function VoiceRecorderControls({
               ? `${savingMessage || "Saving your voice note…"} You can listen while it saves.`
               : preview.state === "ready"
                 ? "Your voice note is ready to include with your letter."
-                : "Your recording is still here on this page. It hasn’t been saved—please retry."}
+                : compact
+                  ? "Your recording is still here. Retry saving below."
+                  : "Your recording is still here on this page. It hasn’t been saved—please retry."}
           </p>
           {preview.state === "error" && (
             <div className="recording-actions">
@@ -155,8 +181,9 @@ export function VoiceRecorderControls({
                 variant="outline"
                 disabled={disabled}
                 onClick={recorder.retry}
+                aria-label="Retry saving voice note"
               >
-                Retry saving voice note
+                {compact ? "Retry saving" : "Retry saving voice note"}
               </Button>
               <Button
                 type="button"

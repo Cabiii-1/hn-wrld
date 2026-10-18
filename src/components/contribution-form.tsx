@@ -186,6 +186,9 @@ export function ContributionForm({
     ...(editing ? retainedMedia : []),
     ...(snapshot?.uploads ?? []),
   ];
+  const savedAudio = attachments.filter(
+    (u) => u.kind === "audio" && u.id !== voice.preview?.uploadId,
+  );
   function openEditor(saved: Snapshot) {
     if (!saved.letter) return;
     setMessage(saved.letter.message);
@@ -394,20 +397,22 @@ export function ContributionForm({
               }}
               aria-label="Upload a photo"
             />
-            <div className="uploaded-list">
-              {attachments
-                .filter((u) => u.kind === "photo")
-                .map(renderAttachment)}
-            </div>
           </section>
           <section
             className="attachment-choice voice-choice"
             aria-labelledby="voice-choice-heading"
           >
             <VoiceRecorderControls
+              compact
+              savedAttachment={
+                savedAudio.length ? (
+                  <div className="uploaded-list">
+                    {savedAudio.map(renderAttachment)}
+                  </div>
+                ) : null
+              }
               heading={
                 <div className="attachment-summary">
-                  {" "}
                   <Mic size={24} />
                   <strong id="voice-choice-heading">
                     A hello in your voice
@@ -456,16 +461,12 @@ export function ContributionForm({
               maxSeconds={snapshot?.limits.audioSeconds ?? MAX.audioSeconds}
               savingMessage={busy}
             />
-            <div className="uploaded-list">
-              {attachments
-                .filter(
-                  (u) => u.kind === "audio" && u.id !== voice.preview?.uploadId,
-                )
-                .map(renderAttachment)}
-            </div>
           </section>
         </div>
 
+        <div className="uploaded-list photo-attachments">
+          {attachments.filter((u) => u.kind === "photo").map(renderAttachment)}
+        </div>
         <fieldset className="letter-visibility" disabled={disabled}>
           <legend>Who can read your letter?</legend>
           <p>A little choice, entirely yours.</p>

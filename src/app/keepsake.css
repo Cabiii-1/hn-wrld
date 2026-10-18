@@ -1464,103 +1464,173 @@
   line-height: 1.7;
 }
 
-/* Keep all voice-note actions and feedback inside their own attachment card. */
+/* Equal attachment cards: recording states replace content rather than add height. */
 .attachment-choices {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 .letter-card .attachment-choice {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px 24px;
-  padding: 18px;
-  align-items: center;
-  text-align: left;
+  box-sizing: border-box;
+  height: 230px;
+  min-width: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
 }
 .attachment-summary {
-  display: grid;
-  grid-template-columns: 26px minmax(0, 1fr);
-  gap: 5px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   min-width: 0;
 }
 .attachment-summary > svg {
-  grid-row: 1 / 4;
   color: #94a275;
+  margin-bottom: 4px;
 }
 .attachment-summary > strong {
   line-height: 1.25;
 }
 .attachment-summary > span,
 .attachment-summary > small {
-  grid-column: 2;
   color: #99917a;
   font:
     10px/1.6 Arial,
     sans-serif;
 }
 .attachment-choice input[type="file"] {
-  width: 180px;
+  width: 160px;
   min-width: 0;
+  max-width: 100%;
   padding: 0;
 }
-.attachment-choice > .uploaded-list {
-  grid-column: 1 / -1;
-  width: 100%;
-}
-.attachment-choice > .uploaded-list:empty {
-  display: none;
-}
-.letter-card .voice-choice {
-  display: block;
-}
 .voice-choice .voice-recorder {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 20px;
-  align-items: center;
+  width: 100%;
+  height: 100%;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .voice-choice .recording-row {
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
   margin: 0;
+  flex-shrink: 0;
 }
 .voice-choice .recording-row:empty {
   display: none;
 }
 .voice-choice .voice-input-actions > .ui-button {
   min-height: 44px;
+  padding: 8px 10px;
   font-size: 11px;
 }
 .microphone-hint {
-  grid-column: 2;
-  font-size: 10px;
-  line-height: 1.7;
+  font-size: 9px;
+  line-height: 1.5;
   color: #9a927a;
   margin: 0;
-  text-align: right;
+}
+.voice-recorder-compact.has-content {
+  justify-content: flex-start;
+}
+.voice-recorder-compact.has-content .attachment-summary > :not(strong) {
+  display: none;
+}
+.voice-recorder-compact.has-content .attachment-summary {
+  flex-shrink: 0;
 }
 .voice-choice .recording-panel,
-.voice-choice .recording-preview,
-.voice-choice .form-error {
-  grid-column: 1 / -1;
-  margin: 4px 0 0;
-  padding: 14px;
+.voice-choice .recording-preview {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
   min-width: 0;
+}
+.voice-choice:has(.is-recording) {
+  border-color: #bd6a62;
+  background: #fff1e9;
+}
+.voice-choice .recording-heading {
+  justify-content: center;
+  gap: 7px;
+}
+.voice-choice .recording-heading strong {
+  font:
+    13px/1.4 Arial,
+    sans-serif;
+  color: #8e403a;
+}
+.voice-choice .recording-clock {
+  font-size: 28px;
+  margin: 6px 0;
+}
+.voice-choice .recording-clock small {
+  font-size: 13px;
+}
+.voice-choice .recording-progress {
+  height: 5px;
+}
+.voice-choice .recording-panel p,
+.voice-choice .recording-preview p {
+  font-size: 10px;
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.voice-choice .recording-stop {
+  min-height: 44px;
+  font-size: 11px;
 }
 .recording-preview-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+}
+.voice-choice .recording-preview-heading strong {
+  margin: 0;
+  font-size: 13px;
+}
+.voice-choice .recording-preview audio {
+  height: 40px;
+  width: 100%;
+  max-width: 100%;
+}
+.voice-choice .recording-actions {
+  justify-content: center;
+  gap: 4px;
+}
+.voice-choice .recording-actions .ui-button {
+  min-height: 44px;
+  padding: 6px 8px;
+  font-size: 10px;
+}
+.voice-choice .form-error {
+  margin: 0;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.voice-choice .uploaded-list {
+  margin: 0;
 }
 .voice-choice .uploaded-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  padding: 8px;
   text-align: left;
-  margin-top: 12px;
 }
 .voice-choice .upload-preview {
   grid-column: 1 / -1;
@@ -1570,26 +1640,19 @@
 .voice-choice .upload-preview audio {
   width: 100%;
   max-width: 100%;
+  height: 40px;
 }
 .voice-choice .uploaded-item strong {
   font:
     11px Arial,
     sans-serif;
 }
-@media (max-width: 760px) {
-  .letter-card .attachment-choice,
-  .voice-choice .voice-recorder {
+.photo-attachments:empty {
+  display: none;
+}
+@media (max-width: 600px) {
+  .attachment-choices {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .voice-choice .recording-row {
-    justify-content: flex-start;
-  }
-  .microphone-hint {
-    grid-column: 1;
-    text-align: left;
-  }
-  .attachment-choice input[type="file"] {
-    width: 170px;
   }
 }
 .park-preview {

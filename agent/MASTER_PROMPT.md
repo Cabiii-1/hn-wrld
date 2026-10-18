@@ -86,3 +86,7 @@ Voice upload and Record a voice note now sit together within A hello in your voi
 
 ## Compact contribution extras (owner update, 2026-10-19)
 Photo and voice extras use full-width compact rows, with left-aligned headings and adjacent upload/record actions. Recording feedback and playback expand within the voice row without a blank neighboring column. A freshly recorded clip has one local player and its removal action together; hide the redundant attachment box and inactive file picker while a clip is present. Keep existing media validation, retry, editing and privacy behavior.
+
+
+## Equal contribution cards (owner clarification, 2026-10-19)
+Keep the desktop two-column photo/voice grid with identical compact 230px cards. This supersedes the earlier full-width extras layout. Voice recording, permission, playback, retry and saved-audio controls replace the idle content inside the voice card instead of extending it. Collapse format/help detail during active states, retain an accessible title and use internal scrolling for unusually long errors or enlarged text. Photo attachment previews sit below the grid; voice playback/removal stays within its card. Mobile stacks the same equal-height cards.

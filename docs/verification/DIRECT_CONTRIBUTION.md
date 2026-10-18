@@ -15,3 +15,7 @@ Voice-card/preview update: all 168 tests pass (four workers), along with lint an
 
 ### Compact extras layout (2026-10-19)
 Replaced unequal side-by-side cards with compact full-width rows and label-area controls. Fresh recordings keep one local audio player with Remove alongside it; inactive upload controls and duplicate attachment summaries are omitted. Regression coverage checks a single player, removal and restored upload controls; saved-media editing/cancel remains covered. All 168 tests, ESLint and production build pass.
+
+
+### Equal attachment cards (2026-10-19)
+Owner clarified the two-column design should remain. Both cards are 230px; voice states replace idle content and retain in-card playback/removal, while photo previews sit below the grid. Existing 168 tests cover microphone lifecycle, local playback, retry/removal and saved media editing. Lint and production build pass. Desktop/mobile visual checks use a disposable invitation; no real letter or microphone is used.
