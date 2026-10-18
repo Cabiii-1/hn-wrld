@@ -3,7 +3,7 @@
 **Product:** Hanna's Little World
 **Version:** 1.0
 **Date:** 2026-10-19 (Asia/Manila)
-**Status:** Core implementation complete; hosted verification in progress. Physical-device release checks remain separately tracked.
+**Status:** Implemented and deployed; automated and hosted flow checks pass. Mobile visual and physical-device release checks remain separately tracked.
 
 ## 1. Purpose and source of truth
 

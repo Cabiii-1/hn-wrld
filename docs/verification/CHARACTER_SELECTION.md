@@ -35,3 +35,11 @@ Migration 0018 has been applied to the linked project. Hosted UI verification an
 ## Compatibility and rollback
 
 Keep migration 0018 and a frontend that understands all nine appearance keys during rollback. Old write signatures preserve saved selections; an older frontend may reject new animal keys on reads. Do not rewrite real selections to force a rollback. The `*_before_characters` projection functions are internal service-only compatibility implementations; they are not new public endpoints.
+
+
+### Hosted results (2026-10-19)
+Production commit 95725c4 deployed Ready. A disposable invitation selected Frog, submitted a synthetic letter, arrived in its assigned Park, reopened with Frog selected, changed to Bee and reopened with Bee selected. A separate synthetic source used Capybara with text sharing enabled. Service-side checks confirmed matching saved choice/visitor/recipient NPC, source Capybara visibility, private-letter denial and denial after session revocation. All synthetic contributions, placements, invitations, contributor sessions and the synthetic recipient link/session were removed successfully. No real letters, media, identity choices or progress were modified.
+
+The public mixed demo rendered all six animals alongside legacy bears in a 50-NPC Park cast and loaded the same cast in Sta. Ana House and SLU. This confirms loading and rendering, not physical-phone frame-rate performance. The desktop selector screenshot is in ignored test-results/character-picker-desktop.png; the mixed cast is in test-results/animal-mixed-cast-park.png.
+
+The browser's requested 390px viewport override did not change its measured 1265px width. The resulting image is excluded as mobile evidence. Two-column narrow-screen selector CSS is implemented, but mobile visual QA and physical-phone performance/microphone checks remain pending; desktop and simulated movement tests do not substitute for those checks.
