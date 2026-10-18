@@ -130,8 +130,8 @@ export function InviteWelcome({
         </p>
         <div className="letter-divider" />
         <p className="quiet-copy">
-          Your message will be reviewed by Cj before Hanna can see it. Photos
-          and voice notes are optional. No account needed.
+          Your hello joins her world when you send it. Photos and voice notes
+          are optional. No account needed.
         </p>
         {!configured && <SetupNotice />}
         {error && (
