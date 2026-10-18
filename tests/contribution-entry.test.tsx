@@ -28,6 +28,47 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
+
+it("sends a checked returning contributor to their world without flashing the editor", async () => {
+  render(
+    <ContributionEntry
+      configured
+      initialSnapshot={{
+        ...fresh,
+        submitted: true,
+        letter: { message: "Saved words", version: "2026-10-18T00:00:00Z" },
+      }}
+    />,
+  );
+  await waitFor(() =>
+    expect(mock.replace).toHaveBeenCalledWith("/contribute/visit"),
+  );
+  expect(screen.queryByRole("button", { name: "Save my changes" })).toBeNull();
+  expect(mock.api).not.toHaveBeenCalled();
+});
+
+it("sends an already-submitted invite link to the visit module after its scoped exchange", async () => {
+  const token = "h".repeat(43);
+  history.replaceState(null, "", "/invite#" + token);
+  mock.api.mockImplementation(async (path: string) =>
+    path === "contributor"
+      ? {
+          ...fresh,
+          submitted: true,
+          letter: { message: "Saved words", version: "2026-10-18T00:00:00Z" },
+        }
+      : { ok: true },
+  );
+  render(<ContributionEntry configured />);
+  await waitFor(() =>
+    expect(mock.replace).toHaveBeenCalledWith("/contribute/visit"),
+  );
+  expect(mock.api).toHaveBeenCalledWith("invitations/exchange", "POST", {
+    token,
+  });
+  expect(location.hash).toBe("");
+  expect(screen.queryByRole("button", { name: "Save my changes" })).toBeNull();
+});
 it("opens the form inline, strips secrets and redeems only once in StrictMode", async () => {
   const token = "a".repeat(43);
   history.replaceState(null, "", "/contribute#" + token);
@@ -67,6 +108,7 @@ it("opens a checked saved letter directly in the full editor without another req
   render(
     <ContributionEntry
       configured
+      edit
       initialSnapshot={{
         ...fresh,
         submitted: true,

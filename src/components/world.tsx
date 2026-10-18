@@ -124,7 +124,7 @@ export function World({
       <header className="site-header">
         <Link
           className="brand"
-          href={visitor ? "/contribute" : "/"}
+          href={visitor ? "/contribute/visit" : "/"}
           aria-label="Hanna’s Little World home"
         >
           <span className="brand-icon">
@@ -352,7 +352,7 @@ export function World({
               variant="ghost"
               className="reset-button edit-message-button"
             >
-              <Link href="/contribute" aria-label="Edit your message">
+              <Link href="/contribute?edit=1" aria-label="Edit your message">
                 <Pencil size={15} />
                 <span>Edit your message</span>
               </Link>

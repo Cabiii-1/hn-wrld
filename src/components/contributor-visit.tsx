@@ -60,32 +60,12 @@ export function ContributorVisitView({
         <p role="alert">{error}</p>
         <Button onClick={() => setAttempt((v) => v + 1)}>Try again</Button>
         <p>
-          <Link href="/contribute">Edit your message</Link>
+          <Link href="/contribute?edit=1">Edit your message</Link>
         </p>
       </main>
     );
   return (
     <div className="contributor-visit">
-      <nav className="visitor-actions" aria-label="Your invitation">
-        <Button
-          variant="ghost"
-          onClick={async () => {
-            try {
-              await api("contributor/logout", "POST");
-              location.replace("/contribute");
-            } catch (e) {
-              setVisit(null);
-              setError(
-                e instanceof Error
-                  ? e.message
-                  : "Please reopen your invitation.",
-              );
-            }
-          }}
-        >
-          Leave for now
-        </Button>
-      </nav>
       <World
         key={
           visit.mapKey +

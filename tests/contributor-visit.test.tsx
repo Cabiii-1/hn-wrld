@@ -69,7 +69,7 @@ describe("Scoped contributor visits", () => {
       screen
         .getByRole("link", { name: "Edit your message" })
         .getAttribute("href"),
-    ).toBe("/contribute");
+    ).toBe("/contribute?edit=1");
   });
   it("removes the scene if the contributor session is revoked on a tab-return check", async () => {
     vi.spyOn(document, "hidden", "get").mockReturnValue(false);

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/backend/browser-api";
 import type { ContributorSnapshot } from "@/lib/backend/contracts";
 import { ContributionForm } from "./contribution-form";
@@ -9,10 +10,13 @@ import { Button } from "./ui/button";
 export function ContributionEntry({
   configured,
   initialSnapshot = null,
+  edit = false,
 }: {
   configured: boolean;
   initialSnapshot?: ContributorSnapshot | null;
+  edit?: boolean;
 }) {
+  const { replace } = useRouter();
   const [snapshot, setSnapshot] = useState<ContributorSnapshot | null>(null);
   const [opening, setOpening] = useState(true);
   const [error, setError] = useState("");
@@ -28,7 +32,11 @@ export function ContributionEntry({
     function open() {
       if (location.hash) captured.current = location.hash.slice(1);
       // Canonicalize old links without a welcome screen or module navigation.
-      history.replaceState(null, "", "/contribute");
+      history.replaceState(
+        null,
+        "",
+        edit ? "/contribute?edit=1" : "/contribute",
+      );
       const token = captured.current;
       queueMicrotask(() => {
         if (!live) return;
@@ -39,8 +47,12 @@ export function ContributionEntry({
       if (!token && initialSnapshot) {
         queueMicrotask(() => {
           if (live) {
-            setSnapshot(initialSnapshot);
-            setOpening(false);
+            if (initialSnapshot.submitted && !edit)
+              replace("/contribute/visit");
+            else {
+              setSnapshot(initialSnapshot);
+              setOpening(false);
+            }
           }
         });
         return;
@@ -79,8 +91,11 @@ export function ContributionEntry({
             request.current === pending &&
             captured.current === pending.token
           ) {
-            setSnapshot(value);
-            setOpening(false);
+            if (value.submitted && !edit) replace("/contribute/visit");
+            else {
+              setSnapshot(value);
+              setOpening(false);
+            }
           }
         })
         .catch((e: unknown) => {
@@ -104,7 +119,7 @@ export function ContributionEntry({
       live = false;
       window.removeEventListener("hashchange", open);
     };
-  }, [configured, initialSnapshot, attempt]);
+  }, [configured, initialSnapshot, attempt, edit, replace]);
   if (snapshot)
     return (
       <ContributionForm
