@@ -439,6 +439,55 @@
   max-width: 600px;
   padding: 40px;
 }
+.contributor-arrival .arrival-heart {
+  margin: 0 auto 20px;
+  color: #b57878;
+  animation: support-heart 900ms ease-in-out both;
+}
+.contributor-visit {
+  animation: support-arrival 650ms ease-out both;
+}
+.visitor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1180px;
+  margin: 16px auto;
+  padding: 0 20px;
+  font-size: 12px;
+  color: #756e55;
+}
+@keyframes support-heart {
+  from {
+    transform: scale(0.8);
+    opacity: 0.2;
+  }
+  70% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes support-arrival {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contributor-arrival .arrival-heart,
+  .contributor-visit {
+    animation: none;
+  }
+}
 .thank-you h1,
 .thank-you .eyebrow {
   justify-content: center;

@@ -1,11 +1,12 @@
 import type { Direction } from "./world";
-import type { WorldNpc } from "./connected";
+import type { WorldNpc, ContributorVisit } from "./connected";
 import type { SceneKey } from "./scenes";
 export type GameStatus = "loading" | "ready" | "error";
 export class GameBridge {
   constructor(
     public readonly npcs?: WorldNpc[],
     public readonly mapKey: SceneKey = "sta_ana_house",
+    public readonly visitor?: ContributorVisit["visitor"],
   ) {}
   held = new Set<Direction>();
   paused = false;
@@ -30,6 +31,7 @@ export class GameBridge {
     this.clear();
   }
   requestTalk() {
+    if (this.visitor) return;
     this.interact = true;
   }
   requestReset() {

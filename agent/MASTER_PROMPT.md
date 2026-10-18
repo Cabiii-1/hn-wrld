@@ -50,3 +50,6 @@ You are the lead engineer implementing **Bubu's Little World**, a private single
 - Keep the repository runnable after each step. Prefer quality and end-to-end proof over superficial large implementation.
 
 **Begin now:** inspect files, give a brief plan, and implement Milestone 1 only unless I ask for more.
+
+## Owner-approved contributor-visit exception (2026-10-18)
+Follow docs/PRD.md’s Contributor visits update: submitted contributors may explore their administrator-assigned scene through an independently authorized visual-only projection. Their own bear is named; other published bears are anonymous. This does not grant access to recipient messages, media, progress, other contributor names, or the finale. Keep /play behind recipient link plus passcode.

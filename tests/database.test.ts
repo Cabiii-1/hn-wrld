@@ -86,6 +86,7 @@ beforeAll(async () => {
     "0006_private_finale.sql",
     "0007_invitation_assigned_names.sql",
     "0008_returning_contributors.sql",
+    "0009_contributor_visits.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -1132,5 +1133,131 @@ describe("Returning contributors", () => {
         "z".repeat(80),
       ]),
     ).rejects.toThrow("unavailable");
+  });
+});
+
+describe("Contributor visit privacy and designation", () => {
+  it("requires submission and shares only anonymous published bears in the assigned place", async () => {
+    const owner = await invite(false, "Synthetic Visitor");
+    await expect(
+      scalar("public.contributor_visit($1)", [owner.session]),
+    ).rejects.toThrow("Submit your letter first");
+    await role("anon");
+    await expect(
+      scalar("public.contributor_visit($1)", [owner.session]),
+    ).rejects.toThrow();
+    await role("authenticated", OTHER);
+    await expect(
+      scalar("public.admin_set_invite_place($1,'slu_baguio')", [owner.id]),
+    ).rejects.toThrow("Admin required");
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_set_invite_place($1,'slu_baguio')", [owner.id]);
+    await role("service_role");
+    const own = await submit(owner.session);
+    const friend = await invite(false, "Private friend name"),
+      pending = await invite(false, "Pending private name");
+    const friendId = await submit(friend.session),
+      pendingId = await submit(pending.session);
+    await role("authenticated", ADMIN);
+    const slu = await scalar<string>(
+      "(select id from public.areas where map_key='slu_baguio')",
+    );
+    await scalar("public.admin_review($1,'approved',null)", [friendId]);
+    await scalar(
+      "public.admin_place_npc($1,$2,'npc-rose-bow',430,360,12,true)",
+      [friendId, slu],
+    );
+    await scalar(
+      "public.admin_place_npc($1,$2,'npc-brown-scarf',410,360,12,false)",
+      [own, slu],
+    );
+    await role("postgres");
+    await db.query(
+      "insert into public.npc_placements(contribution_id,area_id,spawn_x,spawn_y,wander_radius,published) values($1,$2,430,360,12,true)",
+      [pendingId, slu],
+    );
+    await role("service_role");
+    const view = await scalar<{
+      mapKey: string;
+      visitor: { name: string; variant: string };
+      npcs: { id: string; name: string }[];
+    }>("public.contributor_visit($1)", [owner.session]);
+    expect(view.mapKey).toBe("slu_baguio");
+    expect(view.visitor).toEqual({
+      name: "Synthetic Visitor",
+      variant: "npc-brown-scarf",
+    });
+    const published = await scalar<string>(
+      "(select id from public.npc_placements where contribution_id=$1)",
+      [friendId],
+    );
+    const unpublished = await scalar<string>(
+      "(select id from public.npc_placements where contribution_id=$1)",
+      [pendingId],
+    );
+    expect(view.npcs).toContainEqual(
+      expect.objectContaining({ id: published, name: "A friend of Hanna" }),
+    );
+    expect(view.npcs.some((n) => n.id === unpublished)).toBe(false);
+    expect(JSON.stringify(view)).not.toContain("Private friend name");
+    expect(JSON.stringify(view)).not.toContain(friendId);
+    expect(JSON.stringify(view)).not.toContain("Synthetic hello");
+    await expect(
+      scalar("public.recipient_scene($1,'slu_baguio')", [owner.session]),
+    ).rejects.toThrow();
+    await expect(
+      scalar("public.recipient_message($1,$2)", [owner.session, friendId]),
+    ).rejects.toThrow();
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_set_invite_place($1,'tuguegarao_park')", [
+      owner.id,
+    ]);
+    await role("service_role");
+    expect(
+      await scalar("public.contributor_visit($1)->>'mapKey'", [owner.session]),
+    ).toBe("tuguegarao_park");
+    expect(
+      await scalar(
+        "(select published from public.npc_placements where contribution_id=$1)",
+        [own],
+      ),
+    ).toBe(false);
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_revoke_invite($1)", [owner.id]);
+    await role("service_role");
+    await expect(
+      scalar("public.contributor_visit($1)", [owner.session]),
+    ).rejects.toThrow("unavailable");
+  });
+  it("rolls back a new invite with an invalid place and synchronizes detailed NPC assignments", async () => {
+    const id = randomUUID();
+    await role("authenticated", ADMIN);
+    await expect(
+      scalar(
+        "public.admin_issue_designated_invite($1,'synthetic',$2,'Fixture',null,'unknown')",
+        [id, "x".repeat(80)],
+      ),
+    ).rejects.toThrow("Unknown place");
+    expect(
+      await scalar("exists(select 1 from public.invitations where id=$1)", [
+        id,
+      ]),
+    ).toBe(false);
+    const owner = await invite();
+    const own = await submit(owner.session);
+    await role("authenticated", ADMIN);
+    const park = await scalar<string>(
+      "(select id from public.areas where map_key='tuguegarao_park')",
+    );
+    await scalar(
+      "public.admin_place_npc($1,$2,'npc-cream-1',470,290,20,false)",
+      [own, park],
+    );
+    expect(
+      await scalar(
+        "(select assigned_map from public.invitations where id=$1)",
+        [owner.id],
+      ),
+    ).toBe("tuguegarao_park");
   });
 });

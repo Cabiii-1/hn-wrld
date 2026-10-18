@@ -12,6 +12,7 @@ import {
   messageSchema,
   sceneSchema,
   sceneKeySchema,
+  contributorVisitSchema,
 } from "../../game/connected";
 import { isSceneKey, safePlacement } from "../../game/scenes";
 import {
@@ -498,6 +499,17 @@ export async function handleBackend(request: Request, path: string[]) {
       check(result.error);
       return json({ ...result.data, limits: limits() });
     }
+    if (route === "contributor/visit" && method === "GET") {
+      const { db, hash } = await contributor(jar);
+      const result = await db.rpc("contributor_visit", {
+        p_session_hash: hash,
+      });
+      check(
+        result.error,
+        "Your place isn’t available yet. Submit your letter or reopen your invitation.",
+      );
+      return json(contributorVisitSchema.parse(result.data));
+    }
     if (route === "contributor/logout" && method === "POST") {
       const { db, hash } = await contributor(jar);
       const result = await db
@@ -721,7 +733,7 @@ export async function handleBackend(request: Request, path: string[]) {
       const results = await Promise.all([
         db
           .from("invitations")
-          .select("id,label,expires_at,revoked_at,created_at")
+          .select("id,label,expires_at,revoked_at,created_at,assigned_map")
           .order("created_at", { ascending: false })
           .limit(200),
         db
@@ -760,13 +772,13 @@ export async function handleBackend(request: Request, path: string[]) {
       const body = invitationSchema.parse(await readJson(request));
       const token = newSecret(),
         id = randomUUID();
-      const result = await db.rpc("admin_issue_invite", {
+      const result = await db.rpc("admin_issue_designated_invite", {
         p_id: id,
         p_hash: digest(token, backendEnv().INVITE_TOKEN_PEPPER),
         p_cipher: sealInvitation(token, id, backendEnv().INVITE_TOKEN_PEPPER),
         p_label: body.label,
         p_expires: body.expiresAt,
-        p_replace: false,
+        p_map: body.mapKey,
       });
       check(result.error);
       // The fragment is recovered only through authenticated admin access.
@@ -830,6 +842,27 @@ export async function handleBackend(request: Request, path: string[]) {
         ).error,
       );
       return json({ url: `${backendEnv().APP_ORIGIN}/invite#${token}` });
+    }
+    if (
+      path[0] === "admin" &&
+      path[1] === "invitations" &&
+      path.length === 3 &&
+      method === "PATCH"
+    ) {
+      const db = await admin(jar);
+      const body = z
+        .object({ mapKey: sceneKeySchema })
+        .strict()
+        .parse(await readJson(request));
+      check(
+        (
+          await db.rpc("admin_set_invite_place", {
+            p_id: idSchema.parse(path[2]),
+            p_map: body.mapKey,
+          })
+        ).error,
+      );
+      return ok();
     }
     if (
       path[0] === "admin" &&

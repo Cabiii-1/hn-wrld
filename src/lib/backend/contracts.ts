@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { safePlacement } from "../../game/scenes";
+import { sceneKeySchema } from "../../game/connected";
 
 export const MAX = {
   photoBytes: 5 * 1024 * 1024,
@@ -14,6 +15,7 @@ export const invitationSchema = z
   .object({
     label: z.string().trim().min(1).max(80),
     expiresAt: z.iso.datetime({ offset: true }).nullable(),
+    mapKey: sceneKeySchema.default("sta_ana_house"),
   })
   .strict();
 export const contributionSchema = z
@@ -87,6 +89,7 @@ export type Invitation = {
   expires_at: string | null;
   revoked_at: string | null;
   created_at: string;
+  assigned_map?: string;
 };
 export type Area = {
   id: string;

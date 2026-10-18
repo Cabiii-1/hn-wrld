@@ -46,7 +46,11 @@ export class PlaceScene extends Phaser.Scene {
       this.bridge.npcs ?? demoNpcs(this.bridge.mapKey, 1),
     );
     this.player = this.add
-      .sprite(this.crowd.player.x, this.crowd.player.y, "bubu")
+      .sprite(
+        this.crowd.player.x,
+        this.crowd.player.y,
+        this.bridge.visitor?.variant ?? "bubu",
+      )
       .setOrigin(0.5, 30 / 32);
     const style = {
       fontFamily: "monospace",
@@ -55,7 +59,14 @@ export class PlaceScene extends Phaser.Scene {
       backgroundColor: "#674d3deb",
       padding: { x: 7, y: 4 },
     };
-    this.playerLabel = this.add.text(0, 0, "Bubu ♡", style).setOrigin(0.5, 1);
+    this.playerLabel = this.add
+      .text(
+        0,
+        0,
+        this.bridge.visitor ? `${this.bridge.visitor.name} (you)` : "Bubu ♡",
+        style,
+      )
+      .setOrigin(0.5, 1);
     this.actors = this.crowd.bears.map((data) => ({
       data,
       sprite: this.add
@@ -194,7 +205,7 @@ export class PlaceScene extends Phaser.Scene {
       Math.round(this.crowd.player.y),
     );
     const nearest = this.crowd.nearest();
-    this.bridge.setNear(!!nearest, nearest?.id ?? "");
+    this.bridge.setNear(!this.bridge.visitor && !!nearest, nearest?.id ?? "");
     for (const actor of this.actors) {
       actor.sprite.setPosition(
         Math.round(actor.data.x),
@@ -217,16 +228,23 @@ export class PlaceScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.keys.ENTER) ||
       this.bridge.interact;
     this.bridge.interact = false;
-    if (!paused && nearest && action) {
+    if (!this.bridge.visitor && !paused && nearest && action) {
       this.clearInput();
       this.bridge.paused = true;
       this.bridge.onTalk(nearest.id);
     }
-    this.animate(this.player, "bubu", this.facing, moving);
+    this.animate(
+      this.player,
+      this.bridge.visitor?.variant ?? "bubu",
+      this.facing,
+      moving,
+    );
     this.playerLabel
       .setPosition(this.player.x, this.player.y - 34)
       .setDepth(1000);
-    this.marker.setVisible(!!nearest && !paused).setDepth(1001);
+    this.marker
+      .setVisible(!this.bridge.visitor && !!nearest && !paused)
+      .setDepth(1001);
     if (nearest)
       this.marker.setPosition(
         Math.round(nearest.x),

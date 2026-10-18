@@ -19,6 +19,10 @@ import { MAX, type AdminData } from "../src/lib/backend/contracts";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false })),
+  );
   window.history.replaceState(null, "", "/");
 });
 afterEach(() => {
@@ -475,4 +479,39 @@ describe("Server-prepared private pages", () => {
     );
     expect(mock.api).not.toHaveBeenCalled();
   });
+});
+
+it("lets the admin choose the invitation destination alongside the contributor name", async () => {
+  const data: AdminData = {
+    invitations: [],
+    contributions: [],
+    media: [],
+    areas: [],
+    placements: [],
+  };
+  mock.api.mockImplementation(async (path: string) =>
+    path === "admin/dashboard"
+      ? data
+      : { url: "https://world.test/invite#synthetic" },
+  );
+  render(<AdminDesk configured initialData={data} initialResolved />);
+  await userEvent.click(screen.getByRole("button", { name: "Invitations" }));
+  await userEvent.type(
+    screen.getByLabelText("Contributor’s name"),
+    "Synthetic Friend",
+  );
+  await userEvent.selectOptions(
+    screen.getByLabelText("Their place"),
+    "slu_baguio",
+  );
+  await userEvent.click(
+    screen.getByRole("button", { name: "Create invitation" }),
+  );
+  await waitFor(() =>
+    expect(mock.api).toHaveBeenCalledWith("admin/invitations", "POST", {
+      label: "Synthetic Friend",
+      mapKey: "slu_baguio",
+      expiresAt: null,
+    }),
+  );
 });

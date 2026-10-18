@@ -12,6 +12,17 @@ export const npcSchema = z.object({
 });
 export const houseSchema = z.object({ npcs: z.array(npcSchema).max(200) });
 export const sceneSchema = houseSchema.extend({ mapKey: sceneKeySchema });
+export const contributorVisitSchema = sceneSchema
+  .extend({
+    visitor: z
+      .object({
+        name: z.string().min(1).max(80),
+        variant: npcSchema.shape.variant,
+      })
+      .strict(),
+  })
+  .strict();
+export type ContributorVisit = z.infer<typeof contributorVisitSchema>;
 export const messageSchema = z.object({
   id: z.uuid(),
   name: z.string().max(80),

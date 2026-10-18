@@ -1,0 +1,44 @@
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Heart } from "lucide-react";
+import { ContributionShell } from "./contribution-shell";
+import { Button } from "./ui/button";
+
+export function ContributionArrival() {
+  const router = useRouter();
+  useEffect(() => {
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : 900;
+    const timer = setTimeout(() => router.replace("/contribute/visit"), delay);
+    return () => clearTimeout(timer);
+  }, [router]);
+  return (
+    <ContributionShell>
+      <section
+        className="letter-card thank-you contributor-arrival"
+        aria-live="polite"
+      >
+        <Heart className="arrival-heart" size={46} aria-hidden />
+        <span className="eyebrow">SAFELY RECEIVED</span>
+        <h1>
+          You’re part of <em>her little world.</em>
+        </h1>
+        <p>
+          Your words are safe with Dudu. Let’s take you to your little place.
+        </p>
+        <p className="quiet-copy">
+          Received does not mean published. Your letter will be reviewed before
+          Hanna sees it.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => router.replace("/contribute/visit")}
+        >
+          Visit your place now
+        </Button>
+      </section>
+    </ContributionShell>
+  );
+}

@@ -17,7 +17,7 @@ import {
 import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { RecipientAccess } from "./recipient-access";
 import { FinaleEditor } from "./finale-editor";
-import { SCENES, isSceneKey } from "@/game/scenes";
+import { SCENES, SCENE_KEYS, isSceneKey } from "@/game/scenes";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -125,6 +125,7 @@ export function AdminDesk({
     try {
       const value = await api<{ url: string }>("admin/invitations", "POST", {
         label: form.get("label"),
+        mapKey: form.get("mapKey"),
         expiresAt: expiry ? new Date(expiry).toISOString() : null,
       });
       setInviteUrl(value.url);
@@ -300,6 +301,20 @@ export function AdminDesk({
               />
             </label>
             <label>
+              Their place
+              <select
+                name="mapKey"
+                defaultValue="sta_ana_house"
+                disabled={busy}
+              >
+                {SCENE_KEYS.map((key) => (
+                  <option key={key} value={key}>
+                    {SCENES[key].name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
               Expires at <span>Optional</span>
               <input name="expires" type="datetime-local" disabled={busy} />
             </label>
@@ -310,7 +325,7 @@ export function AdminDesk({
             {inviteUrl && (
               <div className="new-invite" role="status">
                 <strong>Here’s their little invitation.</strong>
-                <p>Copy this link now. It won’t be shown again.</p>
+                <p>You can find this link again in the invitation list.</p>
                 <input
                   aria-label="New invitation link"
                   readOnly
@@ -337,6 +352,10 @@ export function AdminDesk({
           </form>
           <div className="letter-card invitation-list">
             <h2>Invited with love</h2>
+            <p className="quiet-copy">
+              Choose where their visit begins. Moving a published bear hides it
+              until you publish its new spot.
+            </p>
             {!data.invitations.length && (
               <p className="empty-copy">
                 Your first invitation is the beginning of a little hello.
@@ -349,6 +368,25 @@ export function AdminDesk({
                 </span>
                 <div>
                   <strong>{i.label}</strong>
+                  <label>
+                    Their place
+                    <select
+                      aria-label={`Place for ${i.label}`}
+                      value={i.assigned_map ?? "sta_ana_house"}
+                      disabled={busy || !!i.revoked_at}
+                      onChange={(event) =>
+                        void action(`admin/invitations/${i.id}`, "PATCH", {
+                          mapKey: event.target.value,
+                        })
+                      }
+                    >
+                      {SCENE_KEYS.map((key) => (
+                        <option key={key} value={key}>
+                          {SCENES[key].name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <span>
                     {i.revoked_at
                       ? "Revoked"
@@ -754,15 +792,20 @@ function PlacementForm({
   busy: boolean;
 }) {
   const placement = data.placements.find((p) => p.contribution_id === c.id);
+  const designated =
+    data.invitations.find((i) => i.id === c.invitation_id)?.assigned_map ??
+    "sta_ana_house";
+  const start =
+    SCENES[isSceneKey(designated) ? designated : "sta_ana_house"].npc;
   const [areaId, setAreaId] = useState(
     placement?.area_id ??
-      data.areas.find((a) => a.map_key === "sta_ana_house")?.id ??
+      data.areas.find((a) => a.map_key === designated)?.id ??
       "",
   );
   const [point, setPoint] = useState({
-    x: placement?.spawn_x ?? 425,
-    y: placement?.spawn_y ?? 352,
-    radius: placement?.wander_radius ?? 20,
+    x: placement?.spawn_x ?? start.x,
+    y: placement?.spawn_y ?? start.y,
+    radius: placement?.wander_radius ?? start.radius,
   });
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

@@ -11,6 +11,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { ContributionShell, SetupNotice } from "./contribution-shell";
+import { ContributionArrival } from "./contribution-arrival";
+import Link from "next/link";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
 import {
@@ -39,6 +41,7 @@ export function ContributionForm({
   const [editing, setEditing] = useState(false),
     [letterMessage, setLetterMessage] = useState(""),
     [letterVersion, setLetterVersion] = useState("");
+  const [arriving, setArriving] = useState(false);
   const recorder = useRef<MediaRecorder | null>(null),
     stream = useRef<MediaStream | null>(null),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,6 +49,7 @@ export function ContributionForm({
   const refresh = async () => {
     const data = await api<Snapshot>("contributor");
     if (alive.current) setSnapshot(data);
+    return data;
   };
   useEffect(() => {
     alive.current = true;
@@ -118,7 +122,7 @@ export function ContributionForm({
             .filter((u) => u.state === "validated")
             .map((u) => u.id) ?? [],
       });
-      await refresh();
+      setArriving(true);
     } catch (e) {
       setError(
         e instanceof Error
@@ -127,7 +131,8 @@ export function ContributionForm({
       );
       // A response can be lost after the transaction committed. Recover the
       // receipt instead of telling the contributor to create a duplicate.
-      await refresh().catch(() => {});
+      const recovered = await refresh().catch(() => null);
+      if (recovered?.submitted) setArriving(true);
     } finally {
       setBusy("");
     }
@@ -204,6 +209,7 @@ export function ContributionForm({
     }
   }
   const disabled = !configured || !snapshot || !!busy || recording;
+  if (arriving) return <ContributionArrival />;
   if (snapshot?.submitted)
     return (
       <ContributionShell>
@@ -224,6 +230,9 @@ export function ContributionForm({
             invitation link to edit your letter. Changes go back to Dudu for
             review before Hanna can see them.
           </p>
+          <Button asChild variant="outline">
+            <Link href="/contribute/visit">Visit your place</Link>
+          </Button>
           {snapshot.letter && !editing && (
             <Button
               variant="outline"

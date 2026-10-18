@@ -5,6 +5,7 @@ import { handleBackend } from "./http";
 type PageRead =
   | "admin/dashboard"
   | "contributor"
+  | "contributor/visit"
   | "recipient/session"
   | "recipient/scenes/sta_ana_house"
   | "recipient/ending/status";

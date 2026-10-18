@@ -484,7 +484,7 @@ describe("Recoverable contributor links and editing", () => {
     });
     expect(created.status).toBe(201);
     const issued = state.rpc.mock.calls.find(
-      ([name]) => name === "admin_issue_invite",
+      ([name]) => name === "admin_issue_designated_invite",
     )![1];
     const body = await created.json();
     state.rows.invitations = {
@@ -543,5 +543,52 @@ describe("Recoverable contributor links and editing", () => {
       (await request("contributions", "PATCH", payload, "https://evil.test"))
         .status,
     ).toBe(403);
+  });
+});
+
+describe("Contributor visit HTTP boundary", () => {
+  it("requires a contributor session and returns the visual-only projection", async () => {
+    expect((await request("contributor/visit")).status).toBe(401);
+    state.jar.set("bubu-contributor", newSecret());
+    const visual = {
+      mapKey: "slu_baguio",
+      visitor: { name: "Synthetic Friend", variant: "npc-cream-1" },
+      npcs: [],
+    };
+    state.rpc.mockImplementation(async (name: string) => ({
+      data:
+        name === "active_contributor"
+          ? "owner"
+          : name === "contributor_visit"
+            ? visual
+            : true,
+      error: null,
+    }));
+    expect(await (await request("contributor/visit")).json()).toEqual(visual);
+    expect((await request("recipient/session")).status).toBe(401);
+    expect((await request("recipient/ending")).status).toBe(401);
+    expect(
+      (await request("recipient/messages/11111111-1111-4111-8111-111111111111"))
+        .status,
+    ).toBe(401);
+  });
+  it("allows only admins to change a valid invitation designation", async () => {
+    const path = "admin/invitations/11111111-1111-4111-8111-111111111111";
+    expect(
+      (await request(path, "PATCH", { mapKey: "slu_baguio" })).status,
+    ).toBe(401);
+    state.jar.set("bubu-admin", "synthetic-jwt");
+    state.validUser = true;
+    state.member = true;
+    expect((await request(path, "PATCH", { mapKey: "unknown" })).status).toBe(
+      400,
+    );
+    expect(
+      (await request(path, "PATCH", { mapKey: "slu_baguio" })).status,
+    ).toBe(200);
+    expect(state.rpc).toHaveBeenCalledWith("admin_set_invite_place", {
+      p_id: "11111111-1111-4111-8111-111111111111",
+      p_map: "slu_baguio",
+    });
   });
 });

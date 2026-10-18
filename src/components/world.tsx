@@ -8,7 +8,7 @@ import {
   useState,
   type PointerEvent,
 } from "react";
-import type { WorldNpc } from "@/game/connected";
+import type { WorldNpc, ContributorVisit } from "@/game/connected";
 import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
 import { RecipientDialogue } from "./recipient-dialogue";
 import { api } from "@/lib/backend/browser-api";
@@ -49,15 +49,17 @@ export function World({
   mapKey = "sta_ana_house",
   preview = false,
   onSceneChange,
+  visitor,
 }: {
   npcs?: WorldNpc[];
   mapKey?: SceneKey;
   preview?: boolean;
   onSceneChange?: (map: SceneKey) => void;
+  visitor?: ContributorVisit["visitor"];
 }) {
-  const connected = npcs !== undefined && !preview;
+  const connected = npcs !== undefined && !preview && !visitor;
   const place = SCENES[mapKey];
-  const [bridge] = useState(() => new GameBridge(npcs, mapKey));
+  const [bridge] = useState(() => new GameBridge(npcs, mapKey, visitor));
   const [nearId, setNearId] = useState("");
   const [talkId, setTalkId] = useState("");
   const [privateSeen, setPrivateSeen] = useState(
@@ -78,6 +80,7 @@ export function World({
     bridge.connect(
       () => setNearId(bridge.nearId),
       (id) => {
+        if (visitor) return;
         setTalkId(id);
         setDialogue(true);
       },
@@ -90,7 +93,7 @@ export function World({
         () => {},
       );
     };
-  }, [bridge]);
+  }, [bridge, visitor]);
   useEffect(() => {
     bridge.pause(dialogue || help);
   }, [bridge, dialogue, help]);
@@ -114,7 +117,11 @@ export function World({
   return (
     <main className="world-shell">
       <header className="site-header">
-        <Link className="brand" href="/" aria-label="Bubu’s Little World home">
+        <Link
+          className="brand"
+          href={visitor ? "/contribute" : "/"}
+          aria-label="Bubu’s Little World home"
+        >
           <span className="brand-icon">
             <Heart size={22} fill="currentColor" />
           </span>
@@ -138,27 +145,36 @@ export function World({
             </div>
             <DialogTitle>Make yourself at home.</DialogTitle>
             <DialogDescription>
-              There’s no rush and nothing to win. Wander around the yard and say
-              hello.
+              {visitor
+                ? "Take a little walk with your bear. Everyone here is part of Hanna’s circle of support."
+                : "There’s no rush and nothing to win. Wander around the yard and say hello."}
             </DialogDescription>
             <ul className="help-list">
               <li>
                 <strong>Move</strong> with WASD, arrow keys, or the on-screen
                 direction pad.
               </li>
+              {!visitor && (
+                <>
+                  <li>
+                    <strong>Talk</strong> when you’re near a bear. Press E,
+                    Space, Enter, or tap Talk.
+                  </li>
+                </>
+              )}
               <li>
-                <strong>Talk</strong> when you’re near a bear. Press E, Space,
-                Enter, or tap Talk.
-              </li>
-              <li>
-                <strong>Take your time.</strong> The world pauses while a
-                message is open. Escape closes it.
+                <strong>Take your time.</strong>{" "}
+                {visitor
+                  ? "There’s no rush. This is a quiet little place to wander."
+                  : "The world pauses while a message is open. Escape closes it."}
               </li>
             </ul>
             <p className="sample-note">
-              {connected
-                ? "Your hellos are saved as you open them. You can always read them again."
-                : "Sample world · all characters and dialogue are synthetic."}
+              {visitor
+                ? "The letters and recordings are just for Hanna. You can return to your own letter from the link above."
+                : connected
+                  ? "Your hellos are saved as you open them. You can always read them again."
+                  : "Sample world · all characters and dialogue are synthetic."}
             </p>
           </DialogContent>
         </Dialog>
@@ -172,7 +188,11 @@ export function World({
             {place.title} <em>{place.accent}</em>
             <Heart className="title-heart" size={26} />
           </h1>
-          <p>Familiar places. Your favorite people. A whole lot of love.</p>
+          <p>
+            {visitor
+              ? "A little place for everyone cheering Hanna on. You belong here, too."
+              : "Familiar places. Your favorite people. A whole lot of love."}
+          </p>
         </div>
         <div className="chapter-mark">
           <House size={20} />
@@ -206,7 +226,11 @@ export function World({
           </span>
           <span className="sun-label">☀ A lovely day to wander</span>
           <span className="preview-tag">
-            {connected ? "YOUR LITTLE WORLD" : "SAMPLE WORLD"}
+            {visitor
+              ? "YOUR PLACE IN HER WORLD"
+              : connected
+                ? "YOUR LITTLE WORLD"
+                : "SAMPLE WORLD"}
           </span>
         </div>
         <div className="game-stage">
@@ -234,11 +258,13 @@ export function World({
               <div className="welcome-chip">
                 <Sparkles size={16} />
                 <span>
-                  {place.welcome}
+                  {visitor ? `Welcome, ${visitor.name}.` : place.welcome}
                   <small>
-                    {connected && !npcs.length
-                      ? "A quiet little moment. More hellos will arrive soon."
-                      : "Take a little walk. Someone’s here for you."}
+                    {visitor
+                      ? "Take a little walk. Every bear is cheering her on."
+                      : connected && !npcs.length
+                        ? "A quiet little moment. More hellos will arrive soon."
+                        : "Take a little walk. Someone’s here for you."}
                   </small>
                 </span>
               </div>
@@ -279,6 +305,7 @@ export function World({
             </div>
             <Button
               className="touch-talk"
+              hidden={!!visitor}
               disabled={!near}
               aria-label={`Talk to ${nearName}`}
               onClick={() => {
@@ -296,19 +323,29 @@ export function World({
             <span>or</span>
             <span className="keycap">↑ ← ↓ →</span>
             <span>to wander</span>
-            <i />
-            <span className="keycap">E</span>
-            <span>to say hello</span>
+            {!visitor && (
+              <>
+                <i />
+                <span className="keycap">E</span>
+                <span>to say hello</span>
+              </>
+            )}
           </div>
           <p className="near-status" role="status">
-            {near
-              ? `${nearName} is nearby. Say hello!`
-              : "Follow your feet. Find a familiar face."}
+            {visitor
+              ? "Your little bear is part of Hanna’s circle of support."
+              : near
+                ? `${nearName} is nearby. Say hello!`
+                : "Follow your feet. Find a familiar face."}
           </p>
           <Button
             variant="ghost"
             className="reset-button"
-            aria-label="Return Bubu to the starting spot"
+            aria-label={
+              visitor
+                ? "Return your bear to the starting spot"
+                : "Return Bubu to the starting spot"
+            }
             onClick={() => {
               bridge.requestReset();
             }}
@@ -334,14 +371,21 @@ export function World({
         </p>
         <span className="seen-count">
           <MessageCircle size={16} />{" "}
-          {connected
-            ? `${npcs.filter((n) => n.seen || privateSeen.has(n.id)).length} of ${npcs.length} hellos shared`
-            : seen
-              ? "1 hello shared"
-              : "A hello is waiting"}
+          {visitor
+            ? `${(npcs?.length ?? 0) + 1} little bears cheering Hanna on`
+            : connected
+              ? `${npcs.filter((n) => n.seen || privateSeen.has(n.id)).length} of ${npcs.length} hellos shared`
+              : seen
+                ? "1 hello shared"
+                : "A hello is waiting"}
         </span>
       </footer>
-      {connected ? (
+      {visitor ? (
+        <p className="preview-note">
+          <Heart size={14} /> Their letters are just for Hanna. Your support is
+          part of this place.
+        </p>
+      ) : connected ? (
         <div className="preview-note recipient-actions">
           <Button variant="outline" onClick={() => location.reload()}>
             Refresh the world
@@ -365,7 +409,7 @@ export function World({
           recipient link for published hellos.
         </p>
       )}
-      <Dialog open={dialogue} onOpenChange={closeDialogue}>
+      <Dialog open={!visitor && dialogue} onOpenChange={closeDialogue}>
         <DialogContent
           className="message-dialog"
           onCloseAutoFocus={(event) => {
