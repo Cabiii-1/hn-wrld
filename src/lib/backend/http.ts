@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { backendEnv, serviceClient, userClient } from "../supabase/server";
 import { hashPasscode, verifyPasscode } from "./passcode";
+import { openInvitation, sealInvitation } from "./invitation-links";
 import {
   houseSchema,
   messageSchema,
@@ -524,6 +525,29 @@ export async function handleBackend(request: Request, path: string[]) {
       );
       return json({ received: true }, 201);
     }
+    if (route === "contributions" && method === "PATCH") {
+      const { db, hash, invitationId } = await contributor(jar);
+      await limit(request, "edit-letter", 20, invitationId);
+      const body = z
+        .object({
+          message: z.string().trim().min(1).max(2000),
+          version: z.string().datetime({ offset: true }),
+          consent: z.literal(true),
+        })
+        .strict()
+        .parse(await readJson(request));
+      check(
+        (
+          await db.rpc("edit_contribution", {
+            p_session_hash: hash,
+            p_message: body.message,
+            p_version: body.version,
+          })
+        ).error,
+        "Your letter changed or could not be saved. Reopen it before trying again.",
+      );
+      return ok();
+    }
     if (route === "uploads" && method === "POST") {
       const { db, hash, invitationId } = await contributor(jar);
       await limit(request, "upload", 24, invitationId);
@@ -734,18 +758,78 @@ export async function handleBackend(request: Request, path: string[]) {
       const db = await admin(jar);
       await limit(request, "create-invite", 50);
       const body = invitationSchema.parse(await readJson(request));
-      const token = newSecret();
-      const result = await db.rpc("admin_create_invite", {
+      const token = newSecret(),
+        id = randomUUID();
+      const result = await db.rpc("admin_issue_invite", {
+        p_id: id,
         p_hash: digest(token, backendEnv().INVITE_TOKEN_PEPPER),
+        p_cipher: sealInvitation(token, id, backendEnv().INVITE_TOKEN_PEPPER),
         p_label: body.label,
         p_expires: body.expiresAt,
+        p_replace: false,
       });
       check(result.error);
-      // Fragment never reaches web server logs/referrers. Shown once, not persisted.
+      // The fragment is recovered only through authenticated admin access.
       return json(
         { id: result.data, url: `${backendEnv().APP_ORIGIN}/invite#${token}` },
         201,
       );
+    }
+    if (
+      path[0] === "admin" &&
+      path[1] === "invitations" &&
+      path.length === 4 &&
+      path[3] === "link" &&
+      (method === "GET" || method === "POST")
+    ) {
+      const db = await admin(jar),
+        id = idSchema.parse(path[2]);
+      if (method === "GET") {
+        const result = await db
+          .from("invitations")
+          .select("id,token_hash,link_ciphertext,revoked_at,expires_at")
+          .eq("id", id)
+          .maybeSingle();
+        check(result.error);
+        if (
+          !result.data ||
+          result.data.revoked_at ||
+          (result.data.expires_at &&
+            new Date(result.data.expires_at) <= new Date())
+        )
+          throw new HttpError(404, "Invitation unavailable.");
+        if (!result.data.link_ciphertext) return json({ url: null });
+        const token = openInvitation(
+          result.data.link_ciphertext,
+          id,
+          backendEnv().INVITE_TOKEN_PEPPER,
+        );
+        if (
+          digest(token, backendEnv().INVITE_TOKEN_PEPPER) !==
+          result.data.token_hash
+        )
+          throw new HttpError(409, "Please replace this invitation link.");
+        return json({ url: `${backendEnv().APP_ORIGIN}/invite#${token}` });
+      }
+      await limit(request, "replace-invite", 20, id);
+      const token = newSecret();
+      check(
+        (
+          await db.rpc("admin_issue_invite", {
+            p_id: id,
+            p_hash: digest(token, backendEnv().INVITE_TOKEN_PEPPER),
+            p_cipher: sealInvitation(
+              token,
+              id,
+              backendEnv().INVITE_TOKEN_PEPPER,
+            ),
+            p_label: null,
+            p_expires: null,
+            p_replace: true,
+          })
+        ).error,
+      );
+      return json({ url: `${backendEnv().APP_ORIGIN}/invite#${token}` });
     }
     if (
       path[0] === "admin" &&

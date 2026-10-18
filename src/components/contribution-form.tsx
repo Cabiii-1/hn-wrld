@@ -18,6 +18,7 @@ import { MAX, type Upload } from "@/lib/backend/contracts";
 type Snapshot = {
   displayName: string;
   submitted: boolean;
+  letter?: { message: string; version: string } | null;
   uploads: Upload[];
   limits: Pick<typeof MAX, "photoBytes" | "audioBytes" | "audioSeconds">;
 };
@@ -29,6 +30,9 @@ export function ContributionForm({ configured }: { configured: boolean }) {
     [description, setDescription] = useState("");
   const [recording, setRecording] = useState(false),
     [recordSupported, setRecordSupported] = useState(false);
+  const [editing, setEditing] = useState(false),
+    [letterMessage, setLetterMessage] = useState(""),
+    [letterVersion, setLetterVersion] = useState("");
   const recorder = useRef<MediaRecorder | null>(null),
     stream = useRef<MediaStream | null>(null),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -210,11 +214,123 @@ export function ContributionForm({ configured }: { configured: boolean }) {
             your message and attachments before they appear in her world.
           </p>
           <p className="quiet-copy">
-            Received does not mean published. If you’d like anything removed,
-            contact the person who invited you.
+            Received does not mean published. You can return through your
+            invitation link to edit your letter. Changes go back to Dudu for
+            review before Hanna can see them.
           </p>
+          {snapshot.letter && !editing && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setLetterMessage(snapshot.letter!.message);
+                setLetterVersion(snapshot.letter!.version);
+                setError("");
+                setEditing(true);
+              }}
+            >
+              Edit my letter
+            </Button>
+          )}
+          {editing && (
+            <form
+              onSubmit={async (event) => {
+                event.preventDefault();
+                const form = new FormData(event.currentTarget);
+                setBusy("Saving your letter…");
+                setError("");
+                try {
+                  await api("contributions", "PATCH", {
+                    message: letterMessage,
+                    version: letterVersion,
+                    consent: form.get("consent") === "on",
+                  });
+                  await refresh();
+                  setEditing(false);
+                } catch (e) {
+                  setError(
+                    e instanceof Error
+                      ? e.message
+                      : "Your changes were not saved.",
+                  );
+                } finally {
+                  setBusy("");
+                }
+              }}
+            >
+              <label>
+                Your message for Hanna
+                <textarea
+                  required
+                  name="message"
+                  rows={7}
+                  maxLength={2000}
+                  value={letterMessage}
+                  disabled={!!busy}
+                  onChange={(e) => setLetterMessage(e.target.value)}
+                />
+              </label>
+              <p className="quiet-copy">
+                Your photos and voice note will stay with your letter. Saving
+                changes sends the letter back for review.
+              </p>
+              <label>
+                <input
+                  type="checkbox"
+                  name="consent"
+                  required
+                  disabled={!!busy}
+                />{" "}
+                I’m happy to share this updated message with Hanna once
+                reviewed.
+              </label>
+              <Button type="submit" disabled={!!busy}>
+                {busy || "Save my changes"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!!busy}
+                onClick={() => {
+                  setEditing(false);
+                  setError("");
+                }}
+              >
+                Cancel
+              </Button>
+              {error && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!!busy}
+                  onClick={async () => {
+                    setBusy("Reopening your letter…");
+                    try {
+                      const saved = await api<Snapshot>("contributor");
+                      setSnapshot(saved);
+                      if (saved.letter) {
+                        setLetterMessage(saved.letter.message);
+                        setLetterVersion(saved.letter.version);
+                        setError("");
+                      }
+                    } catch (e) {
+                      setError(
+                        e instanceof Error
+                          ? e.message
+                          : "Please reopen your invitation.",
+                      );
+                    } finally {
+                      setBusy("");
+                    }
+                  }}
+                >
+                  Reopen saved letter
+                </Button>
+              )}
+            </form>
+          )}
           <Button
             variant="outline"
+            disabled={!!busy}
             onClick={() => {
               void api("contributor/logout", "POST")
                 .then(() => location.replace("/invite"))

@@ -85,6 +85,7 @@ beforeAll(async () => {
     "0005_three_places.sql",
     "0006_private_finale.sql",
     "0007_invitation_assigned_names.sql",
+    "0008_returning_contributors.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -239,9 +240,9 @@ describe("M2 PostgreSQL migrations, RLS and atomic workflows", () => {
     const used = await invite();
     await submit(used.session);
     await expect(submit(used.session)).rejects.toThrow("Already submitted");
-    await expect(
-      scalar("public.exchange_invitation($1,'used')", [used.token]),
-    ).rejects.toThrow("unavailable");
+    await scalar("public.exchange_invitation($1,'used')", [used.token]);
+    expect(await scalar("public.active_contributor('used')")).toBe(used.id);
+    await expect(submit("used")).rejects.toThrow("Already submitted");
   });
   it("persists rate limits across callers and blocks after the allowed attempts", async () => {
     await role("service_role");
@@ -1020,5 +1021,116 @@ describe("M5 private finale and progress", () => {
     await expect(
       scalar("public.recipient_complete_finale($1,3)", [r.session]),
     ).rejects.toThrow();
+  });
+});
+
+describe("Returning contributors", () => {
+  it("edits only the owned letter, rejects stale versions, and withdraws publication for review", async () => {
+    const owner = await invite(),
+      stranger = await invite();
+    const id = await submit(owner.session);
+    await role("postgres");
+    await db.query(
+      "update public.contributions set status='approved' where id=$1",
+      [id],
+    );
+    const area = await scalar<string>("(select id from public.areas limit 1)");
+    await db.query(
+      "insert into public.npc_placements(contribution_id,area_id,spawn_x,spawn_y,published) values($1,$2,100,100,true)",
+      [id, area],
+    );
+    await role("service_role");
+    const snapshot = await scalar<{
+      letter: { message: string; version: string };
+    }>("public.contributor_snapshot($1)", [owner.session]);
+    expect(snapshot.letter.message).toContain("Synthetic hello");
+    expect(
+      await scalar("public.contributor_snapshot($1)->'letter'", [
+        stranger.session,
+      ]),
+    ).toBeNull();
+    await expect(
+      scalar("public.edit_contribution($1,'Forged',$2)", [
+        stranger.session,
+        snapshot.letter.version,
+      ]),
+    ).rejects.toThrow();
+    await scalar("public.edit_contribution($1,'Updated synthetic letter',$2)", [
+      owner.session,
+      snapshot.letter.version,
+    ]);
+    expect(
+      await scalar(
+        "(select status::text from public.contributions where id=$1)",
+        [id],
+      ),
+    ).toBe("pending");
+    expect(
+      await scalar(
+        "(select published from public.npc_placements where contribution_id=$1)",
+        [id],
+      ),
+    ).toBe(false);
+    await expect(
+      scalar("public.edit_contribution($1,'Stale overwrite',$2)", [
+        owner.session,
+        snapshot.letter.version,
+      ]),
+    ).rejects.toThrow("changed");
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_revoke_invite($1)", [owner.id]);
+    await role("service_role");
+    await expect(
+      scalar("public.edit_contribution($1,'Revoked',$2)", [
+        owner.session,
+        snapshot.letter.version,
+      ]),
+    ).rejects.toThrow("unavailable");
+  });
+  it("issues and replaces recoverable links only for an allowlisted admin, preserving the letter", async () => {
+    const id = randomUUID();
+    const issue = () =>
+      scalar(
+        "public.admin_issue_invite($1,'new-hash',$2,'Synthetic',null,false)",
+        [id, "x".repeat(80)],
+      );
+    await role("anon");
+    await expect(issue()).rejects.toThrow();
+    await role("authenticated", OTHER);
+    await expect(issue()).rejects.toThrow("Admin required");
+    await role("authenticated", ADMIN);
+    await issue();
+    await role("service_role");
+    await scalar(
+      "public.exchange_invitation('new-hash','recoverable-session')",
+    );
+    const letter = await submit("recoverable-session");
+    await role("authenticated", ADMIN);
+    await scalar(
+      "public.admin_issue_invite($1,'replacement-hash',$2,null,null,true)",
+      [id, "y".repeat(80)],
+    );
+    await role("service_role");
+    expect(
+      await scalar("public.active_contributor('recoverable-session')"),
+    ).toBeNull();
+    await expect(
+      scalar("public.exchange_invitation('new-hash','old')"),
+    ).rejects.toThrow("unavailable");
+    await scalar("public.exchange_invitation('replacement-hash','new')");
+    expect(
+      await scalar(
+        "(select id from public.contributions where invitation_id=$1)",
+        [id],
+      ),
+    ).toBe(letter);
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_revoke_invite($1)", [id]);
+    await expect(
+      scalar("public.admin_issue_invite($1,'revived',$2,null,null,true)", [
+        id,
+        "z".repeat(80),
+      ]),
+    ).rejects.toThrow("unavailable");
   });
 });

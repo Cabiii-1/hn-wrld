@@ -336,3 +336,84 @@ describe("contributor and admin UI workflows", () => {
     );
   });
 });
+
+describe("Returning contributor UI", () => {
+  it("loads the saved letter and submits edits with its original version and fresh consent", async () => {
+    const letter = {
+      message: "Original synthetic letter",
+      version: "2026-10-18T00:00:00Z",
+    };
+    mock.api.mockResolvedValue({
+      displayName: "Synthetic Friend",
+      submitted: true,
+      letter,
+      uploads: [],
+      limits: MAX,
+    });
+    render(<ContributionForm configured />);
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Edit my letter" }),
+    );
+    const input = screen.getByLabelText("Your message for Hanna");
+    expect((input as HTMLTextAreaElement).value).toBe(letter.message);
+    await userEvent.clear(input);
+    await userEvent.type(input, "Updated synthetic letter");
+    await userEvent.click(screen.getByRole("checkbox"));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Save my changes" }),
+    );
+    await waitFor(() =>
+      expect(mock.api).toHaveBeenCalledWith("contributions", "PATCH", {
+        message: "Updated synthetic letter",
+        version: letter.version,
+        consent: true,
+      }),
+    );
+    await screen.findByRole("button", { name: "Edit my letter" });
+  });
+  it("reveals saved links and offers explicit replacement for older invitations", async () => {
+    const data: AdminData = {
+      invitations: [
+        {
+          id: "i",
+          label: "Synthetic Friend",
+          expires_at: null,
+          revoked_at: null,
+          created_at: "2026-10-18T00:00:00Z",
+        },
+      ],
+      contributions: [],
+      areas: [],
+      placements: [],
+      media: [],
+    };
+    mock.api.mockImplementation(async (path: string) =>
+      path === "admin/dashboard" ? data : { url: null },
+    );
+    render(<AdminDesk configured />);
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Invitations" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "View invitation link" }),
+    );
+    await screen.findByRole("button", { name: "Replace link" });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    await userEvent.click(screen.getByRole("button", { name: "Replace link" }));
+    expect(mock.api).not.toHaveBeenCalledWith(
+      "admin/invitations/i/link",
+      "POST",
+    );
+    confirm.mockReturnValue(true);
+    mock.api.mockResolvedValue({ url: "https://world.test/invite#synthetic" });
+    await userEvent.click(screen.getByRole("button", { name: "Replace link" }));
+    expect(
+      (
+        (await screen.findByLabelText(
+          "Invitation link for Synthetic Friend",
+        )) as HTMLInputElement
+      ).value,
+    ).toBe("https://world.test/invite#synthetic");
+    confirm.mockRestore();
+  });
+});

@@ -457,3 +457,91 @@ describe("M2 HTTP authorization and privacy", () => {
     expect(state.setters).not.toHaveBeenCalled();
   });
 });
+
+describe("Recoverable contributor links and editing", () => {
+  const id = "11111111-1111-4111-8111-111111111111";
+  it("requires admin authorization to reveal or replace links", async () => {
+    for (const method of ["GET", "POST"]) {
+      expect(
+        (await request("admin/invitations/" + id + "/link", method)).status,
+      ).toBe(401);
+      state.jar.set("bubu-admin", "synthetic-jwt");
+      state.validUser = true;
+      state.member = false;
+      expect(
+        (await request("admin/invitations/" + id + "/link", method)).status,
+      ).toBe(403);
+      state.jar.clear();
+    }
+  });
+  it("recovers the exact newly issued link and returns null for legacy links", async () => {
+    state.jar.set("bubu-admin", "synthetic-jwt");
+    state.validUser = true;
+    state.member = true;
+    const created = await request("admin/invitations", "POST", {
+      label: "Synthetic Friend",
+      expiresAt: null,
+    });
+    expect(created.status).toBe(201);
+    const issued = state.rpc.mock.calls.find(
+      ([name]) => name === "admin_issue_invite",
+    )![1];
+    const body = await created.json();
+    state.rows.invitations = {
+      id: issued.p_id,
+      token_hash: issued.p_hash,
+      link_ciphertext: issued.p_cipher,
+      revoked_at: null,
+      expires_at: null,
+    };
+    const revealed = await request(
+      "admin/invitations/" + issued.p_id + "/link",
+    );
+    expect((await revealed.json()).url).toBe(body.url);
+    expect(body.url).not.toContain(issued.p_cipher);
+    state.rows.invitations = {
+      id,
+      link_ciphertext: null,
+      revoked_at: null,
+      expires_at: null,
+    };
+    expect(
+      await (await request("admin/invitations/" + id + "/link")).json(),
+    ).toEqual({ url: null });
+    state.rows.invitations = { id, revoked_at: "2026-10-17T00:00:00Z" };
+    expect((await request("admin/invitations/" + id + "/link")).status).toBe(
+      404,
+    );
+  });
+  it("validates edit consent and forwards only the scoped session, message, and version", async () => {
+    const payload = {
+      message: "Updated synthetic letter",
+      version: "2026-10-18T00:00:00.123456+00:00",
+      consent: true,
+    };
+    expect((await request("contributions", "PATCH", payload)).status).toBe(401);
+    state.jar.set("bubu-contributor", newSecret());
+    expect(
+      (await request("contributions", "PATCH", { ...payload, consent: false }))
+        .status,
+    ).toBe(400);
+    expect(
+      (
+        await request("contributions", "PATCH", {
+          ...payload,
+          invitationId: id,
+        })
+      ).status,
+    ).toBe(400);
+    expect((await request("contributions", "PATCH", payload)).status).toBe(200);
+    expect(state.rpc).toHaveBeenCalledWith("edit_contribution", {
+      p_session_hash: expect.any(String),
+      p_message: payload.message,
+      p_version: payload.version,
+    });
+    expect(
+      (await request("contributions", "PATCH", payload, "https://evil.test"))
+        .status,
+    ).toBe(403);
+  });
+});

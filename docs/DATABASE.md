@@ -19,7 +19,7 @@ M3 migration `0004_recipient_world.sql` adds per-link passcode verifiers, link-b
 2. An invite does not grant access to any other submission or to recipient content.
 3. Admin identity is authenticated server-side and authorizes moderation/invite operations.
 4. Coordinates must lie in safe map bounds and inside designated traversable zones (map-level check in app).
-5. Raw invite/access codes never stored in DB or logs; only hashes. Recipient session cookie is `httpOnly`, `secure`, `sameSite=lax`, short-lived.
+5. Raw invite/access codes are never stored in DB or logs. Verification uses hashes. Migration 0008 additionally stores an authenticated encrypted recovery copy of contributor invitation tokens for allowlisted admin retrieval; the encryption key stays server-side. Recipient session cookie is `httpOnly`, `secure`, `sameSite=lax`, short-lived.
 6. DB tables default to RLS deny for anonymous browser users. Server-only routes should apply authorization in app code even when a privileged key bypasses RLS.
 7. Keep data deletion/unpublish possible and define retention after the event.
 
@@ -47,3 +47,5 @@ The follow-up migration `supabase/migrations/0002_media_recipient_gate.sql` adds
 **Policy:** No generic browser-side `SELECT`/`INSERT` RLS policies on content/media/session tables. All privileged operations are in server-only handlers with tested session authorization. Postgres RLS enabled and deny-by-default. A private bucket alone is not authorization; signed URLs must only be created after the server checks the calling identity *and* parent content approval/publication.
 
 **Important:** Migration 0002 provides storage structure, not a complete upload implementation. Implement pending-file reconciliation, codec sniffing, media metadata verification, EXIF stripping and orphan cleanup in server workflows before production.
+
+Migration 0008 supports returning contributors. `admin_issue_invite` atomically issues or replaces an encrypted recoverable link after an allowlisted JWT check. Replacement revokes old sessions and leaves the existing letter intact. `contributor_snapshot` returns only the active invitation’s letter/version; service-only `edit_contribution` checks scope, expiry/revocation, message length, and optimistic version under row locks. Edits reset moderation to pending and unpublish the NPC without changing attachments. Active links can re-exchange after submission; submission quota enforcement remains in `submit_contribution`.

@@ -84,3 +84,6 @@ Multiplayer, live chat, complex pathfinding, procedural maps, paid accounts, AI-
 
 ## 13. Open non-blocking artistic questions
 Final sprite scale and accessories, wording of passcode hint, final Bubu/Dudu authored lines, scene transitions and ambient sound, exact number of NPCs per scene, and whether Bubu can walk up the SLU stairs. Select sensible placeholders without delaying the vertical slice and record assumptions. The surprise date remains unset.
+
+### Returning invitation links (owner update, 2026-10-18)
+The admin Invitations tab must allow viewing and copying new invitation links through authenticated, no-store endpoints. Store only encrypted recovery copies alongside verification hashes, with the decryption key kept server-side. Older hash-only links require explicit replacement; preserve their letter, invalidate the old token and sessions, and retain expiry/revocation. Invitees can reopen active links and edit their existing letter text with fresh consent and optimistic concurrency. Updates return the letter to pending moderation and unpublish the NPC until reviewed again. Preserve attached photos/audio and continue to enforce one letter per invitation.

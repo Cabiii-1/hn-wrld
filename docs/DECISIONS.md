@@ -26,7 +26,7 @@
 - Exact House details, Tuguegarao park decorations, SLU entrance interaction bounds; day or sunset palette.
 - Sprite accessory set, nickname labels and dialogue languages (Filipino/English/Ilocano/Ibanag mixtures).
 - Exact reunion animation beats, timing and Dudu's final letter text; add editable placeholders.
-- Whether to permit contributors to replace a submission before approval (default no; admin can reopen invitation).
+- Confirmed 2026-10-18: invitees may reopen active links and edit their letter text. Each edit returns the parent to pending and unpublishes its NPC; unchanged photos/audio are preserved. No duplicate letter is created. Admin can recover new links or explicitly replace older hash-only links.
 - Launch date, once known, determines freeze and test schedule, not product architecture.
 
 ## Completion policy

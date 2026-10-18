@@ -38,6 +38,31 @@ export function AdminDesk({ configured }: { configured: boolean }) {
   const [inviteUrl, setInviteUrl] = useState(""),
     [copied, setCopied] = useState(false),
     [notice, setNotice] = useState("");
+  const [savedLinks, setSavedLinks] = useState<Record<string, string | null>>(
+    {},
+  );
+  async function revealLink(id: string, replace = false) {
+    if (
+      replace &&
+      !window.confirm(
+        "Replace this invitation link? The old link and open sessions will stop working. Their existing letter will be kept. Share the replacement privately with this person.",
+      )
+    )
+      return;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await api<{ url: string | null }>(
+        `admin/invitations/${id}/link`,
+        replace ? "POST" : "GET",
+      );
+      setSavedLinks((links) => ({ ...links, [id]: result.url }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not open this link.");
+    } finally {
+      setBusy(false);
+    }
+  }
   async function refresh() {
     const value = await api<AdminData>("admin/dashboard");
     setData(value);
@@ -325,6 +350,63 @@ export function AdminDesk({ configured }: { configured: boolean }) {
                           ? "Message received"
                           : "Waiting for a hello"}
                   </span>
+                  {!i.revoked_at &&
+                    (!i.expires_at || new Date(i.expires_at) > new Date()) && (
+                      <div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={busy}
+                          onClick={() => void revealLink(i.id)}
+                        >
+                          View invitation link
+                        </Button>
+                        {savedLinks[i.id] && (
+                          <>
+                            <input
+                              readOnly
+                              aria-label={`Invitation link for ${i.label}`}
+                              value={savedLinks[i.id] ?? ""}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(
+                                    savedLinks[i.id]!,
+                                  );
+                                  setNotice(`Link copied for ${i.label}.`);
+                                } catch {
+                                  setError(
+                                    "Please select and copy the link manually.",
+                                  );
+                                }
+                              }}
+                            >
+                              Copy link
+                            </Button>
+                          </>
+                        )}
+                        {savedLinks[i.id] === null && (
+                          <>
+                            <p>
+                              This older link can’t be recovered. Create a
+                              replacement to share again; their letter will be
+                              kept.
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={busy}
+                              onClick={() => void revealLink(i.id, true)}
+                            >
+                              Replace link
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
                 </div>
                 <Button
                   variant="ghost"

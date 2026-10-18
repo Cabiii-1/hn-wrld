@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  sealInvitation,
+  openInvitation,
+} from "../src/lib/backend/invitation-links";
+import {
   contributionSchema,
   isSafeHousePlacement,
   tokenSchema,
@@ -16,6 +20,26 @@ import {
 } from "../src/lib/backend/security";
 
 describe("M2 request and authorization boundaries", () => {
+  it("encrypts recoverable links with integrity and invitation binding", () => {
+    const token = newSecret();
+    const cipher = sealInvitation(token, "invite-one", "synthetic-pepper");
+    expect(cipher).not.toContain(token);
+    expect(openInvitation(cipher, "invite-one", "synthetic-pepper")).toBe(
+      token,
+    );
+    expect(sealInvitation(token, "invite-one", "synthetic-pepper")).not.toBe(
+      cipher,
+    );
+    expect(() =>
+      openInvitation(cipher, "invite-two", "synthetic-pepper"),
+    ).toThrow();
+    expect(() =>
+      openInvitation(cipher, "invite-one", "wrong-pepper"),
+    ).toThrow();
+    expect(() =>
+      openInvitation(`X${cipher.slice(1)}`, "invite-one", "synthetic-pepper"),
+    ).toThrow();
+  });
   it("generates unguessable secrets and deterministic peppered digests", () => {
     const a = newSecret(),
       b = newSecret();

@@ -37,7 +37,7 @@ No hosted Supabase account is needed for the Docker option. Do not paste keys/pa
 
 ## Rehearse with synthetic content
 
-1. On Dudu’s desk, create an invitation. Copy the fragment link immediately; it is shown only once. It is not sent to anybody automatically. To reissue a lost link, revoke it and create another.
+1. On Dudu’s desk, create an invitation. Copy the fragment link privately; it can also be recovered later from Invitations → View invitation link. It is not sent to anybody automatically. Older hash-only invitations offer Replace link, which invalidates the old link and sessions while keeping the existing letter.
 2. Open the link in a separate browser/profile. It automatically exchanges the token for a scoped HttpOnly cookie and opens the contribution form, with no extra invitation button. The fragment is removed immediately; a failed exchange offers **Try again**. There is no contributor account.
 3. Submit sample text with three test photos and one ≤90-second audio clip (or record where MediaRecorder is supported). The optional description/transcript applies to the next attachment. Check consent. Each file uploads directly to private quarantine storage, then is validated server-side; only validated, invitation-owned attachments can be submitted. A failed upload stays removable and retryable; refresh attachments after a network interruption.
 4. Confirm the receipt says **received, not published**. On the admin desk, preview the text and each attachment. **Keep** or **Exclude** each attachment before approving the message. You may edit text, reject/hide the parent, delete a single file, or delete the whole contribution.
@@ -69,3 +69,5 @@ Raw uploads are only under randomized `staging/` paths. Verified bytes go to a s
 See `verification/M2_RESULTS.md` and `SECURITY_M2.md`. Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. `npm run test:db` exercises actual PostgreSQL via PGlite without Docker.
 
 **Before M2 can be called fully verified:** complete browser and physical-phone file/recording checks, including actual MP3/M4A/OGG/WebM recordings, cancellation/network recovery and expiry behavior. The hosted rehearsal passes the synthetic invitation → direct upload → validation → receipt → admin review → placement sequence, Storage preflight headers, replay denial, private bucket access and physical deletion of eligible synthetic final files. It uses HTTP requests, not a browser enforcing CORS or accessing a microphone. See the verification report for precise limits. Do not proceed to M3 yet.
+
+Returning-contributor update (2026-10-18): migration 0008 adds encrypted admin link recovery and scoped text editing. Reopening a non-expired, non-revoked link shows the saved letter receipt and Edit my letter. Edits preserve attachments, require fresh consent and an unchanged version, reset moderation to pending and unpublish the NPC. Resubmitting a second letter remains blocked.
