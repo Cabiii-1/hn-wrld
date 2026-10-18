@@ -541,19 +541,12 @@ export async function handleBackend(request: Request, path: string[]) {
       const { db, hash, invitationId } = await contributor(jar);
       await limit(request, "submit", 20, invitationId);
       const body = contributionSchema.parse(await readJson(request));
-      const result = await db.rpc(
-        body.shareWithInvitees === undefined
-          ? "submit_contribution"
-          : "submit_shared_contribution",
-        {
-          p_session_hash: hash,
-          ...(body.shareWithInvitees === undefined
-            ? { p_name: "", p_relationship: "" }
-            : { p_share: body.shareWithInvitees }),
-          p_message: body.message,
-          p_upload_ids: body.uploadIds,
-        },
-      );
+      const result = await db.rpc("submit_instant_contribution", {
+        p_session_hash: hash,
+        p_share: body.shareWithInvitees ?? false,
+        p_message: body.message,
+        p_upload_ids: body.uploadIds,
+      });
       check(
         result.error,
         "Your message was not saved. Check the attachments or reopen your invitation.",
@@ -592,31 +585,14 @@ export async function handleBackend(request: Request, path: string[]) {
         .parse(await readJson(request));
       check(
         (
-          await db.rpc(
-            body.shareWithInvitees !== undefined
-              ? "edit_shared_contribution"
-              : body.retainedMedia === undefined
-                ? "edit_contribution"
-                : "edit_contribution_media",
-            {
-              p_session_hash: hash,
-              p_message: body.message,
-              p_version: body.version,
-              ...(body.shareWithInvitees === undefined
-                ? {}
-                : {
-                    p_share: body.shareWithInvitees,
-                    p_retained: body.retainedMedia ?? null,
-                    p_upload_ids: body.uploadIds ?? null,
-                  }),
-              ...(body.retainedMedia === undefined
-                ? {}
-                : {
-                    p_retained: body.retainedMedia,
-                    p_upload_ids: body.uploadIds,
-                  }),
-            },
-          )
+          await db.rpc("edit_instant_contribution", {
+            p_session_hash: hash,
+            p_message: body.message,
+            p_version: body.version,
+            p_share: body.shareWithInvitees ?? null,
+            p_retained: body.retainedMedia ?? null,
+            p_upload_ids: body.uploadIds ?? null,
+          })
         ).error,
         "Your letter changed or could not be saved. Reopen it before trying again.",
       );

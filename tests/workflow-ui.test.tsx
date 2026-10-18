@@ -163,7 +163,7 @@ describe("contributor and admin UI workflows", () => {
     });
     expect(mock.replace).toHaveBeenCalledWith("/contribute");
   });
-  it("requires consent, submits once, and shows receipt without publication claims", async () => {
+  it("requires consent, submits once, and confirms immediate arrival", async () => {
     let submitted = false;
     mock.api.mockImplementation(async (path: string) => {
       if (path === "contributions") {
@@ -203,7 +203,7 @@ describe("contributor and admin UI workflows", () => {
       shareWithInvitees: false,
       uploadIds: [],
     });
-    expect(screen.getByText(/Received does not mean published/)).toBeTruthy();
+    expect(screen.getByText(/Your hello is in her world/)).toBeTruthy();
   });
   it("recovers a receipt after a lost submission response without duplicating", async () => {
     let submitted = false;
@@ -273,7 +273,7 @@ describe("contributor and admin UI workflows", () => {
       "DELETE",
     );
   });
-  it("keeps parent approval disabled until each attachment is explicitly reviewed", async () => {
+  it("keeps manual restoration disabled while legacy attachments still need a decision", async () => {
     const data: AdminData = {
       invitations: [],
       areas: [],
@@ -313,7 +313,7 @@ describe("contributor and admin UI workflows", () => {
     );
     render(<AdminDesk configured />);
     const approve = await screen.findByRole("button", {
-      name: "Approve message",
+      name: "Save message",
     });
     expect((approve as HTMLButtonElement).disabled).toBe(true);
     await userEvent.click(
@@ -323,13 +323,13 @@ describe("contributor and admin UI workflows", () => {
       expect(
         (
           screen.getByRole("button", {
-            name: "Approve message",
+            name: "Save message",
           }) as HTMLButtonElement
         ).disabled,
       ).toBe(false),
     );
     await userEvent.click(
-      screen.getByRole("button", { name: "Approve message" }),
+      screen.getByRole("button", { name: "Save message" }),
     );
     await waitFor(() =>
       expect(mock.api).toHaveBeenCalledWith("admin/contributions/c", "PATCH", {

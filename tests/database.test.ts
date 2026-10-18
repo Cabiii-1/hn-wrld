@@ -94,6 +94,7 @@ beforeAll(async () => {
     "0014_tuguegarao_civic_plaza.sql",
     "0015_park_display_name.sql",
     "0016_open_park_perimeter.sql",
+    "0017_instant_invited_hellos.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -1733,4 +1734,243 @@ describe("Opt-in shared letters", () => {
     await role("service_role");
     await expect(read(reader.session, place)).rejects.toThrow("unavailable");
   });
+});
+
+describe("Instant invited hellos", () => {
+  async function instant(
+    session: string,
+    share = false,
+    uploads: string[] = [],
+  ) {
+    return scalar<string>(
+      "public.submit_instant_contribution($1,'Synthetic instant hello',$2::uuid[],$3)",
+      [session, uploads, share],
+    );
+  }
+  it("publishes validated media and a safely spaced bear in each designated scene without admin approval", async () => {
+    const positions: { map: string; x: number; y: number; r: number }[] = [];
+    for (const map of SCENE_KEYS) {
+      for (let n = 0; n < 3; n++) {
+        const i = await invite();
+        await role("authenticated", ADMIN);
+        await scalar("public.admin_set_invite_place($1,$2)", [i.id, map]);
+        await role("service_role");
+        const photo = await reserve(i.session);
+        await validate(i.session, photo.id, i.id);
+        const c = await instant(i.session, true, [photo.id]);
+        const rows = await db.query<{
+          spawn_x: number;
+          spawn_y: number;
+          wander_radius: number;
+          published: boolean;
+          status: string;
+          map_key: string;
+        }>(
+          "select p.spawn_x,p.spawn_y,p.wander_radius,p.published,c.status,a.map_key from public.npc_placements p join public.contributions c on c.id=p.contribution_id join public.areas a on a.id=p.area_id where c.id=$1",
+          [c],
+        );
+        const p = rows.rows[0];
+        expect(p).toMatchObject({
+          published: true,
+          status: "approved",
+          map_key: map,
+        });
+        expect(safePlacement(map, p.spawn_x, p.spawn_y, p.wander_radius)).toBe(
+          true,
+        );
+        expect(p.wander_radius).toBeGreaterThanOrEqual(
+          map === "slu_baguio" ? 4 : 8,
+        );
+        expect(p.wander_radius).toBeLessThanOrEqual(20);
+        for (const old of positions.filter((v) => v.map === map))
+          expect(
+            Math.hypot(p.spawn_x - old.x, p.spawn_y - old.y),
+          ).toBeGreaterThanOrEqual(24);
+        positions.push({ map, x: p.spawn_x, y: p.spawn_y, r: p.wander_radius });
+        expect(
+          await scalar(
+            "(select status from public.contribution_media where id=$1)",
+            [photo.id],
+          ),
+        ).toBe("approved");
+      }
+    }
+  });
+  it("updates an active hello immediately, preserves its location and privacy, and keeps rejected attachments excluded", async () => {
+    const i = await invite();
+    const photo = await reserve(i.session);
+    await validate(i.session, photo.id, i.id);
+    const c = await instant(i.session, false, [photo.id]);
+    const old = (
+      await db.query(
+        "select spawn_x,spawn_y,wander_radius from public.npc_placements where contribution_id=$1",
+        [c],
+      )
+    ).rows[0];
+    await role("postgres");
+    await db.query(
+      "update public.contribution_media set status='rejected' where id=$1",
+      [photo.id],
+    );
+    await role("service_role");
+    const snap = await scalar<{ letter: { version: string } }>(
+      "public.contributor_snapshot($1)",
+      [i.session],
+    );
+    await scalar(
+      "public.edit_instant_contribution($1,'Updated instant words',$2,$3::jsonb,'{}'::uuid[],null)",
+      [
+        i.session,
+        snap.letter.version,
+        JSON.stringify([{ id: photo.id, description: "" }]),
+      ],
+    );
+    expect(
+      await scalar(
+        "(select published from public.npc_placements where contribution_id=$1)",
+        [c],
+      ),
+    ).toBe(true);
+    expect(
+      (
+        await db.query(
+          "select spawn_x,spawn_y,wander_radius from public.npc_placements where contribution_id=$1",
+          [c],
+        )
+      ).rows[0],
+    ).toEqual(old);
+    expect(
+      await scalar(
+        "(select share_with_invitees from public.contributions where id=$1)",
+        [c],
+      ),
+    ).toBe(false);
+    expect(
+      await scalar(
+        "(select status from public.contribution_media where id=$1)",
+        [photo.id],
+      ),
+    ).toBe("rejected");
+    await expect(
+      scalar(
+        "public.edit_instant_contribution($1,'Stale update',$2,null,null,true)",
+        [i.session, snap.letter.version],
+      ),
+    ).rejects.toThrow("changed");
+  });
+  it("does not undo an admin hide or manual unpublication when contributors edit", async () => {
+    for (const hidden of [false, true]) {
+      const i = await invite();
+      const c = await instant(i.session);
+      await role("authenticated", ADMIN);
+      if (hidden) await scalar("public.admin_review($1,'hidden',null)", [c]);
+      else {
+        await role("postgres");
+        await db.query(
+          "update public.npc_placements set published=false where contribution_id=$1",
+          [c],
+        );
+      }
+      await role("service_role");
+      const snap = await scalar<{ letter: { version: string } }>(
+        "public.contributor_snapshot($1)",
+        [i.session],
+      );
+      await scalar(
+        "public.edit_instant_contribution($1,'Changed held hello',$2,null,null,false)",
+        [i.session, snap.letter.version],
+      );
+      expect(
+        await scalar(
+          "(select published from public.npc_placements where contribution_id=$1)",
+          [c],
+        ),
+      ).toBe(false);
+      expect(
+        await scalar("(select status from public.contributions where id=$1)", [
+          c,
+        ]),
+      ).toBe(hidden ? "hidden" : "approved");
+    }
+  });
+  it("rejects unvalidated uploads, revoked invitations and browser-role publication attempts atomically", async () => {
+    const i = await invite();
+    const u = await reserve(i.session);
+    await expect(instant(i.session, true, [u.id])).rejects.toThrow(
+      "attachments",
+    );
+    expect(
+      await scalar(
+        "(select count(*) from public.contributions where invitation_id=$1)",
+        [i.id],
+      ),
+    ).toBe(0);
+    await role("anon");
+    await expect(instant(i.session)).rejects.toThrow();
+    await role("authenticated", ADMIN);
+    await expect(
+      scalar("public.publish_invited_contribution($1,true,false)", [i.id]),
+    ).rejects.toThrow();
+    await scalar("public.admin_revoke_invite($1)", [i.id]);
+    await role("service_role");
+    await expect(instant(i.session)).rejects.toThrow("unavailable");
+  });
+});
+
+it("makes instant shared text readable without review while keeping private letters and media out of contributor reads", async () => {
+  const author = await invite(),
+    viewer = await invite(),
+    privateAuthor = await invite();
+  const source = await scalar<string>(
+    "public.submit_instant_contribution($1,'Shared immediately','{}'::uuid[],true)",
+    [author.session],
+  );
+  await scalar(
+    "public.submit_instant_contribution($1,'Viewer hello','{}'::uuid[],false)",
+    [viewer.session],
+  );
+  const privateId = await scalar<string>(
+    "public.submit_instant_contribution($1,'Private immediately','{}'::uuid[],false)",
+    [privateAuthor.session],
+  );
+  const placement = await scalar<string>(
+    "(select id from public.npc_placements where contribution_id=$1)",
+    [source],
+  );
+  const privatePlacement = await scalar<string>(
+    "(select id from public.npc_placements where contribution_id=$1)",
+    [privateId],
+  );
+  expect(
+    await scalar("public.contributor_shared_message($1,$2)", [
+      viewer.session,
+      placement,
+    ]),
+  ).toMatchObject({ message: "Shared immediately" });
+  await expect(
+    scalar("public.contributor_shared_message($1,$2)", [
+      viewer.session,
+      privatePlacement,
+    ]),
+  ).rejects.toThrow("unavailable");
+});
+it("backfills a pending hello with a new safe location without changing its chosen audience", async () => {
+  const i = await invite();
+  const c = await submit(i.session);
+  await scalar("public.publish_invited_contribution($1,true,true)", [c]);
+  expect(
+    await scalar("(select status from public.contributions where id=$1)", [c]),
+  ).toBe("approved");
+  expect(
+    await scalar(
+      "(select share_with_invitees from public.contributions where id=$1)",
+      [c],
+    ),
+  ).toBe(false);
+  expect(
+    await scalar(
+      "(select published from public.npc_placements where contribution_id=$1)",
+      [c],
+    ),
+  ).toBe(true);
 });

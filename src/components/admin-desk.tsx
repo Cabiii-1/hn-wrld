@@ -235,8 +235,8 @@ export function AdminDesk({
         <article>
           <MessageCircle size={20} />
           <span>
-            {data.contributions.filter((c) => c.status === "pending").length}
-            <small>WAITING FOR A LITTLE CARE</small>
+            {data.contributions.length}
+            <small>HELLOS RECEIVED</small>
           </span>
         </article>
         <article>
@@ -249,7 +249,7 @@ export function AdminDesk({
       </div>
       <nav className="desk-tabs" aria-label="Administrator sections">
         {[
-          ["review", "Review messages"],
+          ["review", "Manage hellos"],
           ["invitations", "Invitations"],
           ["placements", "Their little places"],
           ["recipient", "Hanna’s little key"],
@@ -617,7 +617,7 @@ function ReviewCard({
           <p className="quiet-copy">
             Letter audience:{" "}
             {c.share_with_invitees
-              ? "Hanna, Cj and invited friends after approval"
+              ? "Hanna, Cj and invited friends"
               : "Hanna and Cj only"}
             . Photos and voice notes stay private.
           </p>
@@ -635,8 +635,8 @@ function ReviewCard({
         />
       </label>
       <p className="quiet-copy">
-        You can tidy the message before approval. Any review or media change
-        unpublishes its NPC until you explicitly publish again.
+        Invited hellos appear automatically. Your manual message or attachment
+        changes hide their bear until you publish its spot again.
       </p>
       {media.map((m) => (
         <section key={m.id} className="media-review">
@@ -696,7 +696,7 @@ function ReviewCard({
           }
         >
           <Check size={16} />
-          Approve message
+          Save message
         </Button>
         <Button
           variant="outline"
@@ -731,7 +731,7 @@ function ReviewCard({
       </div>
       {media.some((m) => m.status === "pending") && (
         <p className="quiet-copy">
-          Choose Keep or Exclude for every attachment before approving the
+          Choose Keep or Exclude for every attachment before restoring the
           message.
         </p>
       )}

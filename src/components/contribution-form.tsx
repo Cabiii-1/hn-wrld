@@ -196,13 +196,12 @@ export function ContributionForm({
             A little love, <em>on its way.</em>
           </h1>
           <p>
-            Thank you for leaving something lovely for Hanna. Cj will review
-            your message and attachments before they appear in her world.
+            Thank you for leaving something lovely for Hanna. Your hello has
+            joined her little world.
           </p>
           <p className="quiet-copy">
-            Received does not mean published. You can return through your
-            invitation link to edit your letter. Changes go back to Cj for
-            review before Hanna can see them.
+            You can return through your invitation link to update your words,
+            photos, or voice note. Your saved changes appear automatically.
           </p>
           <Button asChild variant="outline">
             <Link href="/contribute/visit">Visit your place</Link>
@@ -241,7 +240,7 @@ export function ContributionForm({
         </h1>
         <p>
           {editing
-            ? "Update your words, photos, or voice note. Changes take effect when you save and go back to Cj for review."
+            ? "Update your words, photos, or voice note. Your changes appear when you save."
             : "A memory, a thank-you, or just a few words for Hanna."}
         </p>
       </section>
@@ -453,9 +452,9 @@ export function ContributionForm({
             </span>
           </label>
           <p>
-            Only your letter text is shared, after Cj reviews it. Photos and
-            voice notes stay private to you, Hanna and Cj. Nothing is public on
-            the internet. You can change this choice later.
+            Only your letter text is shared when you send it. Photos and voice
+            notes stay private to you, Hanna and Cj. Nothing is public on the
+            internet. You can change this choice later.
           </p>
         </fieldset>
         <div className="consent-box">
@@ -463,10 +462,9 @@ export function ContributionForm({
           <div>
             <p>Kept with care.</p>
             <span>
-              Your photos and voice note are private to you, Cj and Hanna once
-              approved. Your letter follows the choice above. Please leave out
-              addresses, phone numbers, and anything you don’t have permission
-              to share.
+              Your photos and voice note are private to you, Cj and Hanna. Your
+              letter follows the choice above. Please leave out addresses, phone
+              numbers, and anything you don’t have permission to share.
             </span>
             <label>
               <input

@@ -1,0 +1,11 @@
+# Automatic invited hellos — 2026-10-18
+
+Owner requested immediate publication for new submissions and revisions, randomized placement/wandering in roomier areas, and publication of existing pending hellos. Migration 0017 adds service-only submit/edit wrappers using existing invitation, message, ownership, attachment validation, consent and optimistic version checks inside the same transaction. API requests always use the instant wrappers, including compatible older forms; missing sharing choices remain private on initial send and preserve the prior choice on edit.
+
+New placements serialize on the area row, sample a randomly offset grid of safe points, maximize clearance from existing published bears and the player start, then randomize a wander radius that fits geometry and spacing. Assignment remains the admin-selected scene. Active custom placements/styles remain intact on edits; pending backfill gets fresh spaced positions. A full scene returns an error and rolls back the entire save.
+
+Validated pending attachments become eligible for recipient-only delivery. Rejected/deleted attachments remain excluded. Hidden/rejected letters and manually unpublished approved bears remain held on contributor edits. Existing admin manual changes still unpublish until the admin explicitly publishes again. No public access is added: contributor letter text requires author opt-in and active scene-scoped sessions; private media and recipient access retain their existing gates.
+
+All 164 tests, ESLint and the production build/TypeScript passed. SQL tests cover safe placement and varied radii in all three scenes, automatic media eligibility, edits/version conflicts, hidden/unpublished holds, rejected media, unvalidated uploads, revoked sessions, role restrictions, immediate opt-in reads and private-letter denial.
+
+Migration 0017 dry-run and application passed on the hosted project. Aggregate preflight found one active pending hello; after backfill there were zero pending hellos and eight safely published bears. No authored content, visibility choices or existing holds were changed.

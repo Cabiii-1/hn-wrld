@@ -25,12 +25,10 @@ export function ContributionArrival() {
         <h1>
           You’re part of <em>her little world.</em>
         </h1>
-        <p>
-          Your words are safe with Cj. Let’s take you to your little place.
-        </p>
+        <p>Your hello is in her world. Let’s take you to your little place.</p>
         <p className="quiet-copy">
-          Received does not mean published. Your letter will be reviewed before
-          Hanna sees it.
+          Your letter follows the sharing choice you made. You can come back and
+          update it whenever you like.
         </p>
         <Button
           variant="outline"

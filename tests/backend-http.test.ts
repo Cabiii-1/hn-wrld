@@ -275,7 +275,7 @@ describe("M2 HTTP authorization and privacy", () => {
     });
     expect(result.status).toBe(400);
     expect(
-      state.rpc.mock.calls.some(([fn]) => fn === "submit_contribution"),
+      state.rpc.mock.calls.some(([fn]) => fn === "submit_instant_contribution"),
     ).toBe(false);
   });
   it("never downloads another contributor’s or rejected media", async () => {
@@ -368,8 +368,8 @@ describe("M2 HTTP authorization and privacy", () => {
     expect(result.headers.get("cache-control")).toContain("no-store");
     expect(result.headers.get("vary")).toBe("Cookie");
     expect(state.rpc).toHaveBeenCalledWith(
-      "submit_contribution",
-      expect.objectContaining({ p_name: "", p_relationship: "" }),
+      "submit_instant_contribution",
+      expect.objectContaining({ p_share: false }),
     );
   });
   it("accepts message-only identity-free submissions", async () => {
@@ -381,10 +381,9 @@ describe("M2 HTTP authorization and privacy", () => {
     });
     expect(result.status).toBe(201);
     expect(state.rpc).toHaveBeenCalledWith(
-      "submit_contribution",
+      "submit_instant_contribution",
       expect.objectContaining({
-        p_name: "",
-        p_relationship: "",
+        p_share: false,
         p_message: "A synthetic hello for Hanna",
       }),
     );
@@ -534,10 +533,13 @@ describe("Recoverable contributor links and editing", () => {
       ).status,
     ).toBe(400);
     expect((await request("contributions", "PATCH", payload)).status).toBe(200);
-    expect(state.rpc).toHaveBeenCalledWith("edit_contribution", {
+    expect(state.rpc).toHaveBeenCalledWith("edit_instant_contribution", {
       p_session_hash: expect.any(String),
       p_message: payload.message,
       p_version: payload.version,
+      p_share: null,
+      p_retained: null,
+      p_upload_ids: null,
     });
     expect(
       (await request("contributions", "PATCH", payload, "https://evil.test"))
@@ -613,12 +615,13 @@ it("requires paired attachment lists on media edits and keeps the session scope 
     ).status,
   ).toBe(400);
   expect((await request("contributions", "PATCH", payload)).status).toBe(200);
-  expect(state.rpc).toHaveBeenCalledWith("edit_contribution_media", {
+  expect(state.rpc).toHaveBeenCalledWith("edit_instant_contribution", {
     p_session_hash: expect.any(String),
     p_message: payload.message,
     p_version: payload.version,
     p_retained: payload.retainedMedia,
     p_upload_ids: [],
+    p_share: null,
   });
 });
 
@@ -674,7 +677,7 @@ it("saves an explicit sharing choice atomically with fresh consent and the lette
     uploadIds: [],
   };
   expect((await request("contributions", "POST", payload)).status).toBe(201);
-  expect(state.rpc).toHaveBeenCalledWith("submit_shared_contribution", {
+  expect(state.rpc).toHaveBeenCalledWith("submit_instant_contribution", {
     p_session_hash: expect.any(String),
     p_message: payload.message,
     p_upload_ids: [],
@@ -691,7 +694,7 @@ it("saves an explicit sharing choice atomically with fresh consent and the lette
       })
     ).status,
   ).toBe(200);
-  expect(state.rpc).toHaveBeenCalledWith("edit_shared_contribution", {
+  expect(state.rpc).toHaveBeenCalledWith("edit_instant_contribution", {
     p_session_hash: expect.any(String),
     p_message: payload.message,
     p_version: version,
