@@ -76,7 +76,8 @@
   color: #9b957d;
   margin-left: 5px;
 }
-.letter-card input:not([type="checkbox"]):not([type="file"]),
+.letter-card
+  input:not([type="checkbox"]):not([type="file"]):not([type="radio"]),
 .letter-card textarea,
 .letter-card select {
   display: block;
@@ -1450,7 +1451,7 @@
   font-size: 12px;
   line-height: 1.8;
 }
-.letter-visibility label {
+.letter-card .letter-visibility label {
   display: flex;
   gap: 12px;
   align-items: flex-start;
@@ -1464,8 +1465,14 @@
   accent-color: #74875c;
   margin: 0;
 }
+.letter-card .letter-visibility label > span {
+  margin: 0;
+  font-size: 14px;
+  color: #6a644f;
+}
 .letter-visibility strong,
 .letter-visibility small {
+  font-size: 12px;
   display: block;
 }
 .letter-visibility small {
