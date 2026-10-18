@@ -464,9 +464,7 @@ it("stages saved attachment removals locally, restores them on cancel, and saves
     <ContributionForm configured initialSnapshot={saved} initialResolved />,
   );
   await userEvent.click(screen.getByRole("button", { name: "Edit my letter" }));
-  expect(
-    (screen.getByLabelText("Upload a voice note") as HTMLInputElement).disabled,
-  ).toBe(true);
+  expect(screen.queryByLabelText("Upload a voice note")).toBeNull();
   await userEvent.click(screen.getByRole("button", { name: "Remove audio" }));
   expect(
     (screen.getByLabelText("Upload a voice note") as HTMLInputElement).disabled,

@@ -11,3 +11,7 @@ After link exchange, a submitted contributor goes directly to /contribute/visit.
 Returning-visit update: 168 tests passed with four workers, along with lint and production build/TypeScript. A passcode-test timeout during concurrent build/test work passed on the quieter rerun. Focused tests cover submitted-link/session routing and explicit edit mode.
 
 Voice-card/preview update: all 168 tests pass (four workers), along with lint and the production build. Existing voice tests verify recording feedback, stopping, preview continuity through upload, failed-save retry, and retained attachment editing after the layout move. No backend access or sharing rules changed.
+
+
+### Compact extras layout (2026-10-19)
+Replaced unequal side-by-side cards with compact full-width rows and label-area controls. Fresh recordings keep one local audio player with Remove alongside it; inactive upload controls and duplicate attachment summaries are omitted. Regression coverage checks a single player, removal and restored upload controls; saved-media editing/cancel remains covered. All 168 tests, ESLint and production build pass.

@@ -72,3 +72,7 @@ After link exchange, a submitted contributor goes directly to /contribute/visit.
 
 ## Contribution voice card and Park preview (owner update, 2026-10-18)
 Voice upload and Record a voice note now sit together within A hello in your voice. Its permission/timer/stop/preview/retry/error UI and saved audio attachment playback/removal remain inside that card. The file picker stays available when live recording is unsupported. The private audience label is Just Hanna; access enforcement remains unchanged, with accurate copy stating media are not shared with other invitees. A small static Park example uses public scenery and a code-native bear icon near Send/Save; it is illustrative, not a live scene or a promise to override the invitation’s assigned destination. No private content is loaded in the preview.
+
+
+## Compact contribution extras (owner update, 2026-10-19)
+Photo and voice extras use full-width compact rows, with left-aligned headings and adjacent upload/record actions. Recording feedback and playback expand within the voice row without a blank neighboring column. A freshly recorded clip has one local player and its removal action together; hide the redundant attachment box and inactive file picker while a clip is present. Keep existing media validation, retry, editing and privacy behavior.

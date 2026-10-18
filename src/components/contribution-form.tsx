@@ -195,6 +195,33 @@ export function ContributionForm({
     setError("");
     setEditing(true);
   }
+  const renderRemoveAttachment = (u: (typeof attachments)[number]) => (
+    <Button
+      type="button"
+      variant="ghost"
+      aria-label={`Remove ${u.kind}`}
+      disabled={!!busy || recording}
+      onClick={async () => {
+        if (u.state === "attached") {
+          if (voice.preview?.uploadId === u.id) voice.discard();
+          setRetainedMedia((items) => items.filter((item) => item.id !== u.id));
+          return;
+        }
+        setBusy("Removing attachment…");
+        try {
+          await api(`uploads/${u.id}`, "DELETE");
+          if (voice.preview?.uploadId === u.id) voice.discard();
+          await refresh();
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Could not remove file.");
+        } finally {
+          setBusy("");
+        }
+      }}
+    >
+      <Trash2 size={17} />
+    </Button>
+  );
   const renderAttachment = (u: (typeof attachments)[number]) => (
     <article key={u.id} className="uploaded-item">
       <div className="upload-preview">
@@ -205,8 +232,6 @@ export function ContributionForm({
               src={`/api/manage/media/${u.id}`}
               alt={u.description || "Your uploaded photo"}
             />
-          ) : voice.preview?.uploadId === u.id ? (
-            <Mic size={24} aria-label="Listen to your recording above" />
           ) : (
             <audio
               controls
@@ -230,33 +255,7 @@ export function ContributionForm({
                 : "Unfinished — remove and retry"}
         </span>
       </div>
-      <Button
-        type="button"
-        variant="ghost"
-        aria-label={`Remove ${u.kind}`}
-        disabled={!!busy || recording}
-        onClick={async () => {
-          if (u.state === "attached") {
-            if (voice.preview?.uploadId === u.id) voice.discard();
-            setRetainedMedia((items) =>
-              items.filter((item) => item.id !== u.id),
-            );
-            return;
-          }
-          setBusy("Removing attachment…");
-          try {
-            await api(`uploads/${u.id}`, "DELETE");
-            if (voice.preview?.uploadId === u.id) voice.discard();
-            await refresh();
-          } catch (e) {
-            setError(e instanceof Error ? e.message : "Could not remove file.");
-          } finally {
-            setBusy("");
-          }
-        }}
-      >
-        <Trash2 size={17} />
-      </Button>
+      {renderRemoveAttachment(u)}
     </article>
   );
   if (arriving) return <ContributionArrival />;
@@ -367,15 +366,20 @@ export function ContributionForm({
           </div>
         </div>
         <div className="attachment-choices">
-          <label className="attachment-choice">
-            <ImagePlus size={24} />
-            <strong>Add a memory</strong>
-            <span>
-              Up to 3 photos ·{" "}
-              {(snapshot?.limits.photoBytes ?? MAX.photoBytes) / 1048576} MiB
-              each
-            </span>
-            <small>JPG, PNG or WebP</small>
+          <section
+            className="attachment-choice memory-choice"
+            aria-labelledby="memory-choice-heading"
+          >
+            <div className="attachment-summary">
+              <ImagePlus size={24} />
+              <strong id="memory-choice-heading">Add a memory</strong>
+              <span>
+                Up to 3 photos ·{" "}
+                {(snapshot?.limits.photoBytes ?? MAX.photoBytes) / 1048576} MiB
+                each
+              </span>
+              <small>JPG, PNG or WebP</small>
+            </div>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -390,36 +394,58 @@ export function ContributionForm({
               }}
               aria-label="Upload a photo"
             />
-          </label>
+            <div className="uploaded-list">
+              {attachments
+                .filter((u) => u.kind === "photo")
+                .map(renderAttachment)}
+            </div>
+          </section>
           <section
             className="attachment-choice voice-choice"
             aria-labelledby="voice-choice-heading"
           >
-            <Mic size={24} />
-            <strong id="voice-choice-heading">A hello in your voice</strong>
-            <span>
-              One recording · up to{" "}
-              {snapshot?.limits.audioSeconds ?? MAX.audioSeconds} seconds
-            </span>
-            <small>
-              MP3, M4A, OGG or WebM ·{" "}
-              {(snapshot?.limits.audioBytes ?? MAX.audioBytes) / 1048576} MiB
-            </small>
             <VoiceRecorderControls
+              heading={
+                <div className="attachment-summary">
+                  {" "}
+                  <Mic size={24} />
+                  <strong id="voice-choice-heading">
+                    A hello in your voice
+                  </strong>
+                  <span>
+                    One recording · up to{" "}
+                    {snapshot?.limits.audioSeconds ?? MAX.audioSeconds} seconds
+                  </span>
+                  <small>
+                    MP3, M4A, OGG or WebM ·{" "}
+                    {(snapshot?.limits.audioBytes ?? MAX.audioBytes) / 1048576}{" "}
+                    MiB
+                  </small>
+                </div>
+              }
+              previewActions={attachments
+                .filter((u) => u.id === voice.preview?.uploadId)
+                .map((u) => (
+                  <div key={u.id}>{renderRemoveAttachment(u)}</div>
+                ))}
               uploadControl={
-                <input
-                  type="file"
-                  accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/ogg,audio/webm"
-                  disabled={
-                    disabled || attachments.some((u) => u.kind === "audio")
-                  }
-                  onChange={(e) => {
-                    const file = e.currentTarget.files?.[0];
-                    e.currentTarget.value = "";
-                    if (file) void upload(file, "audio");
-                  }}
-                  aria-label="Upload a voice note"
-                />
+                !voice.preview &&
+                !recording &&
+                !attachments.some((u) => u.kind === "audio") ? (
+                  <input
+                    type="file"
+                    accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/ogg,audio/webm"
+                    disabled={
+                      disabled || attachments.some((u) => u.kind === "audio")
+                    }
+                    onChange={(e) => {
+                      const file = e.currentTarget.files?.[0];
+                      e.currentTarget.value = "";
+                      if (file) void upload(file, "audio");
+                    }}
+                    aria-label="Upload a voice note"
+                  />
+                ) : null
               }
               recorder={voice}
               disabled={
@@ -432,15 +458,14 @@ export function ContributionForm({
             />
             <div className="uploaded-list">
               {attachments
-                .filter((u) => u.kind === "audio")
+                .filter(
+                  (u) => u.kind === "audio" && u.id !== voice.preview?.uploadId,
+                )
                 .map(renderAttachment)}
             </div>
           </section>
         </div>
 
-        <div className="uploaded-list">
-          {attachments.filter((u) => u.kind === "photo").map(renderAttachment)}
-        </div>
         <fieldset className="letter-visibility" disabled={disabled}>
           <legend>Who can read your letter?</legend>
           <p>A little choice, entirely yours.</p>

@@ -11,12 +11,16 @@ export function VoiceRecorderControls({
   maxSeconds,
   savingMessage,
   uploadControl,
+  heading,
+  previewActions,
 }: {
   recorder: ReturnType<typeof useVoiceRecorder>;
   disabled: boolean;
   maxSeconds: number;
   savingMessage: string;
   uploadControl?: ReactNode;
+  heading?: ReactNode;
+  previewActions?: ReactNode;
 }) {
   const { phase, preview } = recorder;
   const recording = phase === "recording";
@@ -25,20 +29,17 @@ export function VoiceRecorderControls({
   useEffect(() => {
     if (recording) stopButton.current?.focus();
   }, [recording]);
-  if (!recorder.supported)
-    return uploadControl ? (
-      <div className="recording-row">{uploadControl}</div>
-    ) : null;
   return (
     <div className="voice-recorder">
+      {heading}
       <div className="recording-row voice-input-actions">
         {uploadControl}
-        {phase === "idle" && preview?.state !== "ready" && (
+        {recorder.supported && phase === "idle" && !preview && (
           <>
             <Button
               type="button"
               variant="outline"
-              disabled={disabled || preview?.state === "saving"}
+              disabled={disabled}
               onClick={() => void recorder.start()}
             >
               <Mic size={16} /> Record a voice note
@@ -46,9 +47,11 @@ export function VoiceRecorderControls({
           </>
         )}
       </div>
-      <p className="microphone-hint">
-        Your microphone is used only after you tap Record.
-      </p>
+      {recorder.supported && !preview && phase === "idle" && (
+        <p className="microphone-hint">
+          Your microphone is used only after you tap Record.
+        </p>
+      )}
       {(recording || pending) && (
         <section
           className={`recording-panel ${recording ? "is-recording" : ""}`}
@@ -128,7 +131,10 @@ export function VoiceRecorderControls({
           className="recording-preview"
           aria-label="Your recorded voice note"
         >
-          <strong>Your voice note</strong>
+          <div className="recording-preview-heading">
+            <strong>Your voice note</strong>
+            {previewActions}
+          </div>
           <audio
             controls
             preload="metadata"

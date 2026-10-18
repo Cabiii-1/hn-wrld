@@ -274,6 +274,14 @@ describe("Voice recording feedback and lifecycle", () => {
       "POST",
     );
     expect(fetch).toHaveBeenCalledOnce();
+    expect(document.querySelectorAll("audio")).toHaveLength(1);
+    expect(screen.queryByLabelText("Upload a voice note")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Remove audio" }));
+    uploaded = false;
+    await flush();
+    expect(mock.api).toHaveBeenCalledWith("uploads/recorded-upload", "DELETE");
+    expect(screen.queryByLabelText("Preview your recording")).toBeNull();
+    expect(screen.getByLabelText("Upload a voice note")).toBeTruthy();
   });
   it("keeps a failed recording locally, discards its unfinished upload, and retries the same clip", async () => {
     let attempt = 0;
