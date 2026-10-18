@@ -173,3 +173,65 @@ it("opens only opted-in letters, pauses the world, never requests recipient medi
   );
   expect(mock.bridge!.paused).toBe(false);
 });
+
+it("uses the same nearby Talk interaction for invited players while blocking private and forged bear IDs", async () => {
+  const id = "11111111-1111-4111-8111-111111111111",
+    privateId = "22222222-2222-4222-8222-222222222222";
+  const data = {
+    ...visit,
+    npcs: [
+      {
+        id,
+        name: "Sharing Friend",
+        variant: "npc-cream-1" as const,
+        x: 430,
+        y: 360,
+        radius: 12,
+        seen: false,
+        readable: true,
+      },
+      {
+        id: privateId,
+        name: "Private Friend",
+        variant: "npc-cream-1" as const,
+        x: 410,
+        y: 360,
+        radius: 12,
+        seen: false,
+        readable: false,
+      },
+    ],
+  };
+  mock.api.mockResolvedValue({
+    id,
+    name: "Sharing Friend",
+    message: "Synthetic in-world letter",
+  });
+  render(<ContributorVisitView initialVisit={data} />);
+  act(() => mock.bridge!.onStatus("ready"));
+  act(() => {
+    mock.bridge!.setNear(true, privateId);
+    mock.bridge!.requestTalk();
+    mock.bridge!.onTalk(privateId);
+  });
+  expect(mock.bridge!.near).toBe(false);
+  expect(mock.bridge!.interact).toBe(false);
+  expect(mock.api).not.toHaveBeenCalled();
+  expect(screen.queryByRole("dialog")).toBeNull();
+  act(() => mock.bridge!.setNear(true, id));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Talk to Sharing Friend" }),
+  );
+  expect(mock.bridge!.interact).toBe(true);
+  act(() => mock.bridge!.onTalk(id));
+  await screen.findByText("Synthetic in-world letter");
+  expect(mock.bridge!.paused).toBe(true);
+  expect(mock.api).toHaveBeenCalledWith("contributor/letters/" + id);
+  expect(
+    mock.api.mock.calls.every(([path]) => !path.startsWith("recipient/")),
+  ).toBe(true);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Back to our little place" }),
+  );
+  expect(mock.bridge!.paused).toBe(false);
+});

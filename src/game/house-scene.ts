@@ -9,6 +9,7 @@ type Actor = {
   sprite: Phaser.GameObjects.Sprite;
   label: Phaser.GameObjects.Text;
 };
+const sharedBear = (bear: BearState) => bear.readable === true;
 // Shared scenic renderer; each map supplies separate art, geometry and spawns.
 export class PlaceScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Sprite;
@@ -206,8 +207,10 @@ export class PlaceScene extends Phaser.Scene {
       Math.round(this.crowd.player.x),
       Math.round(this.crowd.player.y),
     );
-    const nearest = this.crowd.nearest();
-    this.bridge.setNear(!this.bridge.visitor && !!nearest, nearest?.id ?? "");
+    const nearest = this.crowd.nearest(
+      this.bridge.visitor ? sharedBear : undefined,
+    );
+    this.bridge.setNear(!!nearest, nearest?.id ?? "");
     for (const actor of this.actors) {
       actor.sprite.setPosition(
         Math.round(actor.data.x),
@@ -230,7 +233,7 @@ export class PlaceScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.keys.ENTER) ||
       this.bridge.interact;
     this.bridge.interact = false;
-    if (!this.bridge.visitor && !paused && nearest && action) {
+    if (!paused && nearest && action && this.bridge.canTalk(nearest.id)) {
       this.clearInput();
       this.bridge.paused = true;
       this.bridge.onTalk(nearest.id);
@@ -244,9 +247,7 @@ export class PlaceScene extends Phaser.Scene {
     this.playerLabel
       .setPosition(this.player.x, this.player.y - 34)
       .setDepth(1000);
-    this.marker
-      .setVisible(!this.bridge.visitor && !!nearest && !paused)
-      .setDepth(1001);
+    this.marker.setVisible(!!nearest && !paused).setDepth(1001);
     if (nearest)
       this.marker.setPosition(
         Math.round(nearest.x),

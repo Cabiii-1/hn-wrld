@@ -189,10 +189,11 @@ export class Crowd {
       this.grid.add(bear);
     }
   }
-  nearest() {
+  nearest(eligible?: (bear: BearState) => boolean) {
     let result: BearState | undefined,
       distance = 78;
     for (const bear of this.bears) {
+      if (eligible && !eligible(bear)) continue;
       const d = Math.hypot(bear.x - this.player.x, bear.y - this.player.y);
       if (d < distance) {
         result = bear;

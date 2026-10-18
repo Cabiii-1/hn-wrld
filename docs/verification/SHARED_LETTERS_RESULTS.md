@@ -7,3 +7,7 @@
 - 154 tests across 15 files, lint and production build passed. Coverage includes legacy privacy defaults, explicit consent, atomic opt-out, stale changes, moderation, source/viewer revocation and expiry, unpublished/unsafe/cross-scene placements, no-store responses, UI defaults and editor persistence, denied recipient access, world pause and clearing withdrawn text.
 - Hosted synthetic checks passed for approved opt-in reads, private/anonymous denial and recipient isolation. Browser checks cover the sharing choice, saving it, entering the assigned world and opening a shared letter. Only disposable synthetic content was used.
 - Visual QA caught generic form styles affecting radio sizing. The final CSS excludes radios from text-input styling and restores readable choice labels and aligned controls on desktop and phone widths.
+
+
+## Shared letters through bear interactions (owner clarification, 2026-10-18)
+Invited players open opted-in letters in the playable scene exactly as Hanna does: approach a readable bear and press E/Space/Enter or tap the mobile Talk control. The scene picks the nearest readable bear within normal talk range, and displays E / Talk above it. The dialogue uses the same modal style, pauses movement and NPC wandering, and reads only contributor/letters/{placementId}. Private bears have no letter interaction; no recipient media, seen/progress or finale endpoints are used. The below-world shared-letters panel remains an optional shortcut. Existing opt-in, approval, publication and scene boundaries are unchanged.

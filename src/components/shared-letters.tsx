@@ -82,7 +82,7 @@ export function SharedLetters({
   );
 }
 
-function SharedLetterBody({ id }: { id: string }) {
+export function SharedLetterBody({ id }: { id: string }) {
   const [letter, setLetter] = useState<SharedLetter | null>(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);

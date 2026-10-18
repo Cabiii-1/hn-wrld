@@ -11,6 +11,7 @@ import {
 import type { WorldNpc, ContributorVisit } from "@/game/connected";
 import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
 import { RecipientDialogue } from "./recipient-dialogue";
+import { SharedLetterBody } from "./shared-letters";
 import { api } from "@/lib/backend/browser-api";
 import {
   ArrowDown,
@@ -72,6 +73,7 @@ export function World({
     window.dispatchEvent(new Event("hanna:seen"));
   }, []);
   const near = !!nearId;
+  const canReadLetters = !visitor || !!npcs?.some((npc) => npc.readable);
   const nearName = npcs?.find((n) => n.id === nearId)?.name ?? "Teddy";
   const [dialogue, setDialogue] = useState(false);
   const [help, setHelp] = useState(false);
@@ -82,7 +84,7 @@ export function World({
     bridge.connect(
       () => setNearId(bridge.nearId),
       (id) => {
-        if (visitor) return;
+        if (visitor && !bridge.canTalk(id)) return;
         setTalkId(id);
         setDialogue(true);
       },
@@ -114,7 +116,7 @@ export function World({
   );
   function closeDialogue(open: boolean) {
     setDialogue(open);
-    if (!open && !connected) setSeen(true);
+    if (!open && !connected && !visitor) setSeen(true);
   }
   return (
     <main className="world-shell">
@@ -156,7 +158,7 @@ export function World({
                 <strong>Move</strong> with WASD, arrow keys, or the on-screen
                 direction pad.
               </li>
-              {!visitor && (
+              {canReadLetters && (
                 <>
                   <li>
                     <strong>Talk</strong> when you’re near a bear. Press E,
@@ -167,13 +169,13 @@ export function World({
               <li>
                 <strong>Take your time.</strong>{" "}
                 {visitor
-                  ? "There’s no rush. This is a quiet little place to wander."
+                  ? "The world pauses while a shared letter is open. Escape closes it."
                   : "The world pauses while a message is open. Escape closes it."}
               </li>
             </ul>
             <p className="sample-note">
               {visitor
-                ? "Read opted-in letters from the shared-letters panel below the world. Photos and voice notes stay private."
+                ? "Walk up to a bear who shared their letter and press E or tap Talk. Private letters, photos and voice notes stay private."
                 : connected
                   ? "Your hellos are saved as you open them. You can always read them again."
                   : "Sample world · all characters and dialogue are synthetic."}
@@ -305,7 +307,7 @@ export function World({
               ))}
               <span className="pad-center">♡</span>
             </div>
-            {!visitor && (
+            {canReadLetters && (
               <Button
                 className="touch-talk"
                 disabled={!near}
@@ -326,7 +328,7 @@ export function World({
             <span>or</span>
             <span className="keycap">↑ ← ↓ →</span>
             <span>to wander</span>
-            {!visitor && (
+            {canReadLetters && (
               <>
                 <i />
                 <span className="keycap">E</span>
@@ -336,7 +338,9 @@ export function World({
           </div>
           <p className="near-status" role="status">
             {visitor
-              ? "Your little bear is part of Hanna’s circle of support."
+              ? near
+                ? `${nearName} shared a letter. Say hello!`
+                : "Walk up to a bear to read their shared letter."
               : near
                 ? `${nearName} is nearby. Say hello!`
                 : "Follow your feet. Find a familiar face."}
@@ -385,8 +389,9 @@ export function World({
       </footer>
       {visitor ? (
         <p className="preview-note">
-          <Heart size={14} /> Shared letters are below. Each person chooses
-          whether their words can be read by invited friends.
+          <Heart size={14} /> Walk up to a bear and say hello to read their
+          shared letter. Each person chooses whether their words can be read by
+          invited friends.
         </p>
       ) : connected ? (
         <div className="preview-note recipient-actions">
@@ -412,7 +417,7 @@ export function World({
           recipient link for published hellos.
         </p>
       )}
-      <Dialog open={!visitor && dialogue} onOpenChange={closeDialogue}>
+      <Dialog open={dialogue} onOpenChange={closeDialogue}>
         <DialogContent
           className="message-dialog"
           onCloseAutoFocus={(event) => {
@@ -422,7 +427,17 @@ export function World({
               ?.focus({ preventScroll: true });
           }}
         >
-          {connected ? (
+          {visitor ? (
+            <>
+              <SharedLetterBody key={talkId} id={talkId} />
+              <div className="message-footer">
+                <span>The world can wait.</span>
+                <Button onClick={() => closeDialogue(false)}>
+                  Back to our little place
+                </Button>
+              </div>
+            </>
+          ) : connected ? (
             <>
               <RecipientDialogue key={talkId} id={talkId} onSeen={markSeen} />
               <div className="message-footer">

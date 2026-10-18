@@ -89,3 +89,44 @@ describe("M4 scene geometry and crowded movement", () => {
     expect(a.bears).toEqual(b.bears);
   });
 });
+
+it("selects the nearest shared bear for visitors even when a private bear stands closer", () => {
+  const crowd = new Crowd("sta_ana_house", [
+    {
+      id: "private",
+      name: "Private",
+      variant: "npc-cream-1",
+      x: 430,
+      y: 352,
+      radius: 0,
+      seen: false,
+      readable: false,
+    },
+    {
+      id: "shared",
+      name: "Shared",
+      variant: "npc-cream-1",
+      x: 450,
+      y: 352,
+      radius: 0,
+      seen: false,
+      readable: true,
+    },
+    {
+      id: "far",
+      name: "Far",
+      variant: "npc-cream-1",
+      x: 700,
+      y: 352,
+      radius: 0,
+      seen: false,
+      readable: true,
+    },
+  ]);
+  crowd.player.x = 420;
+  crowd.player.y = 352;
+  expect(crowd.nearest()?.id).toBe("private");
+  expect(crowd.nearest((bear) => bear.readable === true)?.id).toBe("shared");
+  crowd.player.x = 80;
+  expect(crowd.nearest((bear) => bear.readable === true)).toBeUndefined();
+});

@@ -31,8 +31,14 @@ export class GameBridge {
     this.clear();
   }
   requestTalk() {
-    if (this.visitor) return;
+    if (this.visitor && !this.canTalk(this.nearId)) return;
     this.interact = true;
+  }
+  canTalk(id: string) {
+    return (
+      !this.visitor ||
+      !!this.npcs?.some((npc) => npc.id === id && npc.readable === true)
+    );
   }
   requestReset() {
     this.resetRequested = true;
@@ -42,6 +48,10 @@ export class GameBridge {
     this.interact = false;
   }
   setNear(near: boolean, id = "") {
+    if (this.visitor && !this.canTalk(id)) {
+      near = false;
+      id = "";
+    }
     if (near !== this.near || id !== this.nearId) {
       this.near = near;
       this.nearId = id;
