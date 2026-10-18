@@ -87,6 +87,7 @@ beforeAll(async () => {
     "0007_invitation_assigned_names.sql",
     "0008_returning_contributors.sql",
     "0009_contributor_visits.sql",
+    "0010_named_contributor_visits.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -1137,7 +1138,7 @@ describe("Returning contributors", () => {
 });
 
 describe("Contributor visit privacy and designation", () => {
-  it("requires submission and shares only anonymous published bears in the assigned place", async () => {
+  it("requires submission and shares published bear names without letters or pending contributors", async () => {
     const owner = await invite(false, "Synthetic Visitor");
     await expect(
       scalar("public.contributor_visit($1)", [owner.session]),
@@ -1196,10 +1197,10 @@ describe("Contributor visit privacy and designation", () => {
       [pendingId],
     );
     expect(view.npcs).toContainEqual(
-      expect.objectContaining({ id: published, name: "A friend of Hanna" }),
+      expect.objectContaining({ id: published, name: "Private friend name" }),
     );
     expect(view.npcs.some((n) => n.id === unpublished)).toBe(false);
-    expect(JSON.stringify(view)).not.toContain("Private friend name");
+    expect(JSON.stringify(view)).not.toContain("Pending private name");
     expect(JSON.stringify(view)).not.toContain(friendId);
     expect(JSON.stringify(view)).not.toContain("Synthetic hello");
     await expect(

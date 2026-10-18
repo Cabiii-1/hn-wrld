@@ -52,4 +52,4 @@ You are the lead engineer implementing **Bubu's Little World**, a private single
 **Begin now:** inspect files, give a brief plan, and implement Milestone 1 only unless I ask for more.
 
 ## Owner-approved contributor-visit exception (2026-10-18)
-Follow docs/PRD.md’s Contributor visits update: submitted contributors may explore their administrator-assigned scene through an independently authorized visual-only projection. Their own bear is named; other published bears are anonymous. This does not grant access to recipient messages, media, progress, other contributor names, or the finale. Keep /play behind recipient link plus passcode.
+Follow docs/PRD.md’s Contributor visits update: submitted contributors may explore their administrator-assigned scene through an independently authorized visual-only projection. Their own bear and other published bears show their saved contributor display names (owner update, 2026-10-18). This does not grant access to recipient messages, media, progress, or the finale. Keep /play behind recipient link plus passcode.
