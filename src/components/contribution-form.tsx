@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { ContributionArrival } from "./contribution-arrival";
+import { useVoiceRecorder } from "./use-voice-recorder";
+import { VoiceRecorderControls } from "./voice-recorder-controls";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
@@ -36,18 +38,18 @@ export function ContributionForm({
   const [busy, setBusy] = useState(""),
     [message, setMessage] = useState(""),
     [description, setDescription] = useState("");
-  const [recording, setRecording] = useState(false),
-    [recordSupported, setRecordSupported] = useState(false);
   const [editing, setEditing] = useState(false),
     [retainedMedia, setRetainedMedia] = useState<
       NonNullable<NonNullable<Snapshot["letter"]>["media"]>
     >([]),
     [letterVersion, setLetterVersion] = useState("");
   const [arriving, setArriving] = useState(false);
-  const recorder = useRef<MediaRecorder | null>(null),
-    stream = useRef<MediaStream | null>(null),
-    timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const alive = useRef(true);
+  const voice = useVoiceRecorder({
+    maxSeconds: snapshot?.limits.audioSeconds ?? MAX.audioSeconds,
+    onRecorded: (file) => upload(file, "audio", true),
+  });
+  const recording = voice.active;
   const refresh = async () => {
     const data = await api<Snapshot>("contributor");
     if (alive.current) setSnapshot(data);
@@ -59,21 +61,19 @@ export function ContributionForm({
       void api<Snapshot>("contributor")
         .then((data) => setSnapshot(data))
         .catch((e) => setError(e.message));
-    queueMicrotask(() =>
-      setRecordSupported(
-        typeof MediaRecorder !== "undefined" &&
-          !!navigator.mediaDevices?.getUserMedia,
-      ),
-    );
     return () => {
       alive.current = false;
-      if (timer.current) clearTimeout(timer.current);
-      if (recorder.current?.state === "recording") recorder.current.stop();
-      stream.current?.getTracks().forEach((t) => t.stop());
     };
   }, [configured, initialResolved]);
-  async function upload(file: File, kind: "photo" | "audio") {
-    setBusy(`Checking ${kind === "photo" ? "your photo" : "your voice note"}…`);
+  async function upload(
+    file: File,
+    kind: "photo" | "audio",
+    recorded = false,
+  ): Promise<string | null> {
+    let reservedId: string | null = null;
+    setBusy(
+      `Preparing ${kind === "photo" ? "your photo" : "your voice note"}…`,
+    );
     setError("");
     try {
       const reserved = await api<{ id: string; uploadUrl: string }>(
@@ -87,6 +87,11 @@ export function ContributionForm({
           description,
         },
       );
+      reservedId = reserved.id;
+      if (alive.current)
+        setBusy(
+          `Uploading ${kind === "photo" ? "your photo" : "your voice note"}…`,
+        );
       const result = await fetch(reserved.uploadUrl, {
         method: "PUT",
         body: file,
@@ -100,14 +105,25 @@ export function ContributionForm({
         throw new Error(
           "The upload didn’t finish. Remove the unfinished attachment and try again.",
         );
+      if (alive.current)
+        setBusy(
+          `Checking ${kind === "photo" ? "your photo" : "your voice note"}…`,
+        );
       await api(`uploads/${reserved.id}/complete`, "POST");
+      if (alive.current) setBusy("Finishing your attachment…");
+      await refresh();
+      return reserved.id;
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Upload failed. Please try again.",
-      );
-    } finally {
+      if (recorded && reservedId)
+        await api(`uploads/${reservedId}`, "DELETE").catch(() => {});
+      if (alive.current)
+        setError(
+          e instanceof Error ? e.message : "Upload failed. Please try again.",
+        );
       await refresh().catch(() => {});
-      setBusy("");
+      return null;
+    } finally {
+      if (alive.current) setBusy("");
     }
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -151,77 +167,6 @@ export function ContributionForm({
       }
     } finally {
       setBusy("");
-    }
-  }
-  async function startRecording() {
-    setError("");
-    try {
-      const mimeType = [
-        "audio/webm;codecs=opus",
-        "audio/mp4",
-        "audio/ogg;codecs=opus",
-      ].find((t) => MediaRecorder.isTypeSupported(t));
-      if (!mimeType)
-        throw new Error(
-          "Recording is not supported here. You can upload an audio file instead.",
-        );
-      stream.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-      if (!alive.current) {
-        stream.current.getTracks().forEach((t) => t.stop());
-        return;
-      }
-      const chunks: BlobPart[] = [];
-      const instance = new MediaRecorder(stream.current, { mimeType });
-      recorder.current = instance;
-      instance.onerror = () => {
-        if (timer.current) clearTimeout(timer.current);
-        stream.current?.getTracks().forEach((t) => t.stop());
-        if (alive.current) {
-          setRecording(false);
-          setError(
-            "Recording stopped unexpectedly. You can upload a voice file instead.",
-          );
-        }
-      };
-      instance.ondataavailable = (e) => {
-        if (e.data.size) chunks.push(e.data);
-      };
-      instance.onstop = () => {
-        if (timer.current) clearTimeout(timer.current);
-        stream.current?.getTracks().forEach((t) => t.stop());
-        if (!alive.current) return;
-        setRecording(false);
-        const ext = mimeType.startsWith("audio/mp4")
-          ? "m4a"
-          : mimeType.startsWith("audio/ogg")
-            ? "ogg"
-            : "webm";
-        void upload(
-          new File(chunks, `voice-note.${ext}`, {
-            type: mimeType.split(";")[0],
-          }),
-          "audio",
-        );
-      };
-      instance.start();
-      setRecording(true);
-      // Stop early enough to leave room for encoder/container padding under 90s.
-      timer.current = setTimeout(
-        () => {
-          if (instance.state === "recording") instance.stop();
-        },
-        Math.max(1, (snapshot?.limits.audioSeconds ?? MAX.audioSeconds) - 2) *
-          1000,
-      );
-    } catch (e) {
-      stream.current?.getTracks().forEach((t) => t.stop());
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Microphone unavailable. Upload a file instead.",
-      );
     }
   }
   const disabled = !configured || !snapshot || !!busy || recording;
@@ -406,30 +351,14 @@ export function ContributionForm({
             />
           </label>
         </div>
-        {recordSupported && (
-          <div className="recording-row">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={
-                !!busy ||
-                !snapshot ||
-                attachments.some((u) => u.kind === "audio")
-              }
-              onClick={() =>
-                recording ? recorder.current?.stop() : void startRecording()
-              }
-            >
-              <Mic size={16} />
-              {recording ? "Stop & keep recording" : "Record a voice note"}
-            </Button>
-            <span>
-              {recording
-                ? "Recording… stops automatically before the limit."
-                : "Your microphone is used only after you tap Record."}
-            </span>
-          </div>
-        )}
+        <VoiceRecorderControls
+          recorder={voice}
+          disabled={
+            !!busy || !snapshot || attachments.some((u) => u.kind === "audio")
+          }
+          maxSeconds={snapshot?.limits.audioSeconds ?? MAX.audioSeconds}
+          savingMessage={busy}
+        />
         <div className="uploaded-list">
           {attachments.map((u) => (
             <article key={u.id} className="uploaded-item">
@@ -441,10 +370,15 @@ export function ContributionForm({
                       src={`/api/manage/media/${u.id}`}
                       alt={u.description || "Your uploaded photo"}
                     />
+                  ) : voice.preview?.uploadId === u.id ? (
+                    <Mic
+                      size={24}
+                      aria-label="Listen to your recording above"
+                    />
                   ) : (
                     <audio
                       controls
-                      preload="none"
+                      preload="metadata"
                       src={`/api/manage/media/${u.id}`}
                     />
                   )
@@ -494,6 +428,7 @@ export function ContributionForm({
                 disabled={!!busy || recording}
                 onClick={async () => {
                   if (u.state === "attached") {
+                    if (voice.preview?.uploadId === u.id) voice.discard();
                     setRetainedMedia((items) =>
                       items.filter((item) => item.id !== u.id),
                     );
@@ -502,6 +437,7 @@ export function ContributionForm({
                   setBusy("Removing attachment…");
                   try {
                     await api(`uploads/${u.id}`, "DELETE");
+                    if (voice.preview?.uploadId === u.id) voice.discard();
                     await refresh();
                   } catch (e) {
                     setError(
@@ -590,6 +526,7 @@ export function ContributionForm({
                     ),
                   );
                   await refresh();
+                  voice.discard();
                   setEditing(false);
                   setError("");
                 } catch (e) {
@@ -633,6 +570,7 @@ export function ContributionForm({
             type="submit"
             disabled={
               disabled ||
+              voice.preview?.state === "error" ||
               !!snapshot?.uploads.some((u) => u.state !== "validated")
             }
           >
