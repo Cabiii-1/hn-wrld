@@ -1430,3 +1430,85 @@
     font-size: 7px;
   }
 }
+.letter-visibility {
+  margin: 26px 0;
+  padding: 22px;
+  border: 1px solid #d7d9c0;
+  border-radius: 12px;
+  background: #f5f5e9;
+  min-width: 0;
+}
+.letter-visibility legend {
+  padding: 0 8px;
+  font:
+    21px Georgia,
+    serif;
+  color: #646e50;
+}
+.letter-visibility > p {
+  color: #807c67;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.letter-visibility label {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 0;
+  cursor: pointer;
+}
+.letter-visibility input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  accent-color: #74875c;
+  margin: 0;
+}
+.letter-visibility strong,
+.letter-visibility small {
+  display: block;
+}
+.letter-visibility small {
+  margin-top: 5px;
+  color: #807c67;
+  line-height: 1.7;
+}
+.shared-letters {
+  max-width: 1000px;
+  margin: 12px auto 40px;
+  padding: 24px;
+  border: 1px solid #dedcc7;
+  border-radius: 14px;
+  background: #fffdf3;
+}
+.shared-letters .eyebrow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.shared-letters h2 {
+  font:
+    27px Georgia,
+    serif;
+  color: #677454;
+  margin: 16px 0;
+}
+.shared-letters p {
+  line-height: 1.8;
+  color: #817966;
+}
+.shared-letter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+@media (max-width: 600px) {
+  .shared-letters {
+    margin: 12px 16px 28px;
+    padding: 20px;
+  }
+  .shared-letter-list {
+    flex-direction: column;
+  }
+}

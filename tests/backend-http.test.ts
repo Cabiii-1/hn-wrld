@@ -621,3 +621,99 @@ it("requires paired attachment lists on media edits and keeps the session scope 
     p_upload_ids: [],
   });
 });
+
+it("scopes shared letters to a submitted contributor RPC and denies private or unavailable results", async () => {
+  const id = "11111111-1111-4111-8111-111111111111";
+  expect((await request("contributor/letters/" + id)).status).toBe(401);
+  state.jar.set("bubu-contributor", newSecret());
+  state.rpc.mockImplementation(async (name: string) => ({
+    data:
+      name === "consume_rate_limit"
+        ? true
+        : name === "active_contributor"
+          ? "owner"
+          : name === "contributor_shared_message"
+            ? {
+                id,
+                name: "Synthetic Friend",
+                message: "Shared synthetic words",
+              }
+            : null,
+    error: null,
+  }));
+  const response = await request("contributor/letters/" + id);
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toContain("no-store");
+  expect(await response.json()).toEqual({
+    id,
+    name: "Synthetic Friend",
+    message: "Shared synthetic words",
+  });
+  expect(state.rpc).toHaveBeenCalledWith("contributor_shared_message", {
+    p_session_hash: expect.any(String),
+    p_placement: id,
+  });
+  state.rpc.mockImplementation(async (name: string) => ({
+    data:
+      name === "consume_rate_limit"
+        ? true
+        : name === "active_contributor"
+          ? "owner"
+          : null,
+    error:
+      name === "contributor_shared_message" ? { message: "Unavailable" } : null,
+  }));
+  expect((await request("contributor/letters/" + id)).status).toBe(404);
+});
+it("saves an explicit sharing choice atomically with fresh consent and the letter revision", async () => {
+  state.jar.set("bubu-contributor", newSecret());
+  const payload = {
+    message: "Sharing synthetic words",
+    consent: true,
+    shareWithInvitees: true,
+    uploadIds: [],
+  };
+  expect((await request("contributions", "POST", payload)).status).toBe(201);
+  expect(state.rpc).toHaveBeenCalledWith("submit_shared_contribution", {
+    p_session_hash: expect.any(String),
+    p_message: payload.message,
+    p_upload_ids: [],
+    p_share: true,
+  });
+  const version = "2026-10-18T00:00:00Z";
+  expect(
+    (
+      await request("contributions", "PATCH", {
+        ...payload,
+        shareWithInvitees: false,
+        version,
+        retainedMedia: [],
+      })
+    ).status,
+  ).toBe(200);
+  expect(state.rpc).toHaveBeenCalledWith("edit_shared_contribution", {
+    p_session_hash: expect.any(String),
+    p_message: payload.message,
+    p_version: version,
+    p_retained: [],
+    p_upload_ids: [],
+    p_share: false,
+  });
+  expect(
+    (
+      await request("contributions", "PATCH", {
+        ...payload,
+        version,
+        consent: false,
+      })
+    ).status,
+  ).toBe(400);
+  expect(
+    (
+      await request("contributions", "POST", {
+        ...payload,
+        shareWithInvitees: "yes",
+      })
+    ).status,
+  ).toBe(400);
+});

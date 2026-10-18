@@ -13,6 +13,7 @@ import {
   sceneSchema,
   sceneKeySchema,
   contributorVisitSchema,
+  sharedLetterSchema,
 } from "../../game/connected";
 import { isSceneKey, safePlacement } from "../../game/scenes";
 import {
@@ -510,6 +511,22 @@ export async function handleBackend(request: Request, path: string[]) {
       );
       return json(contributorVisitSchema.parse(result.data));
     }
+    if (
+      path[0] === "contributor" &&
+      path[1] === "letters" &&
+      path.length === 3 &&
+      method === "GET"
+    ) {
+      const { db, hash, invitationId } = await contributor(jar);
+      await limit(request, "shared-letter", 120, invitationId);
+      const result = await db.rpc("contributor_shared_message", {
+        p_session_hash: hash,
+        p_placement: idSchema.parse(path[2]),
+      });
+      if (result.error || !result.data)
+        throw new HttpError(404, "This shared letter is no longer available.");
+      return json(sharedLetterSchema.parse(result.data));
+    }
     if (route === "contributor/logout" && method === "POST") {
       const { db, hash } = await contributor(jar);
       const result = await db
@@ -524,13 +541,19 @@ export async function handleBackend(request: Request, path: string[]) {
       const { db, hash, invitationId } = await contributor(jar);
       await limit(request, "submit", 20, invitationId);
       const body = contributionSchema.parse(await readJson(request));
-      const result = await db.rpc("submit_contribution", {
-        p_session_hash: hash,
-        p_name: "",
-        p_relationship: "",
-        p_message: body.message,
-        p_upload_ids: body.uploadIds,
-      });
+      const result = await db.rpc(
+        body.shareWithInvitees === undefined
+          ? "submit_contribution"
+          : "submit_shared_contribution",
+        {
+          p_session_hash: hash,
+          ...(body.shareWithInvitees === undefined
+            ? { p_name: "", p_relationship: "" }
+            : { p_share: body.shareWithInvitees }),
+          p_message: body.message,
+          p_upload_ids: body.uploadIds,
+        },
+      );
       check(
         result.error,
         "Your message was not saved. Check the attachments or reopen your invitation.",
@@ -545,6 +568,7 @@ export async function handleBackend(request: Request, path: string[]) {
           message: z.string().trim().min(1).max(2000),
           version: z.string().datetime({ offset: true }),
           consent: z.literal(true),
+          shareWithInvitees: z.boolean().optional(),
           retainedMedia: z
             .array(
               z
@@ -569,13 +593,22 @@ export async function handleBackend(request: Request, path: string[]) {
       check(
         (
           await db.rpc(
-            body.retainedMedia === undefined
-              ? "edit_contribution"
-              : "edit_contribution_media",
+            body.shareWithInvitees !== undefined
+              ? "edit_shared_contribution"
+              : body.retainedMedia === undefined
+                ? "edit_contribution"
+                : "edit_contribution_media",
             {
               p_session_hash: hash,
               p_message: body.message,
               p_version: body.version,
+              ...(body.shareWithInvitees === undefined
+                ? {}
+                : {
+                    p_share: body.shareWithInvitees,
+                    p_retained: body.retainedMedia ?? null,
+                    p_upload_ids: body.uploadIds ?? null,
+                  }),
               ...(body.retainedMedia === undefined
                 ? {}
                 : {
@@ -768,7 +801,7 @@ export async function handleBackend(request: Request, path: string[]) {
         db
           .from("contributions")
           .select(
-            "id,invitation_id,display_name,relationship_label,message_text,status,created_at",
+            "id,invitation_id,display_name,relationship_label,message_text,status,created_at,share_with_invitees",
           )
           .order("created_at", { ascending: false })
           .limit(200),

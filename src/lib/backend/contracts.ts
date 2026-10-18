@@ -26,6 +26,7 @@ export const contributionSchema = z
     message: z.string().trim().min(1).max(2000),
     consent: z.literal(true),
     uploadIds: z.array(idSchema).max(4),
+    shareWithInvitees: z.boolean().optional(),
   })
   .strict()
   .refine(
@@ -68,6 +69,7 @@ export type Contribution = {
   id: string;
   display_name: string;
   relationship_label: string | null;
+  share_with_invitees?: boolean;
   message_text: string;
   status: string;
   created_at: string;
@@ -126,6 +128,7 @@ export type ContributorSnapshot = {
   letter?: {
     message: string;
     version: string;
+    shareWithInvitees?: boolean;
     media?: (Upload & { status: string })[];
   } | null;
   uploads: Upload[];

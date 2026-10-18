@@ -90,6 +90,7 @@ beforeAll(async () => {
     "0010_named_contributor_visits.sql",
     "0011_character_display_names.sql",
     "0012_edit_contribution_media.sql",
+    "0013_opt_in_shared_letters.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -1440,5 +1441,201 @@ describe("Rich media revisions", () => {
     await expect(
       edit(own.session, before.letter.version, [], []),
     ).rejects.toThrow("unavailable");
+  });
+});
+
+describe("Opt-in shared letters", () => {
+  async function shared(session: string, share: boolean) {
+    return scalar<string>(
+      "public.submit_shared_contribution($1,'Synthetic shared words','{}'::uuid[],$2)",
+      [session, share],
+    );
+  }
+  async function publish(id: string) {
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_review($1,'approved',null)", [id]);
+    const area = await scalar<string>(
+      "(select id from public.areas where map_key='sta_ana_house')",
+    );
+    await scalar(
+      "public.admin_place_npc($1,$2,'npc-cream-1',425,352,12,true)",
+      [id, area],
+    );
+    await role("service_role");
+    return scalar<string>(
+      "(select id from public.npc_placements where contribution_id=$1)",
+      [id],
+    );
+  }
+  const read = (session: string, id: string) =>
+    scalar<{ id: string; name: string; message: string }>(
+      "public.contributor_shared_message($1,$2)",
+      [session, id],
+    );
+  it("defaults legacy letters to private and exposes only opted-in approved text to submitted same-scene invitees", async () => {
+    const owner = await invite(),
+      privateFriend = await invite(),
+      friend = await invite(),
+      waiting = await invite();
+    const legacy = await submit(privateFriend.session);
+    const source = await shared(friend.session, true);
+    expect(
+      await scalar(
+        "(select share_with_invitees from public.contributions where id=$1)",
+        [legacy],
+      ),
+    ).toBe(false);
+    const place = await publish(source),
+      privatePlace = await publish(legacy);
+    await expect(read(owner.session, place)).rejects.toThrow(
+      "Submit your letter first",
+    );
+    await submit(owner.session);
+    const message = await read(owner.session, place);
+    expect(message).toEqual({
+      id: place,
+      name: "Synthetic invite",
+      message: "Synthetic shared words",
+    });
+    expect(Object.keys(message).sort()).toEqual(["id", "message", "name"]);
+    await expect(read(owner.session, privatePlace)).rejects.toThrow(
+      "unavailable",
+    );
+    const scene = await scalar<{ npcs: { id: string; readable: boolean }[] }>(
+      "public.contributor_visit($1)",
+      [owner.session],
+    );
+    expect(scene.npcs.find((n) => n.id === place)?.readable).toBe(true);
+    expect(scene.npcs.find((n) => n.id === privatePlace)?.readable).toBe(false);
+    await expect(read(waiting.session, place)).rejects.toThrow();
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_set_invite_place($1,'slu_baguio')", [owner.id]);
+    await role("service_role");
+    await expect(read(owner.session, place)).rejects.toThrow("unavailable");
+    await role("anon");
+    await expect(read(friend.session, place)).rejects.toThrow();
+    await role("authenticated", OTHER);
+    await expect(read(friend.session, place)).rejects.toThrow();
+  });
+  it("withdraws sharing atomically, preserves it for old-client edits, and requires renewed moderation after updates", async () => {
+    const reader = await invite(),
+      friend = await invite();
+    await submit(reader.session);
+    const source = await shared(friend.session, true);
+    let place = await publish(source);
+    const version = await scalar<string>(
+      "public.contributor_snapshot($1)->'letter'->>'version'",
+      [friend.session],
+    );
+    await scalar(
+      "public.edit_shared_contribution($1,'New private words',$2,'[]'::jsonb,'{}'::uuid[],false)",
+      [friend.session, version],
+    );
+    expect(
+      await scalar(
+        "public.contributor_snapshot($1)->'letter'->>'shareWithInvitees'",
+        [friend.session],
+      ),
+    ).toBe("false");
+    expect(
+      await scalar(
+        "(select sharing_consent_at from public.contributions where id=$1)",
+        [source],
+      ),
+    ).toBeNull();
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    await expect(
+      scalar(
+        "public.edit_shared_contribution($1,'Stale opt-in',$2,null,null,true)",
+        [friend.session, version],
+      ),
+    ).rejects.toThrow("changed");
+    place = await publish(source);
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    const current = await scalar<string>(
+      "public.contributor_snapshot($1)->'letter'->>'version'",
+      [friend.session],
+    );
+    await scalar(
+      "public.edit_shared_contribution($1,'Sharing again',$2,null,null,true)",
+      [friend.session, current],
+    );
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    place = await publish(source);
+    expect((await read(reader.session, place)).message).toBe("Sharing again");
+    const next = await scalar<string>(
+      "public.contributor_snapshot($1)->'letter'->>'version'",
+      [friend.session],
+    );
+    await scalar("public.edit_contribution($1,'Old client edit',$2)", [
+      friend.session,
+      next,
+    ]);
+    expect(
+      await scalar(
+        "(select share_with_invitees from public.contributions where id=$1)",
+        [source],
+      ),
+    ).toBe(true);
+    await expect(read(reader.session, place)).rejects.toThrow();
+  });
+  it("denies opted-in content after moderation, placement, area, safety, expiry or session access changes", async () => {
+    const reader = await invite(),
+      friend = await invite();
+    await submit(reader.session);
+    const source = await shared(friend.session, true);
+    const place = await publish(source);
+    for (const status of ["pending", "hidden", "rejected"]) {
+      await role("postgres");
+      await db.query(
+        "update public.contributions set status=$1::public.moderation_status where id=$2",
+        [status, source],
+      );
+      await role("service_role");
+      await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    }
+    await publish(source);
+    await role("postgres");
+    await db.query(
+      "update public.npc_placements set published=false where id=$1",
+      [place],
+    );
+    await role("service_role");
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    await publish(source);
+    await role("postgres");
+    await db.query(
+      "update public.areas set published=false where map_key='sta_ana_house'",
+    );
+    await role("service_role");
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    await role("postgres");
+    await db.query(
+      "update public.areas set published=true where map_key='sta_ana_house'",
+    );
+    await db.query("update public.npc_placements set spawn_x=0 where id=$1", [
+      place,
+    ]);
+    await role("service_role");
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    await publish(source);
+    await role("postgres");
+    await db.query(
+      "update public.invitations set expires_at=now()-interval '1 second' where id=$1",
+      [friend.id],
+    );
+    await role("service_role");
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    await role("postgres");
+    await db.query(
+      "update public.invitations set expires_at=null,revoked_at=now() where id=$1",
+      [friend.id],
+    );
+    await role("service_role");
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_revoke_invite($1)", [reader.id]);
+    await role("service_role");
+    await expect(read(reader.session, place)).rejects.toThrow("unavailable");
   });
 });

@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 import React from "react";
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type { GameBridge } from "../src/game/bridge";
 const mock = vi.hoisted(() => ({
   api: vi.fn(),
@@ -101,4 +108,68 @@ describe("Scoped contributor visits", () => {
     act(() => vi.runAllTimers());
     expect(mock.replace).not.toHaveBeenCalled();
   });
+});
+
+it("opens only opted-in letters, pauses the world, never requests recipient media, and clears withdrawn text", async () => {
+  const id = "11111111-1111-4111-8111-111111111111",
+    privateId = "22222222-2222-4222-8222-222222222222";
+  const data = {
+    ...visit,
+    npcs: [
+      {
+        id,
+        name: "Sharing Friend",
+        variant: "npc-cream-1" as const,
+        x: 430,
+        y: 360,
+        radius: 12,
+        seen: false,
+        readable: true,
+      },
+      {
+        id: privateId,
+        name: "Private Friend",
+        variant: "npc-cream-1" as const,
+        x: 410,
+        y: 360,
+        radius: 12,
+        seen: false,
+        readable: false,
+      },
+    ],
+  };
+  mock.api.mockResolvedValue({
+    id,
+    name: "Sharing Friend",
+    message: "Synthetic shared words",
+  });
+  vi.spyOn(document, "hidden", "get").mockReturnValue(false);
+  render(<ContributorVisitView initialVisit={data} />);
+  expect(
+    screen.queryByRole("button", {
+      name: "Read Private Friend’s shared letter",
+    }),
+  ).toBeNull();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Read Sharing Friend’s shared letter" }),
+  );
+  await screen.findByText("Synthetic shared words");
+  expect(mock.bridge!.paused).toBe(true);
+  expect(mock.api).toHaveBeenCalledWith("contributor/letters/" + id);
+  expect(
+    mock.api.mock.calls.every(([path]) => !path.startsWith("recipient/")),
+  ).toBe(true);
+  mock.api.mockImplementation(async (path: string) => {
+    if (path === "contributor/visit") return data;
+    throw Error("No longer shared");
+  });
+  await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+  await waitFor(() =>
+    expect(screen.queryByText("Synthetic shared words")).toBeNull(),
+  );
+  expect(screen.getByRole("alert").textContent).toContain("no longer shared");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Back to our little place" }),
+  );
+  expect(mock.bridge!.paused).toBe(false);
 });

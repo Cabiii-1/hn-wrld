@@ -8,6 +8,7 @@ import {
 } from "@/game/connected";
 import { World } from "./world";
 import { Button } from "./ui/button";
+import { SharedLetters } from "./shared-letters";
 
 export function ContributorVisitView({
   initialVisit,
@@ -20,6 +21,7 @@ export function ContributorVisitView({
     [error, setError] = useState(initialError),
     [attempt, setAttempt] = useState(0);
   const generation = useRef(0);
+  const [reading, setReading] = useState(false);
   useEffect(() => {
     let live = true;
     async function refresh() {
@@ -97,6 +99,15 @@ export function ContributorVisitView({
         npcs={visit.npcs}
         mapKey={visit.mapKey}
         visitor={visit.visitor}
+        paused={reading}
+      />
+      <SharedLetters
+        key={visit.npcs
+          .filter((n) => n.readable)
+          .map((n) => n.id)
+          .join(",")}
+        npcs={visit.npcs}
+        onOpenChange={setReading}
       />
     </div>
   );

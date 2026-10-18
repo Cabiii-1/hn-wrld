@@ -50,12 +50,14 @@ export function World({
   preview = false,
   onSceneChange,
   visitor,
+  paused = false,
 }: {
   npcs?: WorldNpc[];
   mapKey?: SceneKey;
   preview?: boolean;
   onSceneChange?: (map: SceneKey) => void;
   visitor?: ContributorVisit["visitor"];
+  paused?: boolean;
 }) {
   const connected = npcs !== undefined && !preview && !visitor;
   const place = SCENES[mapKey];
@@ -95,8 +97,8 @@ export function World({
     };
   }, [bridge, visitor]);
   useEffect(() => {
-    bridge.pause(dialogue || help);
-  }, [bridge, dialogue, help]);
+    bridge.pause(dialogue || help || paused);
+  }, [bridge, dialogue, help, paused]);
   const actions = useMemo(
     () => ({
       press(direction: Direction, event: PointerEvent<HTMLButtonElement>) {
@@ -171,7 +173,7 @@ export function World({
             </ul>
             <p className="sample-note">
               {visitor
-                ? "The letters and recordings are just for Hanna. You can return to your own letter from the link above."
+                ? "Read opted-in letters from the shared-letters panel below the world. Photos and voice notes stay private."
                 : connected
                   ? "Your hellos are saved as you open them. You can always read them again."
                   : "Sample world · all characters and dialogue are synthetic."}
@@ -276,7 +278,7 @@ export function World({
           <div
             className="touch-controls"
             aria-label="Movement controls"
-            hidden={dialogue || help || status !== "ready"}
+            hidden={dialogue || help || paused || status !== "ready"}
           >
             <div className="dpad">
               {directions.map(({ direction, Icon }) => (
@@ -383,8 +385,8 @@ export function World({
       </footer>
       {visitor ? (
         <p className="preview-note">
-          <Heart size={14} /> Their letters are just for Hanna. Your support is
-          part of this place.
+          <Heart size={14} /> Shared letters are below. Each person chooses
+          whether their words can be read by invited friends.
         </p>
       ) : connected ? (
         <div className="preview-note recipient-actions">

@@ -36,8 +36,8 @@ export function ContributionForm({
   const [snapshot, setSnapshot] = useState<Snapshot | null>(initialSnapshot),
     [error, setError] = useState(initialError);
   const [busy, setBusy] = useState(""),
-    [message, setMessage] = useState(""),
-    [description, setDescription] = useState("");
+    [message, setMessage] = useState("");
+  const [shareWithInvitees, setShareWithInvitees] = useState(false);
   const [editing, setEditing] = useState(false),
     [retainedMedia, setRetainedMedia] = useState<
       NonNullable<NonNullable<Snapshot["letter"]>["media"]>
@@ -84,7 +84,6 @@ export function ContributionForm({
           filename: file.name,
           bytes: file.size,
           mime: file.type.split(";")[0],
-          description,
         },
       );
       reservedId = reserved.id;
@@ -134,6 +133,7 @@ export function ContributionForm({
     try {
       await api("contributions", editing ? "PATCH" : "POST", {
         message,
+        shareWithInvitees,
         consent: form.get("consent") === "on",
         ...(editing
           ? {
@@ -177,6 +177,7 @@ export function ContributionForm({
   function openEditor(saved: Snapshot) {
     if (!saved.letter) return;
     setMessage(saved.letter.message);
+    setShareWithInvitees(saved.letter.shareWithInvitees ?? false);
     setLetterVersion(saved.letter.version);
     setRetainedMedia(saved.letter.media ?? []);
     setError("");
@@ -290,18 +291,6 @@ export function ContributionForm({
             <p>Entirely optional. Your words are already enough.</p>
           </div>
         </div>
-        <label className="attachment-description">
-          Photo description or voice transcript <span>Optional</span>
-          <input
-            name="attachmentDescription"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={300}
-            disabled={disabled}
-            placeholder="A little context for the next attachment"
-          />
-          <small>This will stay with the next file you choose or record.</small>
-        </label>
         <div className="attachment-choices">
           <label className="attachment-choice">
             <ImagePlus size={24} />
@@ -399,27 +388,6 @@ export function ContributionForm({
                         ? "Checked and ready · private"
                         : "Unfinished — remove and retry"}
                 </span>
-                {u.state === "attached" && (
-                  <label>
-                    {u.kind === "photo"
-                      ? "Photo description"
-                      : "Voice transcript"}
-                    <input
-                      value={u.description}
-                      maxLength={300}
-                      disabled={disabled}
-                      onChange={(e) =>
-                        setRetainedMedia((items) =>
-                          items.map((item) =>
-                            item.id === u.id
-                              ? { ...item, description: e.target.value }
-                              : item,
-                          ),
-                        )
-                      }
-                    />
-                  </label>
-                )}
               </div>
               <Button
                 type="button"
@@ -453,14 +421,52 @@ export function ContributionForm({
             </article>
           ))}
         </div>
+        <fieldset className="letter-visibility" disabled={disabled}>
+          <legend>Who can read your letter?</legend>
+          <p>A little choice, entirely yours.</p>
+          <label>
+            <input
+              type="radio"
+              name="letterVisibility"
+              value="private"
+              checked={!shareWithInvitees}
+              onChange={() => setShareWithInvitees(false)}
+            />
+            <span>
+              <strong>Just Hanna and Cj</strong>
+              <small>Keep my words between us.</small>
+            </span>
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="letterVisibility"
+              value="invited"
+              checked={shareWithInvitees}
+              onChange={() => setShareWithInvitees(true)}
+            />
+            <span>
+              <strong>Share with invited friends, too</strong>
+              <small>
+                Let other contributors read my letter in our little place.
+              </small>
+            </span>
+          </label>
+          <p>
+            Only your letter text is shared, after Cj reviews it. Photos and
+            voice notes stay private to you, Hanna and Cj. Nothing is public on
+            the internet. You can change this choice later.
+          </p>
+        </fieldset>
         <div className="consent-box">
           <Heart size={18} />
           <div>
             <p>Kept with care.</p>
             <span>
-              Your words and media are private to you, Cj as reviewer, and Hanna
-              once approved. Please leave out addresses, phone numbers, and
-              anything you don’t have permission to share.
+              Your photos and voice note are private to you, Cj and Hanna once
+              approved. Your letter follows the choice above. Please leave out
+              addresses, phone numbers, and anything you don’t have permission
+              to share.
             </span>
             <label>
               <input

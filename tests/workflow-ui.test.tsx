@@ -200,6 +200,7 @@ describe("contributor and admin UI workflows", () => {
     expect(mock.api).toHaveBeenCalledWith("contributions", "POST", {
       message: "A synthetic little hello.",
       consent: true,
+      shareWithInvitees: false,
       uploadIds: [],
     });
     expect(screen.getByText(/Received does not mean published/)).toBeTruthy();
@@ -369,6 +370,7 @@ describe("Returning contributor UI", () => {
         message: "Updated synthetic letter",
         version: letter.version,
         consent: true,
+        shareWithInvitees: false,
         retainedMedia: [],
         uploadIds: [],
       }),
@@ -559,11 +561,7 @@ it("stages saved attachment removals locally, restores them on cancel, and saves
   );
   expect(screen.getByRole("button", { name: "Remove audio" })).toBeTruthy();
   await userEvent.click(screen.getByRole("button", { name: "Remove photo" }));
-  await userEvent.clear(screen.getByLabelText("Voice transcript"));
-  await userEvent.type(
-    screen.getByLabelText("Voice transcript"),
-    "New transcript",
-  );
+  expect(screen.queryByLabelText("Voice transcript")).toBeNull();
   await userEvent.click(screen.getByRole("checkbox"));
   await userEvent.click(
     screen.getByRole("button", { name: "Save my changes" }),
@@ -573,8 +571,73 @@ it("stages saved attachment removals locally, restores them on cancel, and saves
       message: "Saved hello",
       version: saved.letter.version,
       consent: true,
-      retainedMedia: [{ id: "audio", description: "New transcript" }],
+      shareWithInvitees: false,
+      retainedMedia: [{ id: "audio", description: "Hello" }],
       uploadIds: [],
     }),
+  );
+});
+
+it("defaults sharing to private, removes attachment caption fields, and loads a saved opt-in choice for editing", async () => {
+  const saved = {
+    displayName: "Synthetic Friend",
+    submitted: true,
+    letter: {
+      message: "Synthetic words",
+      version: "2026-10-18T00:00:00Z",
+      shareWithInvitees: true,
+      media: [],
+    },
+    uploads: [],
+    limits: MAX,
+  };
+  mock.api.mockResolvedValue(saved);
+  const first = render(
+    <ContributionForm
+      configured
+      initialResolved
+      initialSnapshot={{
+        displayName: "Synthetic Friend",
+        submitted: false,
+        uploads: [],
+        limits: MAX,
+      }}
+    />,
+  );
+  expect(
+    (
+      screen.getByRole("radio", {
+        name: /Just Hanna and Cj/,
+      }) as HTMLInputElement
+    ).checked,
+  ).toBe(true);
+  expect(
+    screen.queryByLabelText(/Photo description or voice transcript/),
+  ).toBeNull();
+  first.unmount();
+  render(
+    <ContributionForm configured initialResolved initialSnapshot={saved} />,
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Edit my letter" }));
+  expect(
+    (
+      screen.getByRole("radio", {
+        name: /Share with invited friends/,
+      }) as HTMLInputElement
+    ).checked,
+  ).toBe(true);
+  await userEvent.click(
+    screen.getByRole("radio", { name: /Just Hanna and Cj/ }),
+  );
+  await userEvent.click(screen.getByRole("checkbox"));
+  await userEvent.click(
+    screen.getByRole("button", { name: "Save my changes" }),
+  );
+  await waitFor(() =>
+    expect(mock.api).toHaveBeenCalledWith(
+      "contributions",
+      "PATCH",
+      expect.objectContaining({ shareWithInvitees: false, consent: true }),
+    ),
   );
 });

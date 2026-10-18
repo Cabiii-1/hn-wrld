@@ -614,6 +614,13 @@ function ReviewCard({
         <div>
           <h2>{c.display_name}</h2>
           <p>{c.relationship_label || "A familiar face"}</p>
+          <p className="quiet-copy">
+            Letter audience:{" "}
+            {c.share_with_invitees
+              ? "Hanna, Cj and invited friends after approval"
+              : "Hanna and Cj only"}
+            . Photos and voice notes stay private.
+          </p>
         </div>
         <span className={`status-badge status-${c.status}`}>{c.status}</span>
       </div>
