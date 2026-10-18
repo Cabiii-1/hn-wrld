@@ -38,19 +38,19 @@
     }
   },
   "tuguegarao_park": {
-    "source": "assets/backgrounds/tuguegarao_park-v2.png",
-    "publicPath": "/game/backgrounds/tuguegarao_park-v2.webp",
+    "source": "assets/backgrounds/tuguegarao_park-v3.png",
+    "publicPath": "/game/backgrounds/tuguegarao_park-v3.webp",
     "width": 1672,
     "height": 941,
     "worldSize": [
       836,
       470
     ],
-    "creator": "AI-assisted pixel-art restyle using built-in imagegen from owner-provided civic plaza reference, 2026-10-18",
+    "creator": "Built-in imagegen restyle with lighter lawns, from owner-approved v2 artwork, 2026-10-18",
     "license": "Production rights confirmation pending; supplied for this prototype",
     "purpose": "Scenic backdrop only; explicit collision geometry in src/game/scene-geometry.json",
     "format": "Lossless WebP; versioned URL prevents stale scenery with new collisions",
-    "bytes": 1815362,
+    "bytes": 1804824,
     "reference": "assets/references/tuguegarao-plaza-owner-reference.png"
   },
   "slu_baguio": {

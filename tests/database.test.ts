@@ -92,6 +92,7 @@ beforeAll(async () => {
     "0012_edit_contribution_media.sql",
     "0013_opt_in_shared_letters.sql",
     "0014_tuguegarao_civic_plaza.sql",
+    "0015_park_display_name.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),

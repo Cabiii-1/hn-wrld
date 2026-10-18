@@ -1,0 +1,4 @@
+Built-in imagegen edit; 2026-10-18
+Input: assets/backgrounds/tuguegarao_park-v2.png
+
+Use case: precise-object-edit / color adjustment. Edit this exact pixel-art game background. Change ONLY the grass in the four lawn quadrants to a noticeably lighter soft sunny spring green, about 20% lighter, slightly less saturated, warm pastel but still clearly green. Keep the small grass shade clusters and flowers. Preserve absolutely everything else unchanged: exact 1672x941 framing, camera angle, layout, positions, sizes, statue, paths, lawns' edges, benches, lamp posts, trees, civic building and roads. Do not lighten trees, pavement, buildings or the whole image. No added or removed objects. Maintain crisp blocky pixel art, hard square pixels, no blur, no antialiasing, no gradients. This is an exact-layout game background with existing collision coordinates; geometric fidelity is critical.

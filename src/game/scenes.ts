@@ -21,8 +21,8 @@ export const SCENES = {
     npc: { x: 425, y: 352, radius: 20 },
   },
   tuguegarao_park: {
-    background: "/game/backgrounds/tuguegarao_park-v2.webp",
-    name: "Tuguegarao Plaza",
+    background: "/game/backgrounds/tuguegarao_park-v3.webp",
+    name: "Park",
     location: "Tuguegarao, Cagayan",
     chapter: "02",
     eyebrow: "LITTLE MOMENTS, LOVELY PEOPLE",

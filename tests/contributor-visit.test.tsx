@@ -150,9 +150,7 @@ it("opens only opted-in letters, pauses the world, never requests recipient medi
       name: "Read Private Friend’s shared letter",
     }),
   ).toBeNull();
-  fireEvent.click(
-    screen.getByRole("button", { name: "Read Sharing Friend’s shared letter" }),
-  );
+  act(() => mock.bridge!.onTalk(id));
   await screen.findByText("Synthetic shared words");
   expect(mock.bridge!.paused).toBe(true);
   expect(mock.api).toHaveBeenCalledWith("contributor/letters/" + id);

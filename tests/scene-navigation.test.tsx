@@ -51,12 +51,8 @@ describe("M4 navigation and protected scene loading", () => {
       screen.getByLabelText("Sample bear count"),
       "50",
     );
-    await userEvent.click(
-      screen.getByRole("button", { name: "Visit Tuguegarao Plaza" }),
-    );
-    expect(
-      screen.getByRole("region", { name: "Explore Tuguegarao Plaza" }),
-    ).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Visit Park" }));
+    expect(screen.getByRole("region", { name: "Explore Park" })).toBeTruthy();
     await userEvent.click(
       screen.getByRole("button", { name: "Visit SLU Baguio" }),
     );
@@ -73,10 +69,8 @@ describe("M4 navigation and protected scene loading", () => {
     }));
     render(<RecipientPlayer />);
     await screen.findByRole("region", { name: "Explore Sta. Ana House" });
-    await userEvent.click(
-      screen.getByRole("button", { name: "Visit Tuguegarao Plaza" }),
-    );
-    await screen.findByRole("region", { name: "Explore Tuguegarao Plaza" });
+    await userEvent.click(screen.getByRole("button", { name: "Visit Park" }));
+    await screen.findByRole("region", { name: "Explore Park" });
     await userEvent.click(
       screen.getByRole("button", { name: "Visit SLU Baguio" }),
     );
