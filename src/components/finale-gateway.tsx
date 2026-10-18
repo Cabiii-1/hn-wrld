@@ -20,11 +20,15 @@ import { Button } from "./ui/button";
 export function FinaleGateway({
   children,
   sample = false,
+  initialStatus = null,
+  initialResolved = false,
 }: {
   children: ReactNode;
   sample?: boolean;
+  initialStatus?: FinaleStatus | null;
+  initialResolved?: boolean;
 }) {
-  const [status, setStatus] = useState<FinaleStatus | null>(null),
+  const [status, setStatus] = useState<FinaleStatus | null>(initialStatus),
     [ending, setEnding] = useState<Finale | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -50,7 +54,7 @@ export function FinaleGateway({
   }, [sample]);
   useEffect(() => {
     mounted.current = true;
-    void refresh();
+    if (!initialResolved) void refresh();
     const check = () => {
       if (!document.hidden) void refresh();
     };
@@ -63,7 +67,7 @@ export function FinaleGateway({
       document.removeEventListener("visibilitychange", check);
       window.removeEventListener("bubu:seen", check);
     };
-  }, [refresh]);
+  }, [refresh, initialResolved]);
   async function open() {
     setBusy(true);
     setError("");

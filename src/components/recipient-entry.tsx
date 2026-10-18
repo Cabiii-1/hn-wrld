@@ -6,7 +6,13 @@ import { Heart, KeyRound } from "lucide-react";
 import { ContributionShell } from "./contribution-shell";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
-export function RecipientEntry() {
+export function RecipientEntry({
+  initialSessionValid = false,
+  initialResolved = false,
+}: {
+  initialSessionValid?: boolean;
+  initialResolved?: boolean;
+}) {
   const router = useRouter();
   const captured = useRef<string | null>(null);
   const [token, setToken] = useState(""),
@@ -25,7 +31,8 @@ export function RecipientEntry() {
         queueMicrotask(() => {
           if (live) setToken(secret);
         });
-      else
+      else if (initialSessionValid) router.replace("/play");
+      else if (!initialResolved)
         void api("recipient/session")
           .then(() => {
             if (live) router.replace("/play");
@@ -38,7 +45,7 @@ export function RecipientEntry() {
       live = false;
       window.removeEventListener("hashchange", readLink);
     };
-  }, [router]);
+  }, [router, initialSessionValid, initialResolved]);
   async function unlock(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
@@ -69,7 +76,9 @@ export function RecipientEntry() {
       <form className="letter-card recipient-entry" onSubmit={unlock}>
         <Heart size={30} aria-hidden />
         <h2>Welcome home, Bubu.</h2>
-        {token ? (
+        {initialSessionValid && !token ? (
+          <p role="status">Opening your little world…</p>
+        ) : token ? (
           <>
             <p>Enter the passcode Dudu shared with you.</p>
             <label>

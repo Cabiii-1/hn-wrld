@@ -76,3 +76,8 @@ Only approved content is loaded when player changes zone or reloads; editing whi
 
 ### Device behavior
 Responsive Phaser canvas uses crisp integer scaling where feasible, adapts logical viewport/aspect without stretching or cropping critical gameplay UI, and keeps browser-visible controls accessible. React manages touch input, focus, dialogue and media players; Phaser moves sprites from an input abstraction. Audio clip playback is explicitly user-initiated.
+
+## Private-page loading (2026-10-18)
+Admin, contribution, and recipient pages prepare their first authorized projection during the current server request, reusing the API authorization implementation without an HTTP loopback. The client hydrates that result without repeating the same initial read or flashing a sign-in form. Entry pages reuse the checked session only when no new secret fragment is present; a fresh private link always takes precedence. No authorization result or private projection is cached across server requests or persisted in browser storage. Private pages/APIs retain private no-store responses.
+
+The browser API shares only simultaneous GET requests and discards the promise after completion; writes clear the in-flight lookup. Scene/finale updates remain periodic and revalidate on tab return. The existing world stays mounted while a tab-return check runs, but a denied read clears it. Only public background artwork under /game/backgrounds is browser-cacheable (one hour, stale-while-revalidate up to one day); private text, uploads, links, and credentials are excluded. A full reload still initializes the Phaser canvas.

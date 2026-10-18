@@ -1,16 +1,29 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { World } from "./world";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
 import { sceneSchema, type WorldNpc } from "@/game/connected";
 import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
-export function RecipientPlayer() {
-  const [npcs, setNpcs] = useState<WorldNpc[] | null>(null),
-    [error, setError] = useState("");
+export function RecipientPlayer({
+  initialScene,
+  initialResolved = false,
+  initialError = "",
+}: {
+  initialScene?: { mapKey: SceneKey; npcs: WorldNpc[] } | null;
+  initialResolved?: boolean;
+  initialError?: string;
+}) {
+  const [npcs, setNpcs] = useState<WorldNpc[] | null>(
+      initialScene?.npcs ?? null,
+    ),
+    [error, setError] = useState(initialError);
   const [attempt, setAttempt] = useState(0);
-  const [mapKey, setMapKey] = useState<SceneKey>("sta_ana_house");
+  const [mapKey, setMapKey] = useState<SceneKey>(
+    initialScene?.mapKey ?? "sta_ana_house",
+  );
+  const navigated = useRef(false);
   useEffect(() => {
     let live = true;
     let generation = 0;
@@ -35,10 +48,9 @@ export function RecipientPlayer() {
         }
       }
     }
-    void load();
+    if (!initialResolved || navigated.current || attempt > 0) void load();
     const refresh = () => {
       if (!document.hidden) {
-        setNpcs(null);
         void load();
       }
     };
@@ -51,8 +63,9 @@ export function RecipientPlayer() {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [attempt, mapKey]);
+  }, [attempt, mapKey, initialResolved]);
   function changeScene(map: SceneKey) {
+    navigated.current = true;
     setNpcs(null);
     setError("");
     setMapKey(map);

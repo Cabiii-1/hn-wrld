@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from "react";
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 const mock = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("../src/lib/backend/browser-api", () => ({ api: mock.api }));
@@ -16,8 +16,35 @@ import { RecipientPlayer } from "../src/components/recipient-player";
 beforeEach(() => {
   vi.clearAllMocks();
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 describe("M4 navigation and protected scene loading", () => {
+  it("keeps the prepared world mounted during a tab-return check, then removes it if access is denied", async () => {
+    let reject!: (error: Error) => void;
+    mock.api.mockImplementation(
+      () =>
+        new Promise((_resolve, fail) => {
+          reject = fail;
+        }),
+    );
+    vi.spyOn(document, "hidden", "get").mockReturnValue(false);
+    render(
+      <RecipientPlayer
+        initialScene={{ mapKey: "sta_ana_house", npcs: [] }}
+        initialResolved
+      />,
+    );
+    const canvas = screen.getByTestId("game");
+    expect(mock.api).not.toHaveBeenCalled();
+    act(() => document.dispatchEvent(new Event("visibilitychange")));
+    expect(mock.api).toHaveBeenCalledWith("recipient/scenes/sta_ana_house");
+    expect(screen.getByTestId("game")).toBe(canvas);
+    await act(async () => reject(new Error("Your visit has ended.")));
+    await screen.findByText("Your visit has ended.");
+    expect(screen.queryByTestId("game")).toBeNull();
+  });
   it("visits all sample maps with 50 bears without fetching private data", async () => {
     render(<DemoWorld />);
     await userEvent.selectOptions(

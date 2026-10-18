@@ -5,6 +5,15 @@ const config: NextConfig = {
   serverExternalPackages: ["sharp", "music-metadata", "file-type"],
   async headers() {
     return [
+      {
+        source: "/game/backgrounds/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, stale-while-revalidate=86400",
+          },
+        ],
+      },
       ...[
         "/",
         "/play/:path*",

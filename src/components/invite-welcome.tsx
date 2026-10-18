@@ -5,7 +5,13 @@ import { Heart, Mail } from "lucide-react";
 import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
-export function InviteWelcome({ configured }: { configured: boolean }) {
+export function InviteWelcome({
+  configured,
+  initialSessionValid = false,
+}: {
+  configured: boolean;
+  initialSessionValid?: boolean;
+}) {
   const [phase, setPhase] = useState<
     "opening" | "missing" | "failed" | "unconfigured"
   >("opening");
@@ -27,6 +33,12 @@ export function InviteWelcome({ configured }: { configured: boolean }) {
         history.replaceState(null, "", location.pathname);
       }
       const token = captured.current;
+      // A fresh fragment always takes precedence over a different invitation's
+      // cookie. A plain return visit can reuse its already-validated session.
+      if (configured && !token && initialSessionValid) {
+        router.replace("/contribute");
+        return;
+      }
       if (!configured || !/^[A-Za-z0-9_-]{43}$/.test(token)) {
         queueMicrotask(() => {
           if (live) setPhase(configured ? "missing" : "unconfigured");
@@ -90,7 +102,7 @@ export function InviteWelcome({ configured }: { configured: boolean }) {
       live = false;
       window.removeEventListener("hashchange", readLink);
     };
-  }, [configured, router, attempt]);
+  }, [configured, router, attempt, initialSessionValid]);
   return (
     <ContributionShell>
       <section className="letter-intro">

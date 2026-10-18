@@ -13,18 +13,24 @@ import {
 import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
-import { MAX, type Upload } from "@/lib/backend/contracts";
+import {
+  MAX,
+  type ContributorSnapshot as Snapshot,
+} from "@/lib/backend/contracts";
 
-type Snapshot = {
-  displayName: string;
-  submitted: boolean;
-  letter?: { message: string; version: string } | null;
-  uploads: Upload[];
-  limits: Pick<typeof MAX, "photoBytes" | "audioBytes" | "audioSeconds">;
-};
-export function ContributionForm({ configured }: { configured: boolean }) {
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
-    [error, setError] = useState("");
+export function ContributionForm({
+  configured,
+  initialSnapshot = null,
+  initialResolved = false,
+  initialError = "",
+}: {
+  configured: boolean;
+  initialSnapshot?: Snapshot | null;
+  initialResolved?: boolean;
+  initialError?: string;
+}) {
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(initialSnapshot),
+    [error, setError] = useState(initialError);
   const [busy, setBusy] = useState(""),
     [message, setMessage] = useState(""),
     [description, setDescription] = useState("");
@@ -43,7 +49,7 @@ export function ContributionForm({ configured }: { configured: boolean }) {
   };
   useEffect(() => {
     alive.current = true;
-    if (configured)
+    if (configured && !initialResolved)
       void api<Snapshot>("contributor")
         .then((data) => setSnapshot(data))
         .catch((e) => setError(e.message));
@@ -59,7 +65,7 @@ export function ContributionForm({ configured }: { configured: boolean }) {
       if (recorder.current?.state === "recording") recorder.current.stop();
       stream.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [configured]);
+  }, [configured, initialResolved]);
   async function upload(file: File, kind: "photo" | "audio") {
     setBusy(`Checking ${kind === "photo" ? "your photo" : "your voice note"}…`);
     setError("");

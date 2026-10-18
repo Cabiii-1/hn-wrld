@@ -417,3 +417,62 @@ describe("Returning contributor UI", () => {
     confirm.mockRestore();
   });
 });
+
+describe("Server-prepared private pages", () => {
+  it("shows an authorized admin desk immediately without a login flash or duplicate read", () => {
+    const data: AdminData = {
+      invitations: [],
+      contributions: [],
+      areas: [],
+      placements: [],
+      media: [],
+    };
+    render(<AdminDesk configured initialData={data} initialResolved />);
+    expect(screen.queryByLabelText("Email address")).toBeNull();
+    expect(screen.getByRole("button", { name: "Invitations" })).toBeTruthy();
+    expect(mock.api).not.toHaveBeenCalled();
+  });
+  it("renders the checked signed-out state without repeating authentication", () => {
+    render(<AdminDesk configured initialData={null} initialResolved />);
+    expect(screen.getByLabelText("Email address")).toBeTruthy();
+    expect(mock.api).not.toHaveBeenCalled();
+  });
+  it("shows the invitation name immediately without another snapshot request", () => {
+    render(
+      <ContributionForm
+        configured
+        initialSnapshot={{
+          displayName: "Synthetic Friend",
+          submitted: false,
+          uploads: [],
+          limits: MAX,
+        }}
+        initialResolved
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Hello, Synthetic Friend!" }),
+    ).toBeTruthy();
+    expect(screen.queryByText("Opening your invitation…")).toBeNull();
+    expect(mock.api).not.toHaveBeenCalled();
+  });
+  it("reuses a checked recipient session but still honors a fresh private-link fragment", async () => {
+    render(<RecipientEntry initialSessionValid initialResolved />);
+    await waitFor(() => expect(mock.replace).toHaveBeenCalledWith("/play"));
+    expect(mock.api).not.toHaveBeenCalled();
+    cleanup();
+    mock.replace.mockClear();
+    history.replaceState(null, "", "/#" + "r".repeat(43));
+    render(<RecipientEntry initialSessionValid initialResolved />);
+    await screen.findByLabelText("Passcode");
+    expect(mock.replace).not.toHaveBeenCalled();
+    expect(mock.api).not.toHaveBeenCalled();
+  });
+  it("returns to an existing contribution session without re-exchanging it", async () => {
+    render(<InviteWelcome configured initialSessionValid />);
+    await waitFor(() =>
+      expect(mock.replace).toHaveBeenCalledWith("/contribute"),
+    );
+    expect(mock.api).not.toHaveBeenCalled();
+  });
+});

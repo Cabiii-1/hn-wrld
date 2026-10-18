@@ -29,10 +29,20 @@ import { api } from "@/lib/backend/browser-api";
 import type { AdminData, Contribution, Media } from "@/lib/backend/contracts";
 
 type Action = (path: string, method: string, body?: unknown) => Promise<void>;
-export function AdminDesk({ configured }: { configured: boolean }) {
-  const [data, setData] = useState<AdminData | null>(null),
+export function AdminDesk({
+  configured,
+  initialData = null,
+  initialResolved = false,
+  initialError = "",
+}: {
+  configured: boolean;
+  initialData?: AdminData | null;
+  initialResolved?: boolean;
+  initialError?: string;
+}) {
+  const [data, setData] = useState<AdminData | null>(initialData),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(initialError);
   const [tab, setTab] = useState("review"),
     [selected, setSelected] = useState("");
   const [inviteUrl, setInviteUrl] = useState(""),
@@ -68,11 +78,11 @@ export function AdminDesk({ configured }: { configured: boolean }) {
     setData(value);
   }
   useEffect(() => {
-    if (configured)
+    if (configured && !initialResolved)
       void api<AdminData>("admin/dashboard")
         .then(setData)
         .catch(() => {});
-  }, [configured]);
+  }, [configured, initialResolved]);
   async function login(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);

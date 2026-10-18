@@ -117,3 +117,10 @@ export type Upload = {
   state: string;
   description: string;
 };
+export type ContributorSnapshot = {
+  displayName: string;
+  submitted: boolean;
+  letter?: { message: string; version: string } | null;
+  uploads: Upload[];
+  limits: Pick<typeof MAX, "photoBytes" | "audioBytes" | "audioSeconds">;
+};
