@@ -115,3 +115,6 @@ The owner supplied a new Tuguegarao reference and requested matching pixel art. 
 
 ## Park and simplified contributor visits (owner update, 2026-10-18)
 The displayed scene name is now Park; retain tuguegarao_park as the stable map key. The redundant Our Little Circle / A few words from her people section and the Your words are with Cj receipt label are removed. Shared text remains available exclusively through the in-world bear Talk interaction, with existing opt-in, approval, session, scene and media privacy checks. Park lawns are lighter while the camera, exact geometry and sprite scale remain unchanged.
+
+## Airy Park and bear monument (owner update, 2026-10-18)
+Reduce perimeter lamps, benches and trees substantially, with sparse asymmetric placement and wider clear gaps. All six foreground lamps are removed; migration 0016 removes their invisible blockers without changing existing placements, publication or access. The human monument is replaced by a pale stone chibi bear matching the game sprites on the same pedestal. Keep light lawns, camera angle, main paths, monument footprint and sprite scale. The v4 background uses a versioned URL.

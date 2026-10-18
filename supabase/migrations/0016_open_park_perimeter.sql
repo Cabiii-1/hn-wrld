@@ -1,0 +1,3 @@
+-- Owner-requested sparse park props; all six foreground lamps are removed.
+-- This only expands safe space; existing placements and publication stay unchanged.
+update public.scene_geometry set geometry='{"regions":[{"left":220,"right":615,"top":125,"bottom":160},{"left":210,"right":626,"top":160,"bottom":200},{"left":192,"right":644,"top":200,"bottom":240},{"left":180,"right":655,"top":240,"bottom":275},{"left":162,"right":672,"top":275,"bottom":310},{"left":150,"right":686,"top":310,"bottom":340},{"left":166,"right":660,"top":340,"bottom":360},{"left":378,"right":458,"top":360,"bottom":405}],"obstacles":[{"x":399,"y":140,"width":38,"height":62},{"x":377,"y":180,"width":82,"height":62},{"x":343,"y":200,"width":146,"height":62}]}'::jsonb where map_key='tuguegarao_park';

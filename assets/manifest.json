@@ -38,19 +38,19 @@
     }
   },
   "tuguegarao_park": {
-    "source": "assets/backgrounds/tuguegarao_park-v3.png",
-    "publicPath": "/game/backgrounds/tuguegarao_park-v3.webp",
+    "source": "assets/backgrounds/tuguegarao_park-v4.png",
+    "publicPath": "/game/backgrounds/tuguegarao_park-v4.webp",
     "width": 1672,
     "height": 941,
     "worldSize": [
       836,
       470
     ],
-    "creator": "Built-in imagegen restyle with lighter lawns, from owner-approved v2 artwork, 2026-10-18",
+    "creator": "Built-in imagegen sparse asymmetrical perimeter and chibi bear monument, 2026-10-18",
     "license": "Production rights confirmation pending; supplied for this prototype",
     "purpose": "Scenic backdrop only; explicit collision geometry in src/game/scene-geometry.json",
     "format": "Lossless WebP; versioned URL prevents stale scenery with new collisions",
-    "bytes": 1804824,
+    "bytes": 1586490,
     "reference": "assets/references/tuguegarao-plaza-owner-reference.png"
   },
   "slu_baguio": {

@@ -11,3 +11,7 @@ Migration 0014 applied successfully to the hosted project. All seven existing pl
 ## Lighter lawns and simplified visitor UI
 The display name is Park across scene selection and admin (migration 0015, applied). Built-in imagegen edited only lawn colors from v2 into v3; exact layout, camera, safe geometry and scale are retained. A versioned lossless WebP bypasses stale art caches. The redundant shared-letter list and receipt label are removed, including unused list/dialogue wrapper styles. The shared in-world dialogue retains its authorization, pause, opt-out and visibility revalidation. All 158 tests and ESLint passed.
 Production webpack build and TypeScript passed after retrying a Windows sandbox output-folder permission failure.
+
+## Sparse perimeter and bear statue
+Owner requested fewer lamps, benches and trees with less symmetry, followed by a bear monument. V4 uses four perimeter lamps and four benches with wide uneven spacing, sparse trees/greenery, clear front lawns and a chibi stone bear on the same monument footprint. Built-in imagegen performed both edits; prompts and final PNG are archived. Migration 0016 removes only the six obsolete front lamp blockers; region boundaries and monument exclusions stay the same. Existing safe placements remain valid without moving or changing publication. All 158 tests and lint passed, including removed-lamp walkability, monument exclusion, 20/30/50-bear bounds and server/client geometry parity.
+Production build/TypeScript passed. Migration 0016 applied; all seven existing park bears remain safely placed.

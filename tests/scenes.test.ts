@@ -16,9 +16,9 @@ describe("M4 scene geometry and crowded movement", () => {
       expect(safePlacement(map, s.npc.x, s.npc.y, s.npc.radius)).toBe(true);
     }
   });
-  it("blocks park lamps/edges and the SLU road/building/wall between stairs", () => {
-    expect(canStand(293, 350, "tuguegarao_park")).toBe(false);
-    expect(canStand(543, 360, "tuguegarao_park")).toBe(false);
+  it("opens the former park lamp footprints while blocking edges and the SLU road/building/wall between stairs", () => {
+    expect(canStand(293, 350, "tuguegarao_park")).toBe(true);
+    expect(canStand(543, 360, "tuguegarao_park")).toBe(true);
     expect(canStand(100, 190, "tuguegarao_park")).toBe(false);
     expect(canStand(400, 410, "slu_baguio")).toBe(false);
     expect(canStand(400, 310, "slu_baguio")).toBe(false);
