@@ -1,15 +1,19 @@
 import type * as Phaser from "phaser";
-import { CAPYBARA, CHARACTER_DIRECTIONS, characterAnimation } from "./capybara";
+import { CHARACTER_DIRECTIONS, characterAnimation } from "./capybara";
+import type { CHARACTERS } from "./catalog";
 
-export function registerCapybaraAnimations(scene: Phaser.Scene) {
+export function registerCharacterAnimations(
+  scene: Phaser.Scene,
+  character: (typeof CHARACTERS)[number],
+) {
   for (const direction of CHARACTER_DIRECTIONS)
     for (const action of ["idle", "walk"] as const) {
       const { start, end, rate } = characterAnimation(direction, action);
-      const key = `${CAPYBARA.key}-${action}-${direction}`;
+      const key = `${character.variant}-${action}-${direction}`;
       if (!scene.anims.exists(key))
         scene.anims.create({
           key,
-          frames: scene.anims.generateFrameNumbers(CAPYBARA.key, {
+          frames: scene.anims.generateFrameNumbers(character.variant, {
             start,
             end,
           }),

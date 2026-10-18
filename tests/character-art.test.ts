@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
+import { CHARACTERS } from "../src/game/characters/catalog";
+import {
+  animalFrame,
+  animalSheetRgba,
+} from "../src/game/characters/animal-art";
 import {
   CAPYBARA,
   CAPYBARA_PALETTE,
@@ -10,6 +15,31 @@ import {
 } from "../src/game/characters/capybara";
 
 describe("Native capybara sprite contract", () => {
+  it("ships all six native-grid atlases with distinct silhouettes, solid pixels and consistent feet anchors", async () => {
+    const sheets = new Set<string>();
+    for (const character of CHARACTERS) {
+      const { data, info } = await sharp(`public${character.src}`)
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      expect([info.width, info.height]).toEqual([384, 32]);
+      expect(data.equals(Buffer.from(animalSheetRgba(character.key)))).toBe(
+        true,
+      );
+      sheets.add(data.toString("base64"));
+      for (let frame = 0; frame < 12; frame++) {
+        const pixels = animalFrame(character.key, frame);
+        expect(
+          Math.max(
+            ...pixels.flatMap((v, i) => (v ? [Math.floor(i / 32)] : [])),
+          ),
+        ).toBe(29);
+        expect(new Set(pixels.filter(Boolean)).size).toBeLessThanOrEqual(6);
+        expect(pixels.slice(0, 32)).toEqual(Array(32).fill(null));
+      }
+    }
+    expect(sheets.size).toBe(6);
+  });
   it("ships an atlas identical to its reproducible pixel source", async () => {
     const { data, info } = await sharp(`public${CAPYBARA.src}`)
       .ensureAlpha()

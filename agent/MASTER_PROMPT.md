@@ -1,6 +1,6 @@
 # MASTER IMPLEMENTATION PROMPT — Claude Code / Codex
 
-Planned extension: read `docs/PRD_CHARACTER_SELECTION.md` for the six-animal character selector. Implementation has started with the capybara art slice; follow its delivery sequence and review the first sprite before producing the remaining animals or changing contributor data.
+Character-selection extension: read `docs/PRD_CHARACTER_SELECTION.md` for the six-animal character selector. The owner reviewed the capybara and authorized continuation; six animals, the picker and persistence are implemented. Follow docs/verification/CHARACTER_SELECTION.md for current validation and compatibility requirements.
 
 You are the lead engineer implementing **Hanna's Little World**, a private single-player sentimental browser pixel-art game. This repository contains the product specification, sample artwork, and seed migrations.
 

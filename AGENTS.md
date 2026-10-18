@@ -80,3 +80,7 @@ Photo and voice extras use full-width compact rows, with left-aligned headings a
 
 ## Equal contribution cards (owner clarification, 2026-10-19)
 Keep the desktop two-column photo/voice grid with identical compact 230px cards. This supersedes the earlier full-width extras layout. Voice recording, permission, playback, retry and saved-audio controls replace the idle content inside the voice card instead of extending it. Collapse format/help detail during active states, retain an accessible title and use internal scrolling for unusually long errors or enlarged text. Photo attachment previews sit below the grid; voice playback/removal stays within its card. Mobile stacks the same equal-height cards.
+
+
+## Crochet Friends character choices (owner-approved, 2026-10-19)
+Follow docs/PRD_CHARACTER_SELECTION.md. Six simple 8-bit animals share 32px frames and existing physics. The contribution character_key is canonical; keep null legacy bear appearances until explicit selection. Character saves must remain atomic with the versioned letter/media/privacy save and preserve placement/publication holds. Invited visits and recipient casts resolve the same appearance. Retain all three legacy variants and service-only authorization. The Park teaser is replaced by the accessible six-choice selector; keep equal photo/voice cards unchanged. See docs/verification/CHARACTER_SELECTION.md.

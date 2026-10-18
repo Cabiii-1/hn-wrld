@@ -14,7 +14,8 @@ import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { ContributionArrival } from "./contribution-arrival";
 import { useVoiceRecorder } from "./use-voice-recorder";
 import { VoiceRecorderControls } from "./voice-recorder-controls";
-import { ParkPreview } from "./park-preview";
+import { CharacterPicker } from "./character-picker";
+import type { CharacterKey } from "@/game/characters/catalog";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
@@ -54,6 +55,11 @@ export function ContributionForm({
     [letterVersion, setLetterVersion] = useState(
       directEntry ? (initialSnapshot?.letter?.version ?? "") : "",
     );
+  const [characterKey, setCharacterKey] = useState<CharacterKey | null>(
+    directEntry && initialSnapshot?.letter
+      ? (initialSnapshot.letter.characterKey ?? null)
+      : "bear",
+  );
   const [arriving, setArriving] = useState(false);
   const alive = useRef(true);
   const voice = useVoiceRecorder({
@@ -145,6 +151,7 @@ export function ContributionForm({
       await api("contributions", editing ? "PATCH" : "POST", {
         message,
         shareWithInvitees,
+        ...(characterKey === null ? {} : { characterKey }),
         consent: form.get("consent") === "on",
         ...(editing
           ? {
@@ -191,6 +198,7 @@ export function ContributionForm({
   );
   function openEditor(saved: Snapshot) {
     if (!saved.letter) return;
+    setCharacterKey(saved.letter.characterKey ?? null);
     setMessage(saved.letter.message);
     setShareWithInvitees(saved.letter.shareWithInvitees ?? false);
     setLetterVersion(saved.letter.version);
@@ -558,7 +566,12 @@ export function ContributionForm({
             {busy}
           </p>
         )}
-        <ParkPreview />
+        <CharacterPicker
+          value={characterKey}
+          legacyVariant={snapshot?.letter?.legacyVariant}
+          onChange={setCharacterKey}
+          disabled={disabled}
+        />
         <div className="submission-footer">
           <span>
             {editing

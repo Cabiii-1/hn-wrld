@@ -18,7 +18,8 @@
     "test:smoke": "node scripts/smoke-local.mjs",
     "db:setup": "node scripts/local.mjs setup",
     "db:status": "node scripts/local.mjs status",
-    "db:stop": "supabase stop"
+    "db:stop": "supabase stop",
+    "art:characters": "node scripts/build-characters.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

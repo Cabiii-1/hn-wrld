@@ -1655,90 +1655,148 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-.park-preview {
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: 22px;
-  align-items: center;
+
+.character-picker {
+  min-width: 0;
   margin: 26px 0;
-  padding: 14px;
-  border: 1px solid #dfdfc9;
+  padding: 20px;
+  border: 1px solid #d8dcc2;
   border-radius: 12px;
-  background: #f6f6e9;
+  background: #f5f5e9;
 }
-.park-preview-picture {
-  position: relative;
-  overflow: hidden;
-  border-radius: 8px;
-  border: 1px solid #d3d6b7;
-  aspect-ratio: 16 / 10;
-}
-.park-preview-picture > img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  image-rendering: pixelated;
-}
-.park-preview-place {
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 9px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  color: #5a6749;
-  background: #fffdf2ed;
-}
-.park-preview-bear {
-  position: absolute;
-  left: 57%;
-  top: 52%;
-  filter: drop-shadow(1px 2px 0 #556b3a50);
-}
-.park-preview-bear > svg {
-  display: block;
-  image-rendering: pixelated;
-}
-.park-preview-hello {
-  position: absolute;
-  left: 9px;
-  top: -10px;
-  color: #c78583;
-}
-.park-preview-copy .eyebrow {
-  font-size: 9px;
-  color: #8a966d;
-}
-.park-preview-copy h3 {
+.character-picker legend {
+  padding: 0 8px;
   font:
     22px Georgia,
     serif;
-  color: #647451;
-  margin: 8px 0;
+  color: #69764f;
 }
-.park-preview-copy p {
+.character-picker > p {
+  margin: 0 0 18px;
   font-size: 12px;
   line-height: 1.7;
-  color: #817861;
-  margin: 0 0 7px;
+  color: #8b826d;
 }
-.park-preview-copy small {
-  font-size: 10px;
-  line-height: 1.6;
-  color: #9a927c;
+.character-picker-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 20px;
+  align-items: center;
+}
+.character-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.letter-card .character-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 102px;
+  min-width: 0;
+  border: 1px solid #ddd8c6;
+  border-radius: 9px;
+  padding: 10px 4px;
+  gap: 5px;
+  background: #fffdf5;
+  cursor: pointer;
+  color: #7f745d;
+  font-size: 12px;
+}
+.character-option > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.character-option:has(input:checked) {
+  border: 2px solid #7c9162;
+  padding: 9px 3px;
+  background: #eef1db;
+}
+.character-option:has(input:focus-visible) {
+  outline: 3px solid #547148;
+  outline-offset: 3px;
+}
+.character-option:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+.character-option-art {
+  display: block;
+  pointer-events: none;
+}
+.character-option-art > svg {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  color: #60754d;
+  display: none;
+}
+.character-option:has(input:checked) .character-option-art > svg {
   display: block;
 }
+.character-option > span {
+  pointer-events: none;
+}
+.character-selected {
+  text-align: center;
+  color: #6e7d53;
+  min-width: 0;
+}
+.character-selected .character-sprite-preview {
+  margin: 14px auto;
+}
+.character-selected > strong {
+  display: block;
+  font:
+    21px Georgia,
+    serif;
+  margin-bottom: 8px;
+}
+.character-selected > small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #91866e;
+}
+.character-sprite-preview.is-still {
+  animation: none;
+}
 @media (max-width: 600px) {
-  .park-preview {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 12px;
+  .character-picker {
+    padding: 16px 12px;
   }
-  .park-preview-picture {
-    aspect-ratio: 16 / 7;
+  .character-picker legend {
+    font-size: 19px;
+  }
+  .character-picker-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .character-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .character-selected {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    text-align: left;
+    align-items: center;
+  }
+  .character-selected .character-sprite-preview {
+    grid-column: 1;
+    grid-row: 1/4;
+    margin: 0 auto;
+  }
+  .character-selected > :not(.character-sprite-preview) {
+    grid-column: 2;
+  }
+  .character-selected > strong {
+    margin: 4px 0;
   }
 }

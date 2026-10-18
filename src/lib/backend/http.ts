@@ -29,6 +29,7 @@ import {
   invitationSchema,
   mediaReviewSchema,
   placementSchema,
+  characterKeySchema,
   reviewSchema,
   tokenSchema,
   uploadSchema,
@@ -541,12 +542,20 @@ export async function handleBackend(request: Request, path: string[]) {
       const { db, hash, invitationId } = await contributor(jar);
       await limit(request, "submit", 20, invitationId);
       const body = contributionSchema.parse(await readJson(request));
-      const result = await db.rpc("submit_instant_contribution", {
-        p_session_hash: hash,
-        p_share: body.shareWithInvitees ?? false,
-        p_message: body.message,
-        p_upload_ids: body.uploadIds,
-      });
+      const result = await db.rpc(
+        body.characterKey === undefined
+          ? "submit_instant_contribution"
+          : "submit_character_contribution",
+        {
+          ...(body.characterKey === undefined
+            ? {}
+            : { p_character: body.characterKey }),
+          p_session_hash: hash,
+          p_share: body.shareWithInvitees ?? false,
+          p_message: body.message,
+          p_upload_ids: body.uploadIds,
+        },
+      );
       check(
         result.error,
         "Your message was not saved. Check the attachments or reopen your invitation.",
@@ -562,6 +571,7 @@ export async function handleBackend(request: Request, path: string[]) {
           version: z.string().datetime({ offset: true }),
           consent: z.literal(true),
           shareWithInvitees: z.boolean().optional(),
+          characterKey: characterKeySchema.optional(),
           retainedMedia: z
             .array(
               z
@@ -585,14 +595,22 @@ export async function handleBackend(request: Request, path: string[]) {
         .parse(await readJson(request));
       check(
         (
-          await db.rpc("edit_instant_contribution", {
-            p_session_hash: hash,
-            p_message: body.message,
-            p_version: body.version,
-            p_share: body.shareWithInvitees ?? null,
-            p_retained: body.retainedMedia ?? null,
-            p_upload_ids: body.uploadIds ?? null,
-          })
+          await db.rpc(
+            body.characterKey === undefined
+              ? "edit_instant_contribution"
+              : "edit_character_contribution",
+            {
+              ...(body.characterKey === undefined
+                ? {}
+                : { p_character: body.characterKey }),
+              p_session_hash: hash,
+              p_message: body.message,
+              p_version: body.version,
+              p_share: body.shareWithInvitees ?? null,
+              p_retained: body.retainedMedia ?? null,
+              p_upload_ids: body.uploadIds ?? null,
+            },
+          )
         ).error,
         "Your letter changed or could not be saved. Reopen it before trying again.",
       );
@@ -777,7 +795,7 @@ export async function handleBackend(request: Request, path: string[]) {
         db
           .from("contributions")
           .select(
-            "id,invitation_id,display_name,relationship_label,message_text,status,created_at,share_with_invitees",
+            "id,invitation_id,display_name,relationship_label,message_text,status,created_at,share_with_invitees,character_key",
           )
           .order("created_at", { ascending: false })
           .limit(200),
@@ -821,7 +839,10 @@ export async function handleBackend(request: Request, path: string[]) {
       check(result.error);
       // The fragment is recovered only through authenticated admin access.
       return json(
-        { id: result.data, url: `${backendEnv().APP_ORIGIN}/contribute#${token}` },
+        {
+          id: result.data,
+          url: `${backendEnv().APP_ORIGIN}/contribute#${token}`,
+        },
         201,
       );
     }

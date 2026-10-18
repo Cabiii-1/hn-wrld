@@ -1,0 +1,37 @@
+# Crochet Friends character selection
+
+Implemented 2026-10-19, following `docs/PRD_CHARACTER_SELECTION.md` and the owner-reviewed capybara slice.
+
+## Delivered behavior
+
+- Six original 32×32 pixel animals: bear, turtle, capybara, frog, cat and bee. Each sheet contains front/back/side idle and movement frames, sharing the existing feet origin, speed and collision/talk rules. Side frames mirror for left/right. Bee wings animate within its frame without changing physics.
+- The former Park teaser is replaced by six named native radio options and a stable animated selected-character preview. Keyboard arrows/Space and touch work; reduced motion uses still frames. Equal-sized photo/voice cards remain separate.
+- New contributions default to Bear. Edits load the saved choice and preserve a failed draft. Cancel restores the saved appearance. Existing contributors keep their legacy bear unless they explicitly choose an animal, including intentionally choosing the new Bear.
+- Migration `0018_contributor_characters.sql` adds nullable canonical `character_key`, separate atomic character submit/edit RPCs and wrappers around existing scoped world projections. Old RPC signatures remain supported. No real identities are backfilled or moved.
+- Contributor and admin choices update the same canonical identity and placement texture. Character-only edits preserve scene, coordinates/radius, publication holds, privacy, media and progress.
+- Public art contains no contributor data. Recipient entry, opt-in shared text and private media/finale authorization are unchanged.
+- Demo now offers all six playable animals plus a mixed legacy/animal cast for 1/20/30/50-character checks, with production-frame pose previews.
+
+## Source and reproduction
+
+- `src/game/characters/catalog.ts`: shared key/name/asset mapping and accepted variants.
+- `animal-art.ts` / `capybara.ts`: original coarse-grid pixel source.
+- `paint-legacy-bear.ts`: the unchanged legacy drawing operations shared with Phaser and preview exports.
+- Run `npm.cmd run art:characters` to reproduce all public PNG sheets. Enlarged AI concepts remain archived under `assets/characters/concepts/8bit-v1/`, separate from production artwork.
+
+## Automated verification
+
+- 180 tests across 18 files pass, including the full SQL/RLS suite.
+- TypeScript/production build and ESLint pass.
+- Art checks compare decoded committed PNGs to source pixels, frame dimensions, palette limits and ground anchors.
+- Tests cover all six saves and visitor/recipient projections, placement preservation, legacy/no-field edits, canonical admin edits, invalid keys, stale revision rollback, session revocation and unauthorized mutation denial.
+- UI checks cover six named radios, keyboard selection, legacy preservation, explicit Bear adoption, failed saves and cancellation. Existing voice/media editing and privacy tests remain passing.
+- A 50-character mixed cast contains all nine new/legacy variants and remains within safe geometry across all three scenes in the movement simulation.
+
+## Hosted verification
+
+Migration 0018 has been applied to the linked project. Hosted UI verification and disposable fixture cleanup are recorded after deployment below. Physical-phone performance and microphone hardware remain separate release checks; automated and desktop-browser results do not claim these were performed.
+
+## Compatibility and rollback
+
+Keep migration 0018 and a frontend that understands all nine appearance keys during rollback. Old write signatures preserve saved selections; an older frontend may reject new animal keys on reads. Do not rewrite real selections to force a rollback. The `*_before_characters` projection functions are internal service-only compatibility implementations; they are not new public endpoints.

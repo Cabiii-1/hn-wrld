@@ -5,8 +5,8 @@ import { WORLD, normalizedInput, type Direction } from "./world";
 import { Crowd, facingDirection, type BearState } from "./crowd";
 import { demoNpcs } from "./demo-fixtures";
 import { SCENES } from "./scenes";
-import { CAPYBARA } from "./characters/capybara";
-import { registerCapybaraAnimations } from "./characters/register";
+import { CHARACTERS } from "./characters/catalog";
+import { registerCharacterAnimations } from "./characters/register";
 type Actor = {
   data: BearState;
   sprite: Phaser.GameObjects.Sprite;
@@ -33,11 +33,17 @@ export class PlaceScene extends Phaser.Scene {
   }
   preload() {
     this.load.image("backdrop", SCENES[this.bridge.mapKey].background);
-    if (this.bridge.artPreview)
-      this.load.spritesheet(CAPYBARA.key, CAPYBARA.src, {
-        frameWidth: CAPYBARA.frameSize,
-        frameHeight: CAPYBARA.frameSize,
-      });
+    const needed = new Set([
+      this.bridge.artPreview,
+      this.bridge.visitor?.variant,
+      ...(this.bridge.npcs ?? []).map((n) => n.variant),
+    ]);
+    for (const character of CHARACTERS)
+      if (needed.has(character.variant))
+        this.load.spritesheet(character.variant, character.src, {
+          frameWidth: 32,
+          frameHeight: 32,
+        });
     this.load.on("loaderror", () => this.bridge.onStatus("error"));
   }
   create() {
@@ -50,12 +56,13 @@ export class PlaceScene extends Phaser.Scene {
     makeBearTextures(this, "npc-cream-1", "#f1d8b0", "#778b63");
     makeBearTextures(this, "npc-brown-scarf", "#b78459", "#778b63");
     makeBearTextures(this, "npc-rose-bow", "#f3dfc5", "#ce8796");
-    if (this.bridge.artPreview) {
-      this.textures
-        .get(CAPYBARA.key)
-        .setFilter(Phaser.Textures.FilterMode.NEAREST);
-      registerCapybaraAnimations(this);
-    }
+    for (const character of CHARACTERS)
+      if (this.textures.exists(character.variant)) {
+        this.textures
+          .get(character.variant)
+          .setFilter(Phaser.Textures.FilterMode.NEAREST);
+        registerCharacterAnimations(this, character);
+      }
     this.crowd = new Crowd(
       this.bridge.mapKey,
       this.bridge.npcs ?? demoNpcs(this.bridge.mapKey, 1),
@@ -81,7 +88,8 @@ export class PlaceScene extends Phaser.Scene {
         this.bridge.visitor
           ? `${this.bridge.visitor.name.length > 22 ? this.bridge.visitor.name.slice(0, 21) + "…" : this.bridge.visitor.name} (you)`
           : this.bridge.artPreview
-            ? "Capybara · art preview"
+            ? (CHARACTERS.find((c) => c.variant === this.bridge.artPreview)
+                ?.name ?? "Sample friend")
             : "Hanna ♡",
         style,
       )

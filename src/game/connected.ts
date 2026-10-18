@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { SPRITE_VARIANTS } from "./characters/catalog";
 import { SCENE_KEYS } from "./scenes";
 export const sceneKeySchema = z.enum(SCENE_KEYS);
 export const npcSchema = z.object({
   id: z.uuid(),
   name: z.string().min(1).max(80),
-  variant: z.enum(["npc-cream-1", "npc-brown-scarf", "npc-rose-bow"]),
+  variant: z.enum(SPRITE_VARIANTS),
   x: z.number().int(),
   y: z.number().int(),
   radius: z.number().int().min(0).max(80),

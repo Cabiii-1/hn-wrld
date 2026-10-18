@@ -25,3 +25,7 @@ Compare against the owner's simple capybara reference at the normal game scale. 
 ## Remaining PRD work
 
 The other five production sprites, contributor character picker, saved selection, SQL/RPC compatibility, admin controls and mixed-animal privacy/access tests have not been implemented. No Supabase migration or real contributor mutation is part of this slice. The Park preview on the contribution form remains until the integrated selector is ready.
+
+
+## Superseded remaining-work status
+The owner reviewed the capybara and requested continuation. The full six-animal selector implementation is now documented in `CHARACTER_SELECTION.md`; the remaining-work section above records the scope at the first checkpoint.

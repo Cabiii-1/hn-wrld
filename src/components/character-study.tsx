@@ -1,22 +1,27 @@
 import type { CSSProperties } from "react";
+import { characterInfo, type CharacterKey } from "@/game/characters/catalog";
 import {
-  CAPYBARA,
   CHARACTER_DIRECTIONS,
   characterAnimation,
 } from "@/game/characters/capybara";
 
-export function CharacterStudy() {
+export function CharacterStudy({
+  character = "capybara",
+}: {
+  character?: CharacterKey;
+}) {
+  const selected = characterInfo(character);
   return (
     <section
       className="character-study"
       aria-labelledby="character-study-title"
     >
       <div>
-        <span className="eyebrow">CHARACTER ART · FIRST SLICE</span>
-        <h2 id="character-study-title">A little capybara.</h2>
+        <span className="eyebrow">CROCHET FRIENDS · CHARACTER ART</span>
+        <h2 id="character-study-title">A little {selected.key}.</h2>
         <p>
           Try walking in every direction. These are the actual game frames; the
-          bears beside you are here for scale.
+          friends beside you are here for scale.
         </p>
       </div>
       <div className="character-study-poses">
@@ -36,10 +41,10 @@ export function CharacterStudy() {
                   <span
                     className="character-sprite-preview"
                     role="img"
-                    aria-label={`Capybara ${action}, ${direction}`}
+                    aria-label={`${selected.name} ${action}, ${direction}`}
                     style={
                       {
-                        backgroundImage: `url(${CAPYBARA.src})`,
+                        backgroundImage: `url(${selected.src})`,
                         "--pose-start": `${-start * 64}px`,
                         "--pose-end": `${-(start + 2) * 64}px`,
                         "--pose-duration": `${2 / rate}s`,

@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD) — Hanna's Little World
 **Version:** 3.0 · **Status:** Approved concept / implementation-ready specification · **Updated:** 2026-10-17
 
-**Planned extension (2026-10-19):** [Crochet Friends Character Selection PRD](PRD_CHARACTER_SELECTION.md) specifies six simple 8-bit animals and a contributor selector. Implementation has started with the capybara art slice; the contributor selector and persistence remain pending.
+**Character-selection extension (2026-10-19):** [Crochet Friends Character Selection PRD](PRD_CHARACTER_SELECTION.md) specifies six simple 8-bit animals and a contributor selector. All six animals, contributor selection and persistence are implemented; see the linked verification notes for hosted and physical-device check status.
 
 ## 1. Product vision
 Build a private, cozy web-based pixel-art exploration keepsake for **Hanna**. She explores places important to her life and talks to cute bear NPCs representing her family, friends, and loved ones. Each NPC delivers an approved, personally submitted **text message with optional photos and voice recording**. **Cj** appears in a scripted, replayable finale consisting of a letter, reunion animation, and conversation. The experience is peaceful and revisit-friendly, without combat, quests, monetization or urgency.
@@ -140,3 +140,7 @@ Photo and voice extras use full-width compact rows, with left-aligned headings a
 
 ## Equal contribution cards (owner clarification, 2026-10-19)
 Keep the desktop two-column photo/voice grid with identical compact 230px cards. This supersedes the earlier full-width extras layout. Voice recording, permission, playback, retry and saved-audio controls replace the idle content inside the voice card instead of extending it. Collapse format/help detail during active states, retain an accessible title and use internal scrolling for unusually long errors or enlarged text. Photo attachment previews sit below the grid; voice playback/removal stays within its card. Mobile stacks the same equal-height cards.
+
+
+## Crochet Friends characters (2026-10-19)
+The owner approved the simple capybara slice and requested continuation. The six-animal character selector, saved contribution choice and shared visitor/NPC identity are implemented under docs/PRD_CHARACTER_SELECTION.md. Migration 0018 preserves legacy bears and access rules. See docs/verification/CHARACTER_SELECTION.md for validation status.

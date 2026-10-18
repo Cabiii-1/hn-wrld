@@ -3,7 +3,7 @@
 **Product:** Hanna's Little World
 **Version:** 1.0
 **Date:** 2026-10-19 (Asia/Manila)
-**Status:** Implementation started. Phase 1 (capybara art slice) is implemented for review; remaining animals, persistence and contributor selector are pending.
+**Status:** Core implementation complete; hosted verification in progress. Physical-device release checks remain separately tracked.
 
 ## 1. Purpose and source of truth
 
@@ -11,7 +11,7 @@ Let invited contributors choose an animal inspired by Hanna's crochet creations.
 
 This extends `docs/PRD.md` v3 and its later owner updates. Once implemented, it replaces the bear-only contributor identity requirement and the static Park preview near Send/Save. Existing invitation routing, automatic publication, opt-in text sharing, media handling, scene assignment and recipient access remain in force. Earlier moderation and visual-only visitor descriptions are already superseded by those owner updates.
 
-This document describes the full target behavior. Implementation began with the capybara art slice; see `docs/verification/CHARACTER_ART_SLICE.md` for the completed scope and remaining work.
+This document describes the full target behavior. Implementation began with the owner-reviewed capybara art slice. See `docs/verification/CHARACTER_SELECTION.md` for the full implementation and validation evidence.
 
 ## 2. Goals and scope
 
@@ -169,4 +169,4 @@ Verify the selector alongside idle, active recording, recorded playback and fail
 - Rehearse six selections, a legacy bear, an explicitly held NPC and a stale revision using synthetic records. Never modify real contributor content for QA.
 - Keep a rollback frontend capable of reading newly saved animal keys. A pre-feature build may reject them; do not rewrite real selections merely to force rollback.
 - Complete means production artwork, selector, persistence, visitor/NPC rendering, admin support and acceptance evidence ship together.
-- **Next step after PRD review:** the capybara art slice. The remaining animals and data/selector work follow the capybara art review.
+- The owner reviewed the capybara slice and authorized the remaining animals and integration. The complete implementation is tracked in `docs/verification/CHARACTER_SELECTION.md`; physical-device release checks remain separately recorded.
