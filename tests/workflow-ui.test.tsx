@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
 }));
 import { ContributionForm } from "../src/components/contribution-form";
 import { AdminDesk } from "../src/components/admin-desk";
-import { InviteWelcome } from "../src/components/invite-welcome";
+import { ContributionEntry } from "../src/components/contribution-entry";
 import { RecipientEntry } from "../src/components/recipient-entry";
 import { MAX, type AdminData } from "../src/lib/backend/contracts";
 
@@ -72,96 +72,6 @@ describe("contributor and admin UI workflows", () => {
       ).disabled,
     ).toBe(true);
     expect(mock.api).not.toHaveBeenCalled();
-  });
-  it("automatically exchanges an invitation once in StrictMode and removes its fragment", async () => {
-    const token = "a".repeat(43);
-    window.history.replaceState(null, "", `/invite#${token}`);
-    mock.api.mockResolvedValue({ ok: true });
-    render(
-      <React.StrictMode>
-        <InviteWelcome configured />
-      </React.StrictMode>,
-    );
-    await waitFor(() =>
-      expect(mock.replace).toHaveBeenCalledWith("/contribute"),
-    );
-    expect(mock.api).toHaveBeenCalledTimes(1);
-    expect(mock.replace).toHaveBeenCalledTimes(1);
-    expect(mock.api).toHaveBeenCalledWith("invitations/exchange", "POST", {
-      token,
-    });
-    expect(location.hash).toBe("");
-    expect(mock.replace).toHaveBeenCalledWith("/contribute");
-    expect(
-      screen.queryByRole("button", { name: "Open my invitation" }),
-    ).toBeNull();
-    expect(localStorage.length).toBe(0);
-    expect(sessionStorage.length).toBe(0);
-  });
-  it("keeps a failed invitation out of the URL and retries only on request", async () => {
-    const token = "d".repeat(43);
-    history.replaceState(null, "", `/invite#${token}`);
-    mock.api
-      .mockRejectedValueOnce(new Error("Connection lost"))
-      .mockResolvedValueOnce({ ok: true });
-    render(<InviteWelcome configured />);
-    await screen.findByText("Connection lost");
-    expect(location.hash).toBe("");
-    expect(mock.replace).not.toHaveBeenCalled();
-    expect(mock.api).toHaveBeenCalledTimes(1);
-    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
-    await waitFor(() =>
-      expect(mock.replace).toHaveBeenCalledWith("/contribute"),
-    );
-    expect(mock.api).toHaveBeenLastCalledWith("invitations/exchange", "POST", {
-      token,
-    });
-    expect(mock.api).toHaveBeenCalledTimes(2);
-  });
-  it.each(["", "#invalid"])(
-    "rejects missing/malformed links (%s) without an exchange and accepts a new fragment",
-    async (hash) => {
-      history.replaceState(null, "", `/invite${hash}`);
-      mock.api.mockResolvedValue({ ok: true });
-      render(<InviteWelcome configured />);
-      await screen.findByText("Open the complete invitation link Cj sent you.");
-      expect(location.hash).toBe("");
-      expect(mock.api).not.toHaveBeenCalled();
-      const token = "e".repeat(43);
-      history.replaceState(null, "", `/invite#${token}`);
-      window.dispatchEvent(new HashChangeEvent("hashchange"));
-      await waitFor(() =>
-        expect(mock.replace).toHaveBeenCalledWith("/contribute"),
-      );
-      expect(mock.api).toHaveBeenCalledWith("invitations/exchange", "POST", {
-        token,
-      });
-    },
-  );
-  it("serializes a second invitation while an earlier exchange is pending", async () => {
-    let finishFirst!: (value: unknown) => void;
-    const first = "f".repeat(43),
-      second = "g".repeat(43);
-    mock.api
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            finishFirst = resolve;
-          }),
-      )
-      .mockResolvedValueOnce({ ok: true });
-    history.replaceState(null, "", `/invite#${first}`);
-    render(<InviteWelcome configured />);
-    history.replaceState(null, "", `/invite#${second}`);
-    window.dispatchEvent(new HashChangeEvent("hashchange"));
-    expect(mock.api).toHaveBeenCalledTimes(1);
-    expect(mock.replace).not.toHaveBeenCalled();
-    finishFirst({ ok: true });
-    await waitFor(() => expect(mock.replace).toHaveBeenCalledTimes(1));
-    expect(mock.api).toHaveBeenLastCalledWith("invitations/exchange", "POST", {
-      token: second,
-    });
-    expect(mock.replace).toHaveBeenCalledWith("/contribute");
   });
   it("requires consent, submits once, and confirms immediate arrival", async () => {
     let submitted = false;
@@ -328,9 +238,7 @@ describe("contributor and admin UI workflows", () => {
         ).disabled,
       ).toBe(false),
     );
-    await userEvent.click(
-      screen.getByRole("button", { name: "Save message" }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Save message" }));
     await waitFor(() =>
       expect(mock.api).toHaveBeenCalledWith("admin/contributions/c", "PATCH", {
         status: "approved",
@@ -475,10 +383,19 @@ describe("Server-prepared private pages", () => {
     expect(mock.api).not.toHaveBeenCalled();
   });
   it("returns to an existing contribution session without re-exchanging it", async () => {
-    render(<InviteWelcome configured initialSessionValid />);
-    await waitFor(() =>
-      expect(mock.replace).toHaveBeenCalledWith("/contribute"),
+    render(
+      <ContributionEntry
+        configured
+        initialSnapshot={{
+          displayName: "Synthetic Friend",
+          submitted: false,
+          uploads: [],
+          limits: MAX,
+        }}
+      />,
     );
+    await screen.findByRole("heading", { name: "Hello, Synthetic Friend!" });
+    expect(mock.replace).not.toHaveBeenCalled();
     expect(mock.api).not.toHaveBeenCalled();
   });
 });

@@ -27,22 +27,32 @@ export function ContributionForm({
   initialSnapshot = null,
   initialResolved = false,
   initialError = "",
+  directEntry = false,
 }: {
   configured: boolean;
   initialSnapshot?: Snapshot | null;
   initialResolved?: boolean;
   initialError?: string;
+  directEntry?: boolean;
 }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(initialSnapshot),
     [error, setError] = useState(initialError);
   const [busy, setBusy] = useState(""),
-    [message, setMessage] = useState("");
-  const [shareWithInvitees, setShareWithInvitees] = useState(false);
-  const [editing, setEditing] = useState(false),
+    [message, setMessage] = useState(
+      directEntry ? (initialSnapshot?.letter?.message ?? "") : "",
+    );
+  const [shareWithInvitees, setShareWithInvitees] = useState(
+    directEntry ? (initialSnapshot?.letter?.shareWithInvitees ?? false) : false,
+  );
+  const [editing, setEditing] = useState(
+      directEntry && !!initialSnapshot?.letter,
+    ),
     [retainedMedia, setRetainedMedia] = useState<
       NonNullable<NonNullable<Snapshot["letter"]>["media"]>
-    >([]),
-    [letterVersion, setLetterVersion] = useState("");
+    >(directEntry ? (initialSnapshot?.letter?.media ?? []) : []),
+    [letterVersion, setLetterVersion] = useState(
+      directEntry ? (initialSnapshot?.letter?.version ?? "") : "",
+    );
   const [arriving, setArriving] = useState(false);
   const alive = useRef(true);
   const voice = useVoiceRecorder({
@@ -151,7 +161,8 @@ export function ContributionForm({
       });
       if (editing) {
         await refresh();
-        setEditing(false);
+        if (directEntry) setArriving(true);
+        else setEditing(false);
       } else setArriving(true);
     } catch (e) {
       setError(
@@ -216,7 +227,7 @@ export function ContributionForm({
             disabled={!!busy}
             onClick={() => {
               void api("contributor/logout", "POST")
-                .then(() => location.replace("/invite"))
+                .then(() => location.replace("/contribute"))
                 .catch((e) => setError(e.message));
             }}
           >

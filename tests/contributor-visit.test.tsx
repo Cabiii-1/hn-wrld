@@ -67,7 +67,7 @@ describe("Scoped contributor visits", () => {
     expect(mock.api).not.toHaveBeenCalled();
     expect(
       screen
-        .getByRole("link", { name: "Back to my letter" })
+        .getByRole("link", { name: "Edit your message" })
         .getAttribute("href"),
     ).toBe("/contribute");
   });

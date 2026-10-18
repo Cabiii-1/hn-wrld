@@ -60,20 +60,19 @@ export function ContributorVisitView({
         <p role="alert">{error}</p>
         <Button onClick={() => setAttempt((v) => v + 1)}>Try again</Button>
         <p>
-          <Link href="/contribute">Back to my letter</Link>
+          <Link href="/contribute">Edit your message</Link>
         </p>
       </main>
     );
   return (
     <div className="contributor-visit">
       <nav className="visitor-actions" aria-label="Your invitation">
-        <Link href="/contribute">Back to my letter</Link>
         <Button
           variant="ghost"
           onClick={async () => {
             try {
               await api("contributor/logout", "POST");
-              location.replace("/invite");
+              location.replace("/contribute");
             } catch (e) {
               setVisit(null);
               setError(

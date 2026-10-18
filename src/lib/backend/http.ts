@@ -821,7 +821,7 @@ export async function handleBackend(request: Request, path: string[]) {
       check(result.error);
       // The fragment is recovered only through authenticated admin access.
       return json(
-        { id: result.data, url: `${backendEnv().APP_ORIGIN}/invite#${token}` },
+        { id: result.data, url: `${backendEnv().APP_ORIGIN}/contribute#${token}` },
         201,
       );
     }
@@ -859,7 +859,7 @@ export async function handleBackend(request: Request, path: string[]) {
           result.data.token_hash
         )
           throw new HttpError(409, "Please replace this invitation link.");
-        return json({ url: `${backendEnv().APP_ORIGIN}/invite#${token}` });
+        return json({ url: `${backendEnv().APP_ORIGIN}/contribute#${token}` });
       }
       await limit(request, "replace-invite", 20, id);
       const token = newSecret();
@@ -879,7 +879,7 @@ export async function handleBackend(request: Request, path: string[]) {
           })
         ).error,
       );
-      return json({ url: `${backendEnv().APP_ORIGIN}/invite#${token}` });
+      return json({ url: `${backendEnv().APP_ORIGIN}/contribute#${token}` });
     }
     if (
       path[0] === "admin" &&

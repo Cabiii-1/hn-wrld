@@ -1,0 +1,7 @@
+# Direct contribution entry — 2026-10-18
+
+New/recovered/reissued invitation URLs now target /contribute#secret. ContributionEntry handles fragment capture, immediate history removal, scoped exchange, and snapshot retrieval inline; it never navigates through an invitation welcome page. The former welcome component is deleted. Existing /invite#secret URLs render the same module and canonicalize to /contribute without a redirect or intermediate welcome screen. Fresh fragments override checked cookie snapshots; exchanges for changing links serialize, and StrictMode reuses pending work. Tokens stay in memory only.
+
+An existing contributor opens the full editor directly, prefilled with message, sharing preference, saved media and optimistic version. Saving from this flow returns them to their assigned world through the existing arrival transition. The visitor footer now links to Edit your message, including its visible phone label; Hanna’s original reset button remains. The redundant top navigation letter link is removed. Session expiry/logout returns to /contribute.
+
+All 166 tests passed, with focused coverage of old/direct links, no module redirect, StrictMode single exchange, token removal/storage absence, retry, malformed links, fresh-link precedence, saved editor hydration and out-of-order link changes. ESLint and production webpack build/TypeScript passed. No database migration or access expansion is required.

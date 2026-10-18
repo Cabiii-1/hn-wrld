@@ -5,7 +5,7 @@ import { ContributorVisitView } from "@/components/contributor-visit";
 export const dynamic = "force-dynamic";
 export default async function VisitPage() {
   const result = await readPageData("contributor/visit");
-  if (result.status === 401) redirect("/invite");
+  if (result.status === 401) redirect("/contribute");
   const parsed = contributorVisitSchema.safeParse(result.data);
   return (
     <ContributorVisitView

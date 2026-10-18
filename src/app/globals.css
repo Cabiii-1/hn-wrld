@@ -862,3 +862,8 @@ h1 em {
     animation: none !important;
   }
 }
+
+/* Keep the contributor edit action readable on phones. */
+.reset-button.edit-message-button span {
+  display: inline;
+}

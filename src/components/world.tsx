@@ -24,6 +24,7 @@ import {
   MapPin,
   MessageCircle,
   RotateCcw,
+  Pencil,
   Sparkles,
   Trees,
 } from "lucide-react";
@@ -345,21 +346,30 @@ export function World({
                 ? `${nearName} is nearby. Say hello!`
                 : "Follow your feet. Find a familiar face."}
           </p>
-          <Button
-            variant="ghost"
-            className="reset-button"
-            aria-label={
-              visitor
-                ? "Return your bear to the starting spot"
-                : "Return Hanna to the starting spot"
-            }
-            onClick={() => {
-              bridge.requestReset();
-            }}
-          >
-            <RotateCcw size={15} />
-            <span>Back to start</span>
-          </Button>
+          {visitor ? (
+            <Button
+              asChild
+              variant="ghost"
+              className="reset-button edit-message-button"
+            >
+              <Link href="/contribute" aria-label="Edit your message">
+                <Pencil size={15} />
+                <span>Edit your message</span>
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              className="reset-button"
+              aria-label={"Return Hanna to the starting spot"}
+              onClick={() => {
+                bridge.requestReset();
+              }}
+            >
+              <RotateCcw size={15} />
+              <span>Back to start</span>
+            </Button>
+          )}
         </div>
       </section>
       <footer className="world-footer">

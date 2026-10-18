@@ -1,13 +1,3 @@
-import { InviteWelcome } from "@/components/invite-welcome";
-import { backendConfigured } from "@/lib/supabase/server";
-import { readPageData } from "@/lib/backend/page-data";
+// Previously shared /invite#secret links open the same contribution module.
+export { default } from "../contribute/page";
 export const dynamic = "force-dynamic";
-export default async function InvitePage() {
-  const result = await readPageData("contributor");
-  return (
-    <InviteWelcome
-      configured={backendConfigured()}
-      initialSessionValid={result.status === 200}
-    />
-  );
-}
