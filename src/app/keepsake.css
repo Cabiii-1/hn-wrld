@@ -964,10 +964,17 @@
     gap: 8px;
   }
   .uploaded-item {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     gap: 9px;
   }
+  .uploaded-item > .upload-preview {
+    grid-column: 1 / -1;
+    max-width: 100%;
+  }
   .upload-preview audio {
+    width: 100%;
     max-width: 255px;
   }
   .uploaded-item > .ui-button {
