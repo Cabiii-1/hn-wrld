@@ -1,0 +1,3 @@
+Built-in imagegen; style-transfer; 2026-10-18
+Reference: assets/references/tuguegarao-plaza-owner-reference.png
+Prompt: Restyle the owner-provided Tuguegarao civic plaza into cute low-detail blocky pixel art matching original 32px chibi bears. Preserve exact 16:9 composition, elevated front-facing view, rear red-roof cream civic building, outside roads, four green lawns, cream cross paths, central pale statue on stepped pedestal, perimeter palms, shrubs, lamps and benches, bottom entrance. Coherent approximately 836x470 logical grid, stepped silhouettes, dark brown outlines, flat 2-3 shade warm green/cream/terracotta clusters. Broad uncluttered walkable lawns and paths. No people, bears, text, logos, gazebo, new pots, blur, antialiasing or painterly texture.

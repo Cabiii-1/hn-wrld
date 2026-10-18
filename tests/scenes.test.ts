@@ -32,6 +32,34 @@ describe("M4 scene geometry and crowded movement", () => {
     expect(canStand(400, 384, "slu_baguio")).toBe(true);
     expect(canStand(230, 360, "slu_baguio")).toBe(true);
   });
+  it("routes around the civic monument and connects both lawns to the entrance without reaching the road", () => {
+    const map = "tuguegarao_park";
+    expect(canStand(418, 165, map)).toBe(false);
+    expect(canStand(418, 235, map)).toBe(false);
+    expect(safePlacement(map, 350, 280, 20)).toBe(false);
+    for (const [x, y] of [
+      [280, 170],
+      [560, 170],
+      [280, 295],
+      [560, 295],
+      [418, 395],
+    ])
+      expect(canStand(x, y, map)).toBe(true);
+    let p = { x: 415, y: 300 };
+    p = moveFeet(p, 0, -180, undefined, map);
+    expect(p.y).toBeGreaterThanOrEqual(271);
+    p = moveFeet(p, -110, 0, undefined, map);
+    p = moveFeet(p, 0, -145, undefined, map);
+    p = moveFeet(p, 215, 0, undefined, map);
+    expect(p.x).toBeGreaterThan(490);
+    expect(p.y).toBeLessThan(180);
+    p = moveFeet(p, 0, 170, undefined, map);
+    p = moveFeet(p, -105, 0, undefined, map);
+    p = moveFeet(p, 0, 200, undefined, map);
+    expect(p.y).toBeLessThanOrEqual(405);
+    expect(p.y).toBeGreaterThan(390);
+    expect(canStand(418, 430, map)).toBe(false);
+  });
   it("joins SLU stairs to the sidewalk and prevents tunnelling into the road", () => {
     let p = { x: 385, y: 365 };
     for (let i = 0; i < 25; i++) p = moveFeet(p, 0, 1, undefined, "slu_baguio");

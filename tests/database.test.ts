@@ -91,6 +91,7 @@ beforeAll(async () => {
     "0011_character_display_names.sql",
     "0012_edit_contribution_media.sql",
     "0013_opt_in_shared_letters.sql",
+    "0014_tuguegarao_civic_plaza.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -540,6 +541,98 @@ async function recipient() {
   return { id, hash, verifier, session };
 }
 describe("M4 per-scene publication and exact geometry", () => {
+  it("moves only incompatible plaza placements while retaining publication, moderation and author privacy", async () => {
+    const i = await invite(),
+      c = await submit(i.session);
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_review($1::uuid,'approved',null)", [c]);
+    const park = await scalar<string>(
+      "(select id from public.areas where map_key='tuguegarao_park')",
+    );
+    await role("postgres");
+    // A previously valid location now falls inside the new monument.
+    await db.query(
+      "update public.scene_geometry set geometry=$1::jsonb where map_key='tuguegarao_park'",
+      [
+        JSON.stringify({
+          regions: [{ left: 142, right: 698, top: 170, bottom: 377 }],
+          obstacles: [],
+        }),
+      ],
+    );
+    try {
+      await role("authenticated", ADMIN);
+      await scalar(
+        "public.admin_place_npc($1::uuid,$2::uuid,'npc-rose-bow',415,220,20,true)",
+        [c, park],
+      );
+      await role("postgres");
+      const before = await db.query(
+        "select id,spawn_x,spawn_y,wander_radius from public.npc_placements where contribution_id<>$1 and public.scene_safe('tuguegarao_park',spawn_x,spawn_y,wander_radius) and area_id=$2",
+        [c, park],
+      );
+      const sql = await readFile(
+        new URL(
+          "../supabase/migrations/0014_tuguegarao_civic_plaza.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      );
+      await db.exec(sql);
+      const moved = await db.query<{
+        spawn_x: number;
+        spawn_y: number;
+        wander_radius: number;
+        published: boolean;
+        status: string;
+        share_with_invitees: boolean;
+      }>(
+        "select p.spawn_x,p.spawn_y,p.wander_radius,p.published,c.status,c.share_with_invitees from public.npc_placements p join public.contributions c on c.id=p.contribution_id where c.id=$1",
+        [c],
+      );
+      expect(moved.rows[0]).toMatchObject({
+        published: true,
+        status: "approved",
+        share_with_invitees: false,
+        wander_radius: 20,
+      });
+      expect(
+        safePlacement(
+          "tuguegarao_park",
+          moved.rows[0].spawn_x,
+          moved.rows[0].spawn_y,
+          20,
+        ),
+      ).toBe(true);
+      for (const old of before.rows as {
+        id: string;
+        spawn_x: number;
+        spawn_y: number;
+        wander_radius: number;
+      }[]) {
+        if (
+          safePlacement(
+            "tuguegarao_park",
+            old.spawn_x,
+            old.spawn_y,
+            old.wander_radius,
+          )
+        ) {
+          const after = await db.query(
+            "select id,spawn_x,spawn_y,wander_radius from public.npc_placements where id=$1",
+            [old.id],
+          );
+          expect(after.rows[0]).toEqual(old);
+        }
+      }
+    } finally {
+      await role("postgres");
+      await db.query(
+        "update public.scene_geometry set geometry=$1::jsonb where map_key='tuguegarao_park'",
+        [JSON.stringify(geometry.tuguegarao_park)],
+      );
+    }
+  });
   it("keeps the PostgreSQL geometry identical to the canonical TS data, including union seams", async () => {
     await role("postgres");
     const rows = await db.query<{ map_key: string; geometry: unknown }>(

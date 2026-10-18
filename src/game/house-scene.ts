@@ -4,6 +4,7 @@ import { makeBearTextures } from "./bear-art";
 import { WORLD, normalizedInput, type Direction } from "./world";
 import { Crowd, facingDirection, type BearState } from "./crowd";
 import { demoNpcs } from "./demo-fixtures";
+import { SCENES } from "./scenes";
 type Actor = {
   data: BearState;
   sprite: Phaser.GameObjects.Sprite;
@@ -29,7 +30,7 @@ export class PlaceScene extends Phaser.Scene {
     super(bridge.mapKey);
   }
   preload() {
-    this.load.image("backdrop", `/game/backgrounds/${this.bridge.mapKey}.webp`);
+    this.load.image("backdrop", SCENES[this.bridge.mapKey].background);
     this.load.on("loaderror", () => this.bridge.onStatus("error"));
   }
   create() {

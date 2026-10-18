@@ -7,6 +7,7 @@ export const SCENE_KEYS = [
 export type SceneKey = (typeof SCENE_KEYS)[number];
 export const SCENES = {
   sta_ana_house: {
+    background: "/game/backgrounds/sta_ana_house.webp",
     name: "Sta. Ana House",
     location: "Sta. Ana, Cagayan",
     chapter: "01",
@@ -20,6 +21,7 @@ export const SCENES = {
     npc: { x: 425, y: 352, radius: 20 },
   },
   tuguegarao_park: {
+    background: "/game/backgrounds/tuguegarao_park-v2.webp",
     name: "Tuguegarao Plaza",
     location: "Tuguegarao, Cagayan",
     chapter: "02",
@@ -33,6 +35,7 @@ export const SCENES = {
     npc: { x: 470, y: 290, radius: 20 },
   },
   slu_baguio: {
+    background: "/game/backgrounds/slu_baguio.webp",
     name: "SLU Baguio",
     location: "Baguio City",
     chapter: "03",
