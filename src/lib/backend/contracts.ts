@@ -123,7 +123,11 @@ export type Upload = {
 export type ContributorSnapshot = {
   displayName: string;
   submitted: boolean;
-  letter?: { message: string; version: string } | null;
+  letter?: {
+    message: string;
+    version: string;
+    media?: (Upload & { status: string })[];
+  } | null;
   uploads: Upload[];
   limits: Pick<typeof MAX, "photoBytes" | "audioBytes" | "audioSeconds">;
 };

@@ -545,16 +545,45 @@ export async function handleBackend(request: Request, path: string[]) {
           message: z.string().trim().min(1).max(2000),
           version: z.string().datetime({ offset: true }),
           consent: z.literal(true),
+          retainedMedia: z
+            .array(
+              z
+                .object({
+                  id: idSchema,
+                  description: z.string().trim().max(300),
+                })
+                .strict(),
+            )
+            .max(4)
+            .optional(),
+          uploadIds: z.array(idSchema).max(4).optional(),
         })
         .strict()
+        .refine(
+          (body) =>
+            (body.retainedMedia === undefined) ===
+            (body.uploadIds === undefined),
+          "Include both attachment lists",
+        )
         .parse(await readJson(request));
       check(
         (
-          await db.rpc("edit_contribution", {
-            p_session_hash: hash,
-            p_message: body.message,
-            p_version: body.version,
-          })
+          await db.rpc(
+            body.retainedMedia === undefined
+              ? "edit_contribution"
+              : "edit_contribution_media",
+            {
+              p_session_hash: hash,
+              p_message: body.message,
+              p_version: body.version,
+              ...(body.retainedMedia === undefined
+                ? {}
+                : {
+                    p_retained: body.retainedMedia,
+                    p_upload_ids: body.uploadIds,
+                  }),
+            },
+          )
         ).error,
         "Your letter changed or could not be saved. Reopen it before trying again.",
       );

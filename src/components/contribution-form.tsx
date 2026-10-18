@@ -39,7 +39,9 @@ export function ContributionForm({
   const [recording, setRecording] = useState(false),
     [recordSupported, setRecordSupported] = useState(false);
   const [editing, setEditing] = useState(false),
-    [letterMessage, setLetterMessage] = useState(""),
+    [retainedMedia, setRetainedMedia] = useState<
+      NonNullable<NonNullable<Snapshot["letter"]>["media"]>
+    >([]),
     [letterVersion, setLetterVersion] = useState("");
   const [arriving, setArriving] = useState(false);
   const recorder = useRef<MediaRecorder | null>(null),
@@ -114,15 +116,27 @@ export function ContributionForm({
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      await api("contributions", "POST", {
+      await api("contributions", editing ? "PATCH" : "POST", {
         message,
         consent: form.get("consent") === "on",
+        ...(editing
+          ? {
+              version: letterVersion,
+              retainedMedia: retainedMedia.map(({ id, description }) => ({
+                id,
+                description,
+              })),
+            }
+          : {}),
         uploadIds:
           snapshot?.uploads
             .filter((u) => u.state === "validated")
             .map((u) => u.id) ?? [],
       });
-      setArriving(true);
+      if (editing) {
+        await refresh();
+        setEditing(false);
+      } else setArriving(true);
     } catch (e) {
       setError(
         e instanceof Error
@@ -131,8 +145,10 @@ export function ContributionForm({
       );
       // A response can be lost after the transaction committed. Recover the
       // receipt instead of telling the contributor to create a duplicate.
-      const recovered = await refresh().catch(() => null);
-      if (recovered?.submitted) setArriving(true);
+      if (!editing) {
+        const recovered = await refresh().catch(() => null);
+        if (recovered?.submitted) setArriving(true);
+      }
     } finally {
       setBusy("");
     }
@@ -209,8 +225,20 @@ export function ContributionForm({
     }
   }
   const disabled = !configured || !snapshot || !!busy || recording;
+  const attachments = [
+    ...(editing ? retainedMedia : []),
+    ...(snapshot?.uploads ?? []),
+  ];
+  function openEditor(saved: Snapshot) {
+    if (!saved.letter) return;
+    setMessage(saved.letter.message);
+    setLetterVersion(saved.letter.version);
+    setRetainedMedia(saved.letter.media ?? []);
+    setError("");
+    setEditing(true);
+  }
   if (arriving) return <ContributionArrival />;
-  if (snapshot?.submitted)
+  if (snapshot?.submitted && !editing)
     return (
       <ContributionShell>
         <section className="letter-card thank-you">
@@ -233,115 +261,10 @@ export function ContributionForm({
           <Button asChild variant="outline">
             <Link href="/contribute/visit">Visit your place</Link>
           </Button>
-          {snapshot.letter && !editing && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setLetterMessage(snapshot.letter!.message);
-                setLetterVersion(snapshot.letter!.version);
-                setError("");
-                setEditing(true);
-              }}
-            >
+          {snapshot.letter && (
+            <Button variant="outline" onClick={() => openEditor(snapshot)}>
               Edit my letter
             </Button>
-          )}
-          {editing && (
-            <form
-              onSubmit={async (event) => {
-                event.preventDefault();
-                const form = new FormData(event.currentTarget);
-                setBusy("Saving your letter…");
-                setError("");
-                try {
-                  await api("contributions", "PATCH", {
-                    message: letterMessage,
-                    version: letterVersion,
-                    consent: form.get("consent") === "on",
-                  });
-                  await refresh();
-                  setEditing(false);
-                } catch (e) {
-                  setError(
-                    e instanceof Error
-                      ? e.message
-                      : "Your changes were not saved.",
-                  );
-                } finally {
-                  setBusy("");
-                }
-              }}
-            >
-              <label>
-                Your message for Hanna
-                <textarea
-                  required
-                  name="message"
-                  rows={7}
-                  maxLength={2000}
-                  value={letterMessage}
-                  disabled={!!busy}
-                  onChange={(e) => setLetterMessage(e.target.value)}
-                />
-              </label>
-              <p className="quiet-copy">
-                Your photos and voice note will stay with your letter. Saving
-                changes sends the letter back for review.
-              </p>
-              <label>
-                <input
-                  type="checkbox"
-                  name="consent"
-                  required
-                  disabled={!!busy}
-                />{" "}
-                I’m happy to share this updated message with Hanna once
-                reviewed.
-              </label>
-              <Button type="submit" disabled={!!busy}>
-                {busy || "Save my changes"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={!!busy}
-                onClick={() => {
-                  setEditing(false);
-                  setError("");
-                }}
-              >
-                Cancel
-              </Button>
-              {error && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!!busy}
-                  onClick={async () => {
-                    setBusy("Reopening your letter…");
-                    try {
-                      const saved = await api<Snapshot>("contributor");
-                      setSnapshot(saved);
-                      if (saved.letter) {
-                        setLetterMessage(saved.letter.message);
-                        setLetterVersion(saved.letter.version);
-                        setError("");
-                      }
-                    } catch (e) {
-                      setError(
-                        e instanceof Error
-                          ? e.message
-                          : "Please reopen your invitation.",
-                      );
-                    } finally {
-                      setBusy("");
-                    }
-                  }}
-                >
-                  Reopen saved letter
-                </Button>
-              )}
-            </form>
           )}
           <Button
             variant="outline"
@@ -367,10 +290,14 @@ export function ContributionForm({
       <section className="letter-intro">
         <span className="eyebrow">A HELLO SHE CAN COME BACK TO</span>
         <h1>
-          Leave a little <em>love.</em>
+          {editing ? "Add a little more" : "Leave a little"} <em>love.</em>
           <Heart size={25} className="title-heart" />
         </h1>
-        <p>A memory, a thank-you, or just a few words for Hanna.</p>
+        <p>
+          {editing
+            ? "Update your words, photos, or voice note. Changes take effect when you save and go back to Cj for review."
+            : "A memory, a thank-you, or just a few words for Hanna."}
+        </p>
       </section>
       {!configured && <SetupNotice />}
       <form className="letter-card contribution-form" onSubmit={submit}>
@@ -445,8 +372,7 @@ export function ContributionForm({
               accept="image/jpeg,image/png,image/webp"
               disabled={
                 disabled ||
-                (snapshot?.uploads.filter((u) => u.kind === "photo").length ??
-                  0) >= 3
+                attachments.filter((u) => u.kind === "photo").length >= 3
               }
               onChange={(e) => {
                 const file = e.currentTarget.files?.[0];
@@ -470,9 +396,7 @@ export function ContributionForm({
             <input
               type="file"
               accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/ogg,audio/webm"
-              disabled={
-                disabled || !!snapshot?.uploads.some((u) => u.kind === "audio")
-              }
+              disabled={disabled || attachments.some((u) => u.kind === "audio")}
               onChange={(e) => {
                 const file = e.currentTarget.files?.[0];
                 e.currentTarget.value = "";
@@ -490,7 +414,7 @@ export function ContributionForm({
               disabled={
                 !!busy ||
                 !snapshot ||
-                !!snapshot.uploads.some((u) => u.kind === "audio")
+                attachments.some((u) => u.kind === "audio")
               }
               onClick={() =>
                 recording ? recorder.current?.stop() : void startRecording()
@@ -507,10 +431,11 @@ export function ContributionForm({
           </div>
         )}
         <div className="uploaded-list">
-          {snapshot?.uploads.map((u) => (
+          {attachments.map((u) => (
             <article key={u.id} className="uploaded-item">
               <div className="upload-preview">
-                {u.state === "validated" ? (
+                {(u.state === "validated" || u.state === "attached") &&
+                !("status" in u && u.status === "rejected") ? (
                   u.kind === "photo" ? (
                     <img
                       src={`/api/manage/media/${u.id}`}
@@ -532,10 +457,35 @@ export function ContributionForm({
                   {u.kind === "photo" ? "Photo memory" : "Voice note"}
                 </strong>
                 <span>
-                  {u.state === "validated"
-                    ? "Checked and ready · private"
-                    : "Unfinished — remove and retry"}
+                  {"status" in u && u.status === "rejected"
+                    ? "Excluded by Cj · remove or replace"
+                    : u.state === "attached"
+                      ? "Saved with your letter · private"
+                      : u.state === "validated"
+                        ? "Checked and ready · private"
+                        : "Unfinished — remove and retry"}
                 </span>
+                {u.state === "attached" && (
+                  <label>
+                    {u.kind === "photo"
+                      ? "Photo description"
+                      : "Voice transcript"}
+                    <input
+                      value={u.description}
+                      maxLength={300}
+                      disabled={disabled}
+                      onChange={(e) =>
+                        setRetainedMedia((items) =>
+                          items.map((item) =>
+                            item.id === u.id
+                              ? { ...item, description: e.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                  </label>
+                )}
               </div>
               <Button
                 type="button"
@@ -543,6 +493,12 @@ export function ContributionForm({
                 aria-label={`Remove ${u.kind}`}
                 disabled={!!busy || recording}
                 onClick={async () => {
+                  if (u.state === "attached") {
+                    setRetainedMedia((items) =>
+                      items.filter((item) => item.id !== u.id),
+                    );
+                    return;
+                  }
                   setBusy("Removing attachment…");
                   try {
                     await api(`uploads/${u.id}`, "DELETE");
@@ -566,9 +522,9 @@ export function ContributionForm({
           <div>
             <p>Kept with care.</p>
             <span>
-              Your words and media are private to you, Cj as reviewer, and
-              Hanna once approved. Please leave out addresses, phone numbers,
-              and anything you don’t have permission to share.
+              Your words and media are private to you, Cj as reviewer, and Hanna
+              once approved. Please leave out addresses, phone numbers, and
+              anything you don’t have permission to share.
             </span>
             <label>
               <input
@@ -615,7 +571,64 @@ export function ContributionForm({
           </p>
         )}
         <div className="submission-footer">
-          <span>Only you can send this little hello.</span>
+          <span>
+            {editing
+              ? "Your saved memories stay unchanged until you save."
+              : "Only you can send this little hello."}
+          </span>
+          {editing && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={disabled}
+              onClick={async () => {
+                setBusy("Closing your changes…");
+                try {
+                  await Promise.all(
+                    (snapshot?.uploads ?? []).map((u) =>
+                      api(`uploads/${u.id}`, "DELETE"),
+                    ),
+                  );
+                  await refresh();
+                  setEditing(false);
+                  setError("");
+                } catch (e) {
+                  setError(
+                    e instanceof Error
+                      ? e.message
+                      : "Could not close your changes. Please retry.",
+                  );
+                } finally {
+                  setBusy("");
+                }
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+          {editing && error && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={disabled}
+              onClick={async () => {
+                setBusy("Reopening your letter…");
+                try {
+                  openEditor(await refresh());
+                } catch (e) {
+                  setError(
+                    e instanceof Error
+                      ? e.message
+                      : "Please reopen your invitation.",
+                  );
+                } finally {
+                  setBusy("");
+                }
+              }}
+            >
+              Reopen saved letter
+            </Button>
+          )}
           <Button
             type="submit"
             disabled={
@@ -623,7 +636,11 @@ export function ContributionForm({
               !!snapshot?.uploads.some((u) => u.state !== "validated")
             }
           >
-            {busy ? "Please wait…" : "Send my little hello"}
+            {busy
+              ? "Please wait…"
+              : editing
+                ? "Save my changes"
+                : "Send my little hello"}
             <Send size={16} />
           </Button>
         </div>

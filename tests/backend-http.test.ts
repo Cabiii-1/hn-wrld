@@ -592,3 +592,32 @@ describe("Contributor visit HTTP boundary", () => {
     });
   });
 });
+
+it("requires paired attachment lists on media edits and keeps the session scope server supplied", async () => {
+  state.jar.set("bubu-contributor", newSecret());
+  const payload = {
+    message: "Updated memories",
+    version: "2026-10-18T00:00:00Z",
+    consent: true,
+    retainedMedia: [
+      { id: "11111111-1111-4111-8111-111111111111", description: "Caption" },
+    ],
+    uploadIds: [],
+  };
+  expect(
+    (
+      await request("contributions", "PATCH", {
+        ...payload,
+        uploadIds: undefined,
+      })
+    ).status,
+  ).toBe(400);
+  expect((await request("contributions", "PATCH", payload)).status).toBe(200);
+  expect(state.rpc).toHaveBeenCalledWith("edit_contribution_media", {
+    p_session_hash: expect.any(String),
+    p_message: payload.message,
+    p_version: payload.version,
+    p_retained: payload.retainedMedia,
+    p_upload_ids: [],
+  });
+});

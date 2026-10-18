@@ -89,6 +89,7 @@ beforeAll(async () => {
     "0009_contributor_visits.sql",
     "0010_named_contributor_visits.sql",
     "0011_character_display_names.sql",
+    "0012_edit_contribution_media.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -387,13 +388,16 @@ describe("M2 PostgreSQL migrations, RLS and atomic workflows", () => {
       ),
     ).toBe(true);
   });
-  it("caps the lifetime upload budget even after discarded reservations", async () => {
+  it("allows future revisions after discarded reservations while capping active drafts", async () => {
     const i = await invite();
     for (let n = 0; n < 24; n++) {
       const p = await reserve(i.session);
       await scalar("public.discard_upload($1,$2::uuid)", [i.session, p.id]);
     }
-    await expect(reserve(i.session)).rejects.toThrow("quota");
+    await reserve(i.session);
+    await reserve(i.session);
+    await reserve(i.session);
+    await expect(reserve(i.session)).rejects.toThrow("Attachment limit");
   });
   it("serializes duplicate submissions so only one message is created", async () => {
     const i = await invite();
@@ -1261,5 +1265,180 @@ describe("Contributor visit privacy and designation", () => {
         [owner.id],
       ),
     ).toBe("tuguegarao_park");
+  });
+});
+
+describe("Rich media revisions", () => {
+  async function snapshot(session: string) {
+    return scalar<{
+      letter: {
+        message: string;
+        version: string;
+        media: { id: string; status: string; description: string }[];
+      };
+    }>("public.contributor_snapshot($1)", [session]);
+  }
+  const edit = (
+    session: string,
+    version: string,
+    kept: { id: string; description: string }[],
+    added: string[],
+  ) =>
+    scalar(
+      "public.edit_contribution_media($1,'Revised memories',$2,$3::jsonb,$4::uuid[])",
+      [session, version, JSON.stringify(kept), added],
+    );
+  it("atomically replaces saved photos and audio, queues removals, and returns updates for review", async () => {
+    const own = await invite();
+    const photo = await reserve(own.session),
+      audio = await reserve(own.session, "audio"),
+      keep = await reserve(own.session);
+    const oldPath = await validate(own.session, photo.id, own.id);
+    await scalar("public.validate_upload($1,$2,$3,'audio/mpeg',123,1000)", [
+      own.session,
+      audio.id,
+      `validated/${own.id}/${audio.id}/old.mp3`,
+    ]);
+    await validate(own.session, keep.id, own.id);
+    const parent = await submit(own.session, [photo.id, audio.id, keep.id]);
+    await role("authenticated", ADMIN);
+    for (const id of [photo.id, audio.id, keep.id])
+      await scalar("public.admin_review_media($1,'approved')", [id]);
+    await scalar("public.admin_review($1,'approved',null)", [parent]);
+    const area = await scalar<string>(
+      "(select id from public.areas where map_key='sta_ana_house')",
+    );
+    await scalar(
+      "public.admin_place_npc($1,$2,'npc-brown-scarf',425,352,20,true)",
+      [parent, area],
+    );
+    await role("service_role");
+    const before = await snapshot(own.session);
+    expect(before.letter.media).toHaveLength(3);
+    const replacement = await reserve(own.session),
+      voice = await reserve(own.session, "audio");
+    await validate(own.session, replacement.id, own.id);
+    await scalar("public.validate_upload($1,$2,$3,'audio/mpeg',123,1000)", [
+      own.session,
+      voice.id,
+      `validated/${own.id}/${voice.id}/new.mp3`,
+    ]);
+    await edit(
+      own.session,
+      before.letter.version,
+      [{ id: keep.id, description: "Updated caption" }],
+      [replacement.id, voice.id],
+    );
+    const after = await snapshot(own.session);
+    expect(after.letter.media.map((m) => m.id).sort()).toEqual(
+      [keep.id, replacement.id, voice.id].sort(),
+    );
+    expect(after.letter.media.every((m) => m.status === "pending")).toBe(true);
+    expect(after.letter.media.find((m) => m.id === keep.id)?.description).toBe(
+      "Updated caption",
+    );
+    expect(
+      await scalar(
+        "(select status::text from public.contributions where id=$1)",
+        [parent],
+      ),
+    ).toBe("pending");
+    expect(
+      await scalar(
+        "(select published from public.npc_placements where contribution_id=$1)",
+        [parent],
+      ),
+    ).toBe(false);
+    expect(
+      await scalar(
+        "(select count(*) from public.storage_cleanup where storage_path=$1)",
+        [oldPath],
+      ),
+    ).toBe(1);
+    expect(
+      await scalar(
+        "(select state::text from public.upload_intents where id=$1)",
+        [photo.id],
+      ),
+    ).toBe("deleted");
+    await expect(
+      edit(own.session, before.letter.version, [], []),
+    ).rejects.toThrow("changed");
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_review_media($1,'rejected')", [keep.id]);
+    await role("service_role");
+    const current = await snapshot(own.session);
+    await edit(
+      own.session,
+      current.letter.version,
+      current.letter.media.map((m) => ({
+        id: m.id,
+        description: m.id === keep.id ? "Changed again" : m.description,
+      })),
+      [],
+    );
+    expect(
+      (await snapshot(own.session)).letter.media.find((m) => m.id === keep.id)
+        ?.status,
+    ).toBe("rejected");
+  });
+  it("rejects foreign, duplicate, unfinished, expired, excess and revoked revisions without deleting originals", async () => {
+    const own = await invite(),
+      stranger = await invite();
+    await role("service_role");
+    const original = await reserve(own.session);
+    await validate(own.session, original.id, own.id);
+    await submit(own.session, [original.id]);
+    const foreign = await reserve(stranger.session);
+    await validate(stranger.session, foreign.id, stranger.id);
+    await submit(stranger.session, [foreign.id]);
+    const draft = await reserve(own.session);
+    const before = await snapshot(own.session),
+      kept = [{ id: original.id, description: "Synthetic attachment" }];
+    await expect(
+      edit(
+        own.session,
+        before.letter.version,
+        [{ id: foreign.id, description: "" }],
+        [],
+      ),
+    ).rejects.toThrow("unavailable");
+    await expect(
+      edit(own.session, before.letter.version, [], [foreign.id]),
+    ).rejects.toThrow("unavailable");
+    await expect(
+      edit(own.session, before.letter.version, [...kept, ...kept], []),
+    ).rejects.toThrow("Invalid");
+    await expect(
+      edit(own.session, before.letter.version, [], [draft.id]),
+    ).rejects.toThrow("unavailable");
+    await validate(own.session, draft.id, own.id);
+    await db.query(
+      "update public.upload_intents set expires_at=now()-interval '1 second' where id=$1",
+      [draft.id],
+    );
+    await expect(
+      edit(own.session, before.letter.version, [], [draft.id]),
+    ).rejects.toThrow("unavailable");
+    const more = [];
+    for (let n = 0; n < 3; n++) {
+      const p = await reserve(own.session);
+      await validate(own.session, p.id, own.id);
+      more.push(p.id);
+    }
+    await expect(
+      edit(own.session, before.letter.version, kept, more),
+    ).rejects.toThrow("limit");
+    expect((await snapshot(own.session)).letter).toEqual(before.letter);
+    await role("anon");
+    await expect(
+      edit(own.session, before.letter.version, [], []),
+    ).rejects.toThrow();
+    await role("authenticated", ADMIN);
+    await scalar("public.admin_revoke_invite($1)", [own.id]);
+    await role("service_role");
+    await expect(
+      edit(own.session, before.letter.version, [], []),
+    ).rejects.toThrow("unavailable");
   });
 });

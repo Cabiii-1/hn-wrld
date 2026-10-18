@@ -124,9 +124,7 @@ describe("contributor and admin UI workflows", () => {
       history.replaceState(null, "", `/invite${hash}`);
       mock.api.mockResolvedValue({ ok: true });
       render(<InviteWelcome configured />);
-      await screen.findByText(
-        "Open the complete invitation link Cj sent you.",
-      );
+      await screen.findByText("Open the complete invitation link Cj sent you.");
       expect(location.hash).toBe("");
       expect(mock.api).not.toHaveBeenCalled();
       const token = "e".repeat(43);
@@ -358,7 +356,7 @@ describe("Returning contributor UI", () => {
     await userEvent.click(
       await screen.findByRole("button", { name: "Edit my letter" }),
     );
-    const input = screen.getByLabelText("Your message for Hanna");
+    const input = screen.getByLabelText(/Your message for Hanna/);
     expect((input as HTMLTextAreaElement).value).toBe(letter.message);
     await userEvent.clear(input);
     await userEvent.type(input, "Updated synthetic letter");
@@ -371,6 +369,8 @@ describe("Returning contributor UI", () => {
         message: "Updated synthetic letter",
         version: letter.version,
         consent: true,
+        retainedMedia: [],
+        uploadIds: [],
       }),
     );
     await screen.findByRole("button", { name: "Edit my letter" });
@@ -512,6 +512,69 @@ it("lets the admin choose the invitation destination alongside the contributor n
       label: "Synthetic Friend",
       mapKey: "slu_baguio",
       expiresAt: null,
+    }),
+  );
+});
+
+it("stages saved attachment removals locally, restores them on cancel, and saves a changed selection with consent", async () => {
+  const media = [
+    {
+      id: "photo",
+      kind: "photo" as const,
+      state: "attached",
+      status: "approved",
+      description: "A memory",
+    },
+    {
+      id: "audio",
+      kind: "audio" as const,
+      state: "attached",
+      status: "approved",
+      description: "Hello",
+    },
+  ];
+  const saved = {
+    displayName: "Synthetic Friend",
+    submitted: true,
+    letter: { message: "Saved hello", version: "2026-10-18T00:00:00Z", media },
+    uploads: [],
+    limits: MAX,
+  };
+  mock.api.mockResolvedValue(saved);
+  render(
+    <ContributionForm configured initialSnapshot={saved} initialResolved />,
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Edit my letter" }));
+  expect(
+    (screen.getByLabelText("Upload a voice note") as HTMLInputElement).disabled,
+  ).toBe(true);
+  await userEvent.click(screen.getByRole("button", { name: "Remove audio" }));
+  expect(
+    (screen.getByLabelText("Upload a voice note") as HTMLInputElement).disabled,
+  ).toBe(false);
+  expect(mock.api).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Edit my letter" }),
+  );
+  expect(screen.getByRole("button", { name: "Remove audio" })).toBeTruthy();
+  await userEvent.click(screen.getByRole("button", { name: "Remove photo" }));
+  await userEvent.clear(screen.getByLabelText("Voice transcript"));
+  await userEvent.type(
+    screen.getByLabelText("Voice transcript"),
+    "New transcript",
+  );
+  await userEvent.click(screen.getByRole("checkbox"));
+  await userEvent.click(
+    screen.getByRole("button", { name: "Save my changes" }),
+  );
+  await waitFor(() =>
+    expect(mock.api).toHaveBeenCalledWith("contributions", "PATCH", {
+      message: "Saved hello",
+      version: saved.letter.version,
+      consent: true,
+      retainedMedia: [{ id: "audio", description: "New transcript" }],
+      uploadIds: [],
     }),
   );
 });
