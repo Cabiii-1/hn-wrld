@@ -103,7 +103,7 @@ it("preserves legacy appearance on unrelated edits and saves an explicit animal 
     screen
       .getByRole("img", { name: "Your character: Bear" })
       .getAttribute("style"),
-  ).toContain("bear-v1");
+  ).toContain("bear-v3");
 });
 
 it("loads a saved animal and supports keyboard selection with six named radio options", async () => {

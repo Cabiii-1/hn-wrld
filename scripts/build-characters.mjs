@@ -21,7 +21,7 @@ for (const name of names)
     raw: { width: 384, height: 32, channels: 4 },
   })
     .png()
-    .toFile(`public/game/characters/${name}-v1.png`);
+    .toFile(`public/game/characters/${name}-v3.png`);
 console.log("Built six native-grid character sheets.");
 const { paintLegacyBear } =
   await import("../src/game/characters/paint-legacy-bear.ts");

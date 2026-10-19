@@ -144,3 +144,6 @@ Keep the desktop two-column photo/voice grid with identical compact 230px cards.
 
 ## Crochet Friends characters (2026-10-19)
 The owner approved the simple capybara slice and requested continuation. The six-animal character selector, saved contribution choice and shared visitor/NPC identity are implemented under docs/PRD_CHARACTER_SELECTION.md. Migration 0018 preserves legacy bears and access rules. See docs/verification/CHARACTER_SELECTION.md for validation status.
+
+## Exact animal reference (owner update, 2026-10-19)
+The latest approved sheet is assets/characters/references/approved-16px-sheet.png. Turtle, capybara, calico cat, bee and frog must use its exact 16x16 cells, palettes and six front/back/side idle/stride poses, expanded 2x into the existing 32px cells. Preserve natural species proportions and grid padding instead of forcing identical bounding boxes. Keep the original cream scarf bear. Duplicate idle and alternate idle/stride to fill the existing 12-frame layout; side mirroring and all physics/access rules stay unchanged. This supersedes earlier concept art and outline interpretations. See docs/PRD_CHARACTER_SELECTION.md v1.1.

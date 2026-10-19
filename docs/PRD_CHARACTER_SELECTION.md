@@ -1,7 +1,7 @@
 # PRD: Crochet Friends Character Selection
 
 **Product:** Hanna's Little World
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2026-10-19 (Asia/Manila)
 **Status:** Implemented and deployed; automated and hosted flow checks pass. Mobile visual and physical-device release checks remain separately tracked.
 
@@ -28,12 +28,12 @@ Excluded: changes to Hanna/Cj or the finale; new scenes/camera/collision geometr
 
 ## 3. Art specification
 
-The detailed crochet-texture drafts were rejected as too busy. Concepts in `assets/characters/concepts/8bit-v1/` show the simpler direction. These enlarged PNGs are design references, not literal native-grid exports or usable animation sheets.
+The owner supplied an exact six-pose sheet on 2026-10-19, archived as `assets/characters/references/approved-16px-sheet.png`. This supersedes earlier concepts and outline redraws for turtle, capybara, calico cat, bee and frog. Preserve its actual 16×16 pixel cells, colors, proportions and poses. Extract pixel centers without antialiasing, remove only the reference grid/background and expand exactly 2× into 32×32 transparent production cells. Keep the original cream scarf bear, which is absent from this reference. The shared logical canvas controls scale; do not stretch different species to identical bounding boxes.
 
 | Animal | Essential identifying features |
 | --- | --- |
 | Bear | Tan/cream body, round ears, simple muzzle; small green scarf if readable |
-| Turtle | Green head/feet, clearly separate shell; small sunflower accent if readable |
+| Turtle | Green head/feet, green and gold shell from the supplied sheet |
 | Capybara | Tan body, tiny ears, broad rectangular brown muzzle |
 | Frog | Green body, raised eyes, pale belly, squat feet |
 | Cat | Pointed ears, cream/orange/brown calico patches, small tail |
@@ -41,12 +41,12 @@ The detailed crochet-texture drafts were rejected as too busy. Concepts in `asse
 
 Production requirements:
 
-- **32×32 transparent frame cells**, matching the current game contract. Draw using a coarse logical grid and large pixel clusters; the canvas size must not introduce extra detail.
+- **32×32 transparent frame cells**, matching the current game contract, with exact 2× expansion of the supplied 16×16 animal cells. Preserve the original bear's native pixels.
 - Prefer approximately 6–8 flat colors per character, simple eyes and square blush. No yarn/fur texture, speckles, gradients, detailed eye highlights or antialiasing.
 - Verify recognizable silhouettes at actual game size. Keep apparent scale, foot anchor and common baseline consistent, while allowing species-appropriate body proportions.
 - Match the existing elevated/front-facing scene view; no isometric diamond orientation.
 - Match the current **12-frame arrangement**: front, back and side directions, each with two idle and two movement frames. Mirror side frames for left/right; markings must remain coherent under mirroring.
-- Bear/capybara/cat walk; frog uses a restrained step-hop; turtle waddles; bee has a subtle wing/hover cycle. Gameplay speed, feet hitbox and talk range are equal.
+- Each supplied direction has idle and stride poses. Duplicate idle for both idle frames and alternate idle/stride for walking; do not invent extra artwork. Preserve the bear's original animation. Gameplay speed, feet hitbox and talk range are equal.
 - Hop/hover offsets affect rendering only, not collisions, NPC coordinates or Y-depth ordering.
 - Use nearest-neighbor rendering and existing integer scaling. Selector previews must use production frames rather than different concept art.
 - Share a typed sprite catalog between React previews and Phaser. Frame-by-frame game animation remains in Phaser, not React state updates.

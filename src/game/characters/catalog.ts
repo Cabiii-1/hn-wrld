@@ -31,7 +31,7 @@ export const CHARACTERS = CHARACTER_KEYS.map((key) => ({
   key,
   variant: `animal-${key}` as (typeof ANIMAL_VARIANTS)[number],
   name: key.charAt(0).toUpperCase() + key.slice(1),
-  src: key === "capybara" ? CAPYBARA.src : `/game/characters/${key}-v1.png`,
+  src: key === "capybara" ? CAPYBARA.src : `/game/characters/${key}-v3.png`,
   frameSize: 32,
   frameCount: 12,
 }));

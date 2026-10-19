@@ -4,7 +4,7 @@ Implemented 2026-10-19, following `docs/PRD_CHARACTER_SELECTION.md` and the owne
 
 ## Delivered behavior
 
-- Six original 32×32 pixel animals: bear, turtle, capybara, frog, cat and bee. Each sheet contains front/back/side idle and movement frames, sharing the existing feet origin, speed and collision/talk rules. Side frames mirror for left/right. Bee wings animate within its frame without changing physics.
+- Six 32×32 pixel animals: original bear plus the owner's exact turtle, capybara, frog, calico cat and bee reference poses. Each sheet contains front/back/side idle and movement frames, sharing the existing feet origin, speed and collision/talk rules. Side frames mirror for left/right. Bee hover remains within its frame without changing physics.
 - The former Park teaser is replaced by six named native radio options and a stable animated selected-character preview. Keyboard arrows/Space and touch work; reduced motion uses still frames. Equal-sized photo/voice cards remain separate.
 - New contributions default to Bear. Edits load the saved choice and preserve a failed draft. Cancel restores the saved appearance. Existing contributors keep their legacy bear unless they explicitly choose an animal, including intentionally choosing the new Bear.
 - Migration `0018_contributor_characters.sql` adds nullable canonical `character_key`, separate atomic character submit/edit RPCs and wrappers around existing scoped world projections. Old RPC signatures remain supported. No real identities are backfilled or moved.
@@ -15,7 +15,7 @@ Implemented 2026-10-19, following `docs/PRD_CHARACTER_SELECTION.md` and the owne
 ## Source and reproduction
 
 - `src/game/characters/catalog.ts`: shared key/name/asset mapping and accepted variants.
-- `animal-art.ts` / `capybara.ts`: original coarse-grid pixel source.
+- `reference-pixels.json`: exact indexed 16px poses from the owner's approved sheet; `animal-art.ts` expands them 2x and retains the original bear. `capybara.ts` defines the shared animation addresses.
 - `paint-legacy-bear.ts`: the unchanged legacy drawing operations shared with Phaser and preview exports.
 - Run `npm.cmd run art:characters` to reproduce all public PNG sheets. Enlarged AI concepts remain archived under `assets/characters/concepts/8bit-v1/`, separate from production artwork.
 
@@ -23,7 +23,7 @@ Implemented 2026-10-19, following `docs/PRD_CHARACTER_SELECTION.md` and the owne
 
 - 180 tests across 18 files pass, including the full SQL/RLS suite.
 - TypeScript/production build and ESLint pass.
-- Art checks compare decoded committed PNGs to source pixels, frame dimensions, palette limits and ground anchors.
+- Art checks compare decoded committed PNGs to source pixels and every expanded pixel against the archived reference. They also verify animation addresses, distinct strides and byte-identical original bear rendering.
 - Tests cover all six saves and visitor/recipient projections, placement preservation, legacy/no-field edits, canonical admin edits, invalid keys, stale revision rollback, session revocation and unauthorized mutation denial.
 - UI checks cover six named radios, keyboard selection, legacy preservation, explicit Bear adoption, failed saves and cancellation. Existing voice/media editing and privacy tests remain passing.
 - A 50-character mixed cast contains all nine new/legacy variants and remains within safe geometry across all three scenes in the movement simulation.
@@ -43,3 +43,10 @@ Production commit 95725c4 deployed Ready. A disposable invitation selected Frog,
 The public mixed demo rendered all six animals alongside legacy bears in a 50-NPC Park cast and loaded the same cast in Sta. Ana House and SLU. This confirms loading and rendering, not physical-phone frame-rate performance. The desktop selector screenshot is in ignored test-results/character-picker-desktop.png; the mixed cast is in test-results/animal-mixed-cast-park.png.
 
 The browser's requested 390px viewport override did not change its measured 1265px width. The resulting image is excluded as mobile evidence. Two-column narrow-screen selector CSS is implemented, but mobile visual QA and physical-phone performance/microphone checks remain pending; desktop and simulated movement tests do not substitute for those checks.
+
+### Exact reference revision (2026-10-19)
+The owner replaced earlier art interpretations with an exact 16x16 six-pose sheet for turtle, capybara, calico cat, bee and frog. Archived at assets/characters/references/approved-16px-sheet.png. The import script samples grid-cell centers and removes only the known background colors; indexed pixels are committed for reproducible builds. All five retain their exact proportions, palette and poses at integer 2x scale. Idle repeats the supplied idle; walking alternates the supplied idle and stride. The original cream scarf bear is unchanged. Versioned v3 URLs avoid stale asset caching; no database migration or saved-choice change is needed.
+
+180 tests pass, including exact reference comparisons across every frame and original-bear equivalence. ESLint passes. The rendered six-pose contact sheet was visually inspected at test-results/approved-animals.png. Production build and hosted verification results are recorded after completion below.
+
+Production build passes, including TypeScript and prerendering. The first sandboxed build hit a generated-output mkdir permission error; the authorized retry completed successfully.
