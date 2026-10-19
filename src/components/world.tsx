@@ -11,6 +11,7 @@ import {
 import type { WorldNpc, ContributorVisit } from "@/game/connected";
 import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
 import { RecipientDialogue } from "./recipient-dialogue";
+import { ParkAudio } from "./park-audio";
 import { SharedLetterBody } from "./shared-letters";
 import { api } from "@/lib/backend/browser-api";
 import {
@@ -121,6 +122,9 @@ export function World({
   }
   return (
     <main className="world-shell">
+      {mapKey === "tuguegarao_park" && (
+        <ParkAudio paused={dialogue || help || paused || status !== "ready"} />
+      )}
       <header className="site-header">
         <Link
           className="brand"

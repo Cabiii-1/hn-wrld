@@ -67,5 +67,15 @@
     "purpose": "Scenic backdrop only; explicit collision geometry in src/game/scene-geometry.json",
     "format": "Lossless WebP converted from the supplied PNG",
     "bytes": 1515066
+  },
+  "park_soundtrack": {
+    "source": "User-supplied Haikyuu!! - Adults (Extended).mp3",
+    "publicPath": "/game/audio/park-adults-v1.mp3",
+    "creator": "User-supplied recording; original music credited by supplied filename",
+    "license": "Supplied by owner for use in this project",
+    "bytes": 2105717,
+    "durationSeconds": 179.74857142857144,
+    "map": "tuguegarao_park",
+    "purpose": "Looping background soundtrack at 22% volume; no visible controls"
   }
 }

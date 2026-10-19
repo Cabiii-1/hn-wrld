@@ -141,3 +141,6 @@ Keep the desktop two-column photo/voice grid with identical compact 230px cards.
 
 ## Bear-only restoration (owner update, 2026-10-19)
 Character selection and animal sprites are removed at the owner's request. Restore the original bear styles and the static A LITTLE PEEK / Your hello has a place here Park preview in the contribution panel. Migration 0019 reverses the deployed appearance extension, preserving letters, media, placement coordinates, publication and access. Migration 0018 remains in history so existing deployments can migrate forward safely. Do not reintroduce animal selection or art previews.
+
+## Park soundtrack (owner update, 2026-10-19)
+Park plays the supplied Haikyuu!! - Adults (Extended).mp3 as a quiet loop, with no visible audio controls. Applies to recipient, contributor and sample Park worlds only. Try automatic playback when the scene is ready; if the browser denies autoplay, retry on normal touch/pointer/keyboard input. Pause during letters/help/finale, when the tab is hidden and on scene exit; preserve playback position through temporary pauses. No database or contributor content changes.

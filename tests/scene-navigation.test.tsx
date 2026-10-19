@@ -15,6 +15,7 @@ import { DemoWorld } from "../src/components/demo-world";
 import { RecipientPlayer } from "../src/components/recipient-player";
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
 });
 afterEach(() => {
   cleanup();
@@ -47,12 +48,18 @@ describe("M4 navigation and protected scene loading", () => {
   });
   it("visits all sample maps with 50 bears without fetching private data", async () => {
     render(<DemoWorld />);
+    expect(
+      document.querySelector("audio[src='/game/audio/park-adults-v1.mp3']"),
+    ).toBeNull();
     await userEvent.selectOptions(
       screen.getByLabelText("Sample bear count"),
       "50",
     );
     await userEvent.click(screen.getByRole("button", { name: "Visit Park" }));
     expect(screen.getByRole("region", { name: "Explore Park" })).toBeTruthy();
+    expect(
+      document.querySelector("audio[src='/game/audio/park-adults-v1.mp3']"),
+    ).not.toBeNull();
     await userEvent.click(
       screen.getByRole("button", { name: "Visit SLU Baguio" }),
     );
@@ -60,6 +67,9 @@ describe("M4 navigation and protected scene loading", () => {
       screen.getByRole("region", { name: "Explore SLU Baguio" }),
     ).toBeTruthy();
     expect(screen.getAllByTestId("game")).toHaveLength(1);
+    expect(
+      document.querySelector("audio[src='/game/audio/park-adults-v1.mp3']"),
+    ).toBeNull();
     expect(mock.api).not.toHaveBeenCalled();
   });
   it("loads only the selected protected scene and persists the session through navigation", async () => {
