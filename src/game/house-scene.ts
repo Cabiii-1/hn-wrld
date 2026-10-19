@@ -5,8 +5,6 @@ import { WORLD, normalizedInput, type Direction } from "./world";
 import { Crowd, facingDirection, type BearState } from "./crowd";
 import { demoNpcs } from "./demo-fixtures";
 import { SCENES } from "./scenes";
-import { CHARACTERS } from "./characters/catalog";
-import { registerCharacterAnimations } from "./characters/register";
 type Actor = {
   data: BearState;
   sprite: Phaser.GameObjects.Sprite;
@@ -33,17 +31,6 @@ export class PlaceScene extends Phaser.Scene {
   }
   preload() {
     this.load.image("backdrop", SCENES[this.bridge.mapKey].background);
-    const needed = new Set([
-      this.bridge.artPreview,
-      this.bridge.visitor?.variant,
-      ...(this.bridge.npcs ?? []).map((n) => n.variant),
-    ]);
-    for (const character of CHARACTERS)
-      if (needed.has(character.variant))
-        this.load.spritesheet(character.variant, character.src, {
-          frameWidth: 32,
-          frameHeight: 32,
-        });
     this.load.on("loaderror", () => this.bridge.onStatus("error"));
   }
   create() {
@@ -56,13 +43,6 @@ export class PlaceScene extends Phaser.Scene {
     makeBearTextures(this, "npc-cream-1", "#f1d8b0", "#778b63");
     makeBearTextures(this, "npc-brown-scarf", "#b78459", "#778b63");
     makeBearTextures(this, "npc-rose-bow", "#f3dfc5", "#ce8796");
-    for (const character of CHARACTERS)
-      if (this.textures.exists(character.variant)) {
-        this.textures
-          .get(character.variant)
-          .setFilter(Phaser.Textures.FilterMode.NEAREST);
-        registerCharacterAnimations(this, character);
-      }
     this.crowd = new Crowd(
       this.bridge.mapKey,
       this.bridge.npcs ?? demoNpcs(this.bridge.mapKey, 1),
@@ -71,7 +51,7 @@ export class PlaceScene extends Phaser.Scene {
       .sprite(
         this.crowd.player.x,
         this.crowd.player.y,
-        this.bridge.artPreview ?? this.bridge.visitor?.variant ?? "hanna",
+        this.bridge.visitor?.variant ?? "hanna",
       )
       .setOrigin(0.5, 30 / 32);
     const style = {
@@ -87,10 +67,7 @@ export class PlaceScene extends Phaser.Scene {
         0,
         this.bridge.visitor
           ? `${this.bridge.visitor.name.length > 22 ? this.bridge.visitor.name.slice(0, 21) + "…" : this.bridge.visitor.name} (you)`
-          : this.bridge.artPreview
-            ? (CHARACTERS.find((c) => c.variant === this.bridge.artPreview)
-                ?.name ?? "Sample friend")
-            : "Hanna ♡",
+          : "Hanna ♡",
         style,
       )
       .setOrigin(0.5, 1);
@@ -264,7 +241,7 @@ export class PlaceScene extends Phaser.Scene {
     }
     this.animate(
       this.player,
-      this.bridge.artPreview ?? this.bridge.visitor?.variant ?? "hanna",
+      this.bridge.visitor?.variant ?? "hanna",
       this.facing,
       moving,
     );

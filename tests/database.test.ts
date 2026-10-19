@@ -96,6 +96,7 @@ beforeAll(async () => {
     "0016_open_park_perimeter.sql",
     "0017_instant_invited_hellos.sql",
     "0018_contributor_characters.sql",
+    "0019_restore_default_bears.sql",
   ]) {
     let sql = await readFile(
       new URL(`../supabase/migrations/${file}`, import.meta.url),
@@ -126,6 +127,75 @@ afterEach(async () => {
 });
 afterAll(async () => {
   await db?.close();
+});
+
+it("restores saved animals to default bears without changing letters or placement metadata", async () => {
+  await role("postgres");
+  await db.exec("begin");
+  try {
+    await db.exec(
+      await readFile(
+        new URL(
+          "../supabase/migrations/0018_contributor_characters.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
+    const own = await invite();
+    const id = await scalar<string>(
+      "public.submit_character_contribution($1,'Keep this synthetic letter','{}'::uuid[],true,'frog')",
+      [own.session],
+    );
+    const beforeLetter = await scalar(
+      "(select to_jsonb(c)-'character_key' from public.contributions c where id=$1)",
+      [id],
+    );
+    const beforePlacement = await scalar(
+      "(select to_jsonb(p)-'sprite_variant' from public.npc_placements p where contribution_id=$1)",
+      [id],
+    );
+    await role("postgres");
+    await db.exec(
+      await readFile(
+        new URL(
+          "../supabase/migrations/0019_restore_default_bears.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
+    expect(
+      await scalar(
+        "(select to_jsonb(c) from public.contributions c where id=$1)",
+        [id],
+      ),
+    ).toEqual(beforeLetter);
+    expect(
+      await scalar(
+        "(select to_jsonb(p)-'sprite_variant' from public.npc_placements p where contribution_id=$1)",
+        [id],
+      ),
+    ).toEqual(beforePlacement);
+    expect(
+      await scalar(
+        "(select sprite_variant from public.npc_placements where contribution_id=$1)",
+        [id],
+      ),
+    ).toBe("npc-cream-1");
+    expect(
+      await scalar(
+        "to_regprocedure('public.submit_character_contribution(text,text,uuid[],boolean,text)') is null",
+      ),
+    ).toBe(true);
+    await role("service_role");
+    expect(
+      await scalar("public.contributor_visit($1)", [own.session]),
+    ).toMatchObject({ visitor: { variant: "npc-cream-1" } });
+  } finally {
+    await role("postgres");
+    await db.exec("rollback");
+  }
 });
 
 describe("Invitation-assigned contributor names", () => {
@@ -1974,204 +2044,4 @@ it("backfills a pending hello with a new safe location without changing its chos
       [c],
     ),
   ).toBe(true);
-});
-describe("Contributor animal selection", () => {
-  it("persists all six choices into both authorized world projections without changing placement on edit", async () => {
-    const i = await invite();
-    const c = await scalar<string>(
-      "public.submit_character_contribution($1,'Animal hello','{}',false,'bear')",
-      [i.session],
-    );
-    const original = await scalar<Record<string, unknown>>(
-      "(select to_jsonb(p) from public.npc_placements p where contribution_id=$1)",
-      [c],
-    );
-    const r = await recipient();
-    for (const key of ["bear", "turtle", "capybara", "frog", "cat", "bee"]) {
-      const snapshot = await scalar<{
-        letter: { version: string; characterKey: string };
-      }>("public.contributor_snapshot($1)", [i.session]);
-      await scalar(
-        "public.edit_character_contribution($1,'Animal hello',$2,null,null,null,$3)",
-        [i.session, snapshot.letter.version, key],
-      );
-      expect(
-        await scalar(
-          "(select character_key from public.contributions where id=$1)",
-          [c],
-        ),
-      ).toBe(key);
-      const visit = await scalar<{ visitor: { variant: string } }>(
-        "public.contributor_visit($1)",
-        [i.session],
-      );
-      expect(visit.visitor.variant).toBe(`animal-${key}`);
-      const world = await scalar<{ npcs: { id: string; variant: string }[] }>(
-        "public.recipient_scene($1,'sta_ana_house')",
-        [r.session],
-      );
-      expect(world.npcs.find((n) => n.id === c)?.variant).toBe(`animal-${key}`);
-      const placed = await scalar<Record<string, unknown>>(
-        "(select to_jsonb(p) from public.npc_placements p where contribution_id=$1)",
-        [c],
-      );
-      for (const field of [
-        "id",
-        "area_id",
-        "spawn_x",
-        "spawn_y",
-        "wander_radius",
-        "published",
-      ])
-        expect(placed[field]).toEqual(original[field]);
-    }
-    const viewer = await invite();
-    await scalar(
-      "public.submit_character_contribution($1,'Viewer','{}',false,'frog')",
-      [viewer.session],
-    );
-    const visit = await scalar<{
-      npcs: { variant: string; readable: boolean }[];
-    }>("public.contributor_visit($1)", [viewer.session]);
-    expect(
-      visit.npcs.some((n) => n.variant === "animal-bee" && !n.readable),
-    ).toBe(true);
-    expect(JSON.stringify(visit)).not.toContain("Animal hello");
-  });
-  it("preserves legacy appearance and a manual publication hold; stale or invalid changes roll back", async () => {
-    const i = await invite();
-    const c = await scalar<string>(
-      "public.submit_instant_contribution($1,'Legacy hello','{}',false)",
-      [i.session],
-    );
-    await db.query(
-      "update public.npc_placements set sprite_variant='npc-rose-bow',published=false where contribution_id=$1",
-      [c],
-    );
-    const saved = await scalar<{
-      letter: { version: string; characterKey: null; legacyVariant: string };
-    }>("public.contributor_snapshot($1)", [i.session]);
-    expect(saved.letter).toMatchObject({
-      characterKey: null,
-      legacyVariant: "npc-rose-bow",
-    });
-    await scalar(
-      "public.edit_character_contribution($1,'Legacy hello',$2,null,null,null,null)",
-      [i.session, saved.letter.version],
-    );
-    expect(
-      await scalar(
-        "(select sprite_variant from public.npc_placements where contribution_id=$1)",
-        [c],
-      ),
-    ).toBe("npc-rose-bow");
-    const fresh = await scalar<{ letter: { version: string } }>(
-      "public.contributor_snapshot($1)",
-      [i.session],
-    );
-    await expect(
-      scalar(
-        "public.edit_character_contribution($1,'Unsaved',$2,null,null,null,'dragon')",
-        [i.session, fresh.letter.version],
-      ),
-    ).rejects.toThrow("Unknown character");
-    expect(
-      await scalar(
-        "(select message_text from public.contributions where id=$1)",
-        [c],
-      ),
-    ).toBe("Legacy hello");
-    await scalar(
-      "public.edit_character_contribution($1,'Legacy hello',$2,null,null,null,'cat')",
-      [i.session, fresh.letter.version],
-    );
-    expect(
-      await scalar(
-        "(select published from public.npc_placements where contribution_id=$1)",
-        [c],
-      ),
-    ).toBe(false);
-    await expect(
-      scalar(
-        "public.edit_character_contribution($1,'Stale',$2,null,null,null,'bee')",
-        [i.session, fresh.letter.version],
-      ),
-    ).rejects.toThrow();
-    expect(
-      await scalar(
-        "(select character_key from public.contributions where id=$1)",
-        [c],
-      ),
-    ).toBe("cat");
-  });
-  it("rejects invalid, revoked and unauthorized mutations and keeps admin selection canonical", async () => {
-    const i = await invite();
-    await expect(
-      scalar(
-        "public.submit_character_contribution($1,'Invalid','{}',false,'dragon')",
-        [i.session],
-      ),
-    ).rejects.toThrow("Unknown character");
-    expect(
-      await scalar(
-        "(select count(*)::int from public.contributions where invitation_id=$1)",
-        [i.id],
-      ),
-    ).toBe(0);
-    const c = await scalar<string>(
-      "public.submit_character_contribution($1,'Private hello','{}',false,'turtle')",
-      [i.session],
-    );
-    const p = await scalar<{
-      area_id: string;
-      spawn_x: number;
-      spawn_y: number;
-      wander_radius: number;
-    }>(
-      "(select to_jsonb(p) from public.npc_placements p where contribution_id=$1)",
-      [c],
-    );
-    await role("authenticated", OTHER);
-    await expect(
-      scalar("public.set_contribution_character($1,'bee')", [c]),
-    ).rejects.toThrow("permission denied");
-    await expect(
-      scalar("public.admin_place_npc($1,$2,'animal-bee',$3,$4,$5,true)", [
-        c,
-        p.area_id,
-        p.spawn_x,
-        p.spawn_y,
-        p.wander_radius,
-      ]),
-    ).rejects.toThrow("Admin required");
-    await role("authenticated", ADMIN);
-    await scalar("public.admin_place_npc($1,$2,'animal-bee',$3,$4,$5,true)", [
-      c,
-      p.area_id,
-      p.spawn_x,
-      p.spawn_y,
-      p.wander_radius,
-    ]);
-    await role("service_role");
-    expect(
-      await scalar(
-        "(select character_key from public.contributions where id=$1)",
-        [c],
-      ),
-    ).toBe("bee");
-    const saved = await scalar<{ letter: { version: string } }>(
-      "public.contributor_snapshot($1)",
-      [i.session],
-    );
-    await db.query(
-      "update public.invitations set revoked_at=now() where id=$1",
-      [i.id],
-    );
-    await expect(
-      scalar(
-        "public.edit_character_contribution($1,'Denied',$2,null,null,null,'frog')",
-        [i.session, saved.letter.version],
-      ),
-    ).rejects.toThrow("Session unavailable");
-  });
 });

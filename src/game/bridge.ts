@@ -1,14 +1,12 @@
 import type { Direction } from "./world";
 import type { WorldNpc, ContributorVisit } from "./connected";
 import type { SceneKey } from "./scenes";
-import type { ANIMAL_VARIANTS } from "./characters/catalog";
 export type GameStatus = "loading" | "ready" | "error";
 export class GameBridge {
   constructor(
     public readonly npcs?: WorldNpc[],
     public readonly mapKey: SceneKey = "sta_ana_house",
     public readonly visitor?: ContributorVisit["visitor"],
-    public readonly artPreview?: (typeof ANIMAL_VARIANTS)[number],
   ) {}
   held = new Set<Direction>();
   paused = false;

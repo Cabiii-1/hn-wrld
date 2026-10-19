@@ -109,7 +109,6 @@ describe("contributor and admin UI workflows", () => {
     await screen.findByText("SAFELY RECEIVED");
     expect(mock.api).toHaveBeenCalledWith("contributions", "POST", {
       message: "A synthetic little hello.",
-      characterKey: "bear",
       consent: true,
       shareWithInvitees: false,
       uploadIds: [],

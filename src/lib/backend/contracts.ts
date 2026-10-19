@@ -1,11 +1,4 @@
 import { z } from "zod";
-import {
-  CHARACTER_KEYS,
-  SPRITE_VARIANTS,
-  type CharacterKey,
-  type SpriteVariant,
-} from "../../game/characters/catalog";
-export const characterKeySchema = z.enum(CHARACTER_KEYS);
 import { safePlacement } from "../../game/scenes";
 import { sceneKeySchema } from "../../game/connected";
 
@@ -34,7 +27,6 @@ export const contributionSchema = z
     consent: z.literal(true),
     uploadIds: z.array(idSchema).max(4),
     shareWithInvitees: z.boolean().optional(),
-    characterKey: characterKeySchema.optional(),
   })
   .strict()
   .refine(
@@ -63,7 +55,7 @@ export const placementSchema = z
   .object({
     contributionId: idSchema,
     areaId: idSchema,
-    variant: z.enum(SPRITE_VARIANTS),
+    variant: z.enum(["npc-cream-1", "npc-brown-scarf", "npc-rose-bow"]),
     x: z.number().int().min(0).max(2000),
     y: z.number().int().min(0).max(2000),
     radius: z.number().int().min(0).max(80),
@@ -82,7 +74,6 @@ export type Contribution = {
   status: string;
   created_at: string;
   invitation_id: string;
-  character_key?: CharacterKey | null;
 };
 export type Media = {
   id: string;
@@ -137,8 +128,6 @@ export type ContributorSnapshot = {
   letter?: {
     message: string;
     version: string;
-    characterKey?: CharacterKey | null;
-    legacyVariant?: SpriteVariant;
     shareWithInvitees?: boolean;
     media?: (Upload & { status: string })[];
   } | null;

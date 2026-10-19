@@ -8,7 +8,6 @@ import {
 import { canStand, moveFeet, normalizedInput } from "../src/game/world";
 import { Crowd } from "../src/game/crowd";
 import { demoNpcs } from "../src/game/demo-fixtures";
-import { SPRITE_VARIANTS } from "../src/game/characters/catalog";
 describe("M4 scene geometry and crowded movement", () => {
   it("keeps all default spawns and complete wander footprints on safe ground", () => {
     for (const map of SCENE_KEYS) {
@@ -158,18 +157,4 @@ it("selects the nearest shared bear for visitors even when a private bear stands
   expect(crowd.nearest((bear) => bear.readable === true)?.id).toBe("shared");
   crowd.player.x = 80;
   expect(crowd.nearest((bear) => bear.readable === true)).toBeUndefined();
-});
-it("keeps a mixed 50-character cast inside safe bounds with every animal represented in every scene", () => {
-  for (const map of SCENE_KEYS) {
-    const fixture = demoNpcs(map, 50, true);
-    expect(new Set(fixture.map((n) => n.variant))).toEqual(
-      new Set(SPRITE_VARIANTS),
-    );
-    const crowd = new Crowd(map, fixture);
-    for (let frame = 0; frame < 120; frame++)
-      crowd.step(normalizedInput(1, 0.5), 1 / 60);
-    expect(canStand(crowd.player.x, crowd.player.y, map)).toBe(true);
-    for (const bear of crowd.bears)
-      expect(canStand(bear.x, bear.y, map)).toBe(true);
-  }
 });

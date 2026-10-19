@@ -1,5 +1,4 @@
 "use client";
-import { CHARACTERS } from "@/game/characters/catalog";
 /* eslint-disable @next/next/no-img-element -- Private cookie-bound media must bypass the public image optimizer. */
 import { useEffect, useState, type FormEvent } from "react";
 import {
@@ -354,8 +353,8 @@ export function AdminDesk({
           <div className="letter-card invitation-list">
             <h2>Invited with love</h2>
             <p className="quiet-copy">
-              Choose where their visit begins. Moving a published character
-              hides it until you publish its new spot.
+              Choose where their visit begins. Moving a published bear hides it
+              until you publish its new spot.
             </p>
             {!data.invitations.length && (
               <p className="empty-copy">
@@ -528,7 +527,7 @@ export function AdminDesk({
           <p className="quiet-copy">
             All places use the 836 × 470 game world. Changing a scene suggests a
             safe starting spot. Keep the whole wander area clear of scenery; use
-            separate spots for different friends. At SLU, only the lower
+            separate spots for different bears. At SLU, only the lower
             central/left stairs and sidewalk are walkable; the road is blocked.
           </p>
           {!data.contributions.length && (
@@ -637,7 +636,7 @@ function ReviewCard({
       </label>
       <p className="quiet-copy">
         Invited hellos appear automatically. Your manual message or attachment
-        changes hide their character until you publish its spot again.
+        changes hide their bear until you publish its spot again.
       </p>
       {media.map((m) => (
         <section key={m.id} className="media-review">
@@ -857,42 +856,15 @@ function PlacementForm({
           </select>
         </label>
         <label>
-          Character
+          Bear style
           <select
             name="variant"
-            defaultValue={
-              c.character_key
-                ? `animal-${c.character_key}`
-                : (placement?.sprite_variant ?? "npc-brown-scarf")
-            }
+            defaultValue={placement?.sprite_variant ?? "npc-brown-scarf"}
             disabled={busy}
           >
-            {CHARACTERS.map((c) => (
-              <option key={c.key} value={c.variant}>
-                {c.name}
-              </option>
-            ))}
-            <option
-              disabled={
-                !!c.character_key ||
-                placement?.sprite_variant.startsWith("animal-")
-              }
-              value="npc-cream-1"
-            >
-              Cream bear · legacy
-            </option>
-            <option
-              disabled={placement?.sprite_variant.startsWith("animal-")}
-              value="npc-brown-scarf"
-            >
-              Brown bear · scarf
-            </option>
-            <option
-              disabled={placement?.sprite_variant.startsWith("animal-")}
-              value="npc-rose-bow"
-            >
-              Cream bear · rose bow
-            </option>
+            <option value="npc-cream-1">Cream bear</option>
+            <option value="npc-brown-scarf">Brown bear · scarf</option>
+            <option value="npc-rose-bow">Cream bear · rose bow</option>
           </select>
         </label>
         <label>

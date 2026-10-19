@@ -38,7 +38,6 @@ import {
 } from "@/components/ui/dialog";
 import { GameBridge, type GameStatus } from "@/game/bridge";
 import type { Direction } from "@/game/world";
-import type { ANIMAL_VARIANTS } from "@/game/characters/catalog";
 const GameCanvas = dynamic(() => import("./game-canvas"), { ssr: false });
 const directions = [
   { direction: "up", Icon: ArrowUp },
@@ -54,7 +53,6 @@ export function World({
   onSceneChange,
   visitor,
   paused = false,
-  artPreview,
 }: {
   npcs?: WorldNpc[];
   mapKey?: SceneKey;
@@ -62,14 +60,10 @@ export function World({
   onSceneChange?: (map: SceneKey) => void;
   visitor?: ContributorVisit["visitor"];
   paused?: boolean;
-  artPreview?: (typeof ANIMAL_VARIANTS)[number];
 }) {
   const connected = npcs !== undefined && !preview && !visitor;
   const place = SCENES[mapKey];
-  const [bridge] = useState(
-    () =>
-      new GameBridge(npcs, mapKey, visitor, preview ? artPreview : undefined),
-  );
+  const [bridge] = useState(() => new GameBridge(npcs, mapKey, visitor));
   const [nearId, setNearId] = useState("");
   const [talkId, setTalkId] = useState("");
   const [privateSeen, setPrivateSeen] = useState(
@@ -157,7 +151,7 @@ export function World({
             <DialogTitle>Make yourself at home.</DialogTitle>
             <DialogDescription>
               {visitor
-                ? "Take a little walk with your little friend. Everyone here is part of Hanna’s circle of support."
+                ? "Take a little walk with your bear. Everyone here is part of Hanna’s circle of support."
                 : "There’s no rush and nothing to win. Wander around the yard and say hello."}
             </DialogDescription>
             <ul className="help-list">
@@ -168,7 +162,7 @@ export function World({
               {canReadLetters && (
                 <>
                   <li>
-                    <strong>Talk</strong> when you’re near a friend. Press E,
+                    <strong>Talk</strong> when you’re near a bear. Press E,
                     Space, Enter, or tap Talk.
                   </li>
                 </>
@@ -182,7 +176,7 @@ export function World({
             </ul>
             <p className="sample-note">
               {visitor
-                ? "Walk up to a friend who shared their letter and press E or tap Talk. Private letters, photos and voice notes stay private."
+                ? "Walk up to a bear who shared their letter and press E or tap Talk. Private letters, photos and voice notes stay private."
                 : connected
                   ? "Your hellos are saved as you open them. You can always read them again."
                   : "Sample world · all characters and dialogue are synthetic."}
@@ -272,7 +266,7 @@ export function World({
                   {visitor ? `Welcome, ${visitor.name}.` : place.welcome}
                   <small>
                     {visitor
-                      ? "Take a little walk. Everyone here is cheering her on."
+                      ? "Take a little walk. Every bear is cheering her on."
                       : connected && !npcs.length
                         ? "A quiet little moment. More hellos will arrive soon."
                         : "Take a little walk. Someone’s here for you."}
@@ -347,7 +341,7 @@ export function World({
             {visitor
               ? near
                 ? `${nearName} shared a letter. Say hello!`
-                : "Walk up to a friend to read their shared letter."
+                : "Walk up to a bear to read their shared letter."
               : near
                 ? `${nearName} is nearby. Say hello!`
                 : "Follow your feet. Find a familiar face."}
@@ -395,7 +389,7 @@ export function World({
         <span className="seen-count">
           <MessageCircle size={16} />{" "}
           {visitor
-            ? `${(npcs?.length ?? 0) + 1} little friend${npcs?.length ? "s" : ""} cheering Hanna on`
+            ? `${(npcs?.length ?? 0) + 1} little bear${npcs?.length ? "s" : ""} cheering Hanna on`
             : connected
               ? `${npcs.filter((n) => n.seen || privateSeen.has(n.id)).length} of ${npcs.length} hellos shared`
               : seen
@@ -405,7 +399,7 @@ export function World({
       </footer>
       {visitor ? (
         <p className="preview-note">
-          <Heart size={14} /> Walk up to a friend and say hello to read their
+          <Heart size={14} /> Walk up to a bear and say hello to read their
           shared letter. Each person chooses whether their words can be read by
           invited friends.
         </p>

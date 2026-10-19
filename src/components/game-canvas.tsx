@@ -28,11 +28,9 @@ export default function GameCanvas({ bridge }: { bridge: GameBridge }) {
         });
         game.canvas.setAttribute(
           "aria-label",
-          bridge.artPreview
-            ? `${SCENES[bridge.mapKey].name}. Character art preview. Use WASD, arrow keys, or the direction pad to move. Press E or tap Talk near a sample friend.`
-            : bridge.visitor
-              ? `${SCENES[bridge.mapKey].name}. Use WASD, arrow keys, or the direction pad to move your character. Press E or tap Talk near a friend who shared their letter.`
-              : `${SCENES[bridge.mapKey].name}. Use WASD or arrow keys to move Hanna, and E to talk to a nearby friend.`,
+          bridge.visitor
+            ? `${SCENES[bridge.mapKey].name}. Use WASD, arrow keys, or the direction pad to move your bear. Press E or tap Talk near a bear who shared their letter.`
+            : `${SCENES[bridge.mapKey].name}. Use WASD or arrow keys to move Hanna, and E to talk to a nearby bear.`,
         );
         game.canvas.setAttribute("role", "img");
       })
