@@ -336,7 +336,7 @@ export function ContributionForm({
             something she holds close.
           </p>
           <p>
-            As she pursues her dream of becoming a lawyer and balances so much
+            As she pursues her dream of becoming an attorney and balances so much
             on her own, a few words from you can remind her that she’s never
             alone. She has people who believe in her, cheer her on, and will
             always have her back.
