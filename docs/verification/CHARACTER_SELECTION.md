@@ -50,3 +50,5 @@ The owner replaced earlier art interpretations with an exact 16x16 six-pose shee
 180 tests pass, including exact reference comparisons across every frame and original-bear equivalence. ESLint passes. The rendered six-pose contact sheet was visually inspected at test-results/approved-animals.png. Production build and hosted verification results are recorded after completion below.
 
 Production build passes, including TypeScript and prerendering. The first sandboxed build hit a generated-output mkdir permission error; the authorized retry completed successfully.
+
+Hosted result: f4a2193 deployed Ready on Vercel. The production demo selected Capybara with a 20-character mixed Park cast; the pose preview references capybara-v3.png, and the canvas visibly renders the supplied animals beside unchanged bears. Screenshot: test-results/exact-animals-park.png. No real contributor data was used or modified.
