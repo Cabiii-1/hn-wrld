@@ -324,22 +324,32 @@ export function ContributionForm({
       </section>
       {!configured && <SetupNotice />}
       <form className="letter-card contribution-form" onSubmit={submit}>
+        <section
+          className="invitation-note"
+          aria-labelledby="invitation-note-heading"
+        >
+          <h2 id="invitation-note-heading">
+            Hello{snapshot?.displayName ? `, ${snapshot.displayName}` : ""}!
+          </h2>
+          <p>
+            You mean more to Hanna than you might realize. The bond you share is
+            something she holds close.
+          </p>
+          <p>
+            As she pursues her dream of becoming a lawyer and balances so much
+            on her own, a few words from you can remind her that she’s never
+            alone. She has people who believe in her, cheer her on, and will
+            always have her back.
+          </p>
+          <p>
+            Thank you for taking a little time to be part of this surprise for
+            her. Together, we can give her something to come back to on the hard
+            days: a reminder of how loved she is, and how many of us are rooting
+            for her, every step of the way.
+          </p>
+        </section>
         <div className="form-section-heading">
           <span>01</span>
-          <div>
-            <h2>
-              Hello{snapshot?.displayName ? `, ${snapshot.displayName}` : ""}!
-            </h2>
-            <p>
-              You’re someone special to Hanna. As she follows her dream of
-              becoming a lawyer, a few words from you can remind her she’s never
-              alone—and that she has people cheering her on, every step of the
-              way.
-            </p>
-          </div>
-        </div>
-        <div className="form-section-heading">
-          <span>02</span>
           <div>
             <h2>Words worth keeping.</h2>
             <p>You don’t have to find perfect words. Just your words.</p>
@@ -362,7 +372,7 @@ export function ContributionForm({
           </small>
         </label>
         <div className="form-section-heading">
-          <span>03</span>
+          <span>02</span>
           <div>
             <h2>A little something extra.</h2>
             <p>Entirely optional. Your words are already enough.</p>
