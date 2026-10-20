@@ -19,3 +19,6 @@ Replaced unequal side-by-side cards with compact full-width rows and label-area 
 
 ### Equal attachment cards (2026-10-19)
 Owner clarified the two-column design should remain. Both cards are 230px; voice states replace idle content and retain in-card playback/removal, while photo previews sit below the grid. Existing 168 tests cover microphone lifecycle, local playback, retry/removal and saved media editing. Lint and production build pass. Desktop/mobile visual checks use a disposable invitation; no real letter or microphone is used.
+
+## Contributor edit action — 2026-10-21
+Edit your message now uses the filled primary style and no longer inherits the reset icon's fixed 44px phone width. Below 600px, the contributor footer stacks its status and full-width edit link with a 44px minimum touch height; desktop keeps a compact action. Existing /contribute?edit=1 routing stays intact. Six contributor visit tests, targeted ESLint, and the production build pass.

@@ -863,9 +863,42 @@ h1 em {
   }
 }
 
-/* Keep the contributor edit action readable on phones. */
-.reset-button.edit-message-button span {
-  display: inline;
+/* Contributor editing is a primary action, separate from the reset icon. */
+.contributor-stage-bottom {
+  flex-wrap: wrap;
+  padding: 10px;
+  gap: 10px 16px;
+}
+.contributor-stage-bottom .near-status {
+  flex: 1;
+  min-width: 0;
+}
+.edit-message-button {
+  flex-shrink: 0;
+  max-width: 100%;
+  white-space: normal;
+}
+.edit-message-button svg {
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .contributor-stage-bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px;
+    gap: 8px;
+  }
+  .contributor-stage-bottom .keyboard-hint {
+    display: none;
+  }
+  .contributor-stage-bottom .near-status {
+    max-width: none;
+    margin: 0;
+    text-align: center;
+  }
+  .edit-message-button {
+    width: 100%;
+  }
 }
 
 /* In-world JRPG windowskin: no viewport portal or backdrop. */

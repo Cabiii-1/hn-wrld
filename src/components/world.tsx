@@ -364,7 +364,9 @@ export function World({
             </GameDialogueContent>
           </Dialog>
         </div>
-        <div className="stage-bottom">
+        <div
+          className={`stage-bottom${visitor ? " contributor-stage-bottom" : ""}`}
+        >
           <div className="keyboard-hint">
             <span className="keycap">W A S D</span>
             <span>or</span>
@@ -388,11 +390,7 @@ export function World({
                 : "Follow your feet. Find a familiar face."}
           </p>
           {visitor ? (
-            <Button
-              asChild
-              variant="ghost"
-              className="reset-button edit-message-button"
-            >
+            <Button asChild className="edit-message-button">
               <Link href="/contribute?edit=1" aria-label="Edit your message">
                 <Pencil size={15} />
                 <span>Edit your message</span>
