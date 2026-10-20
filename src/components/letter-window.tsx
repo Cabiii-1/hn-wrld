@@ -1,74 +1,18 @@
 "use client";
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { WorldNpc } from "@/game/connected";
-
-/** Split on word boundaries without losing Unicode characters or paragraphs. */
-export function letterPages(message: string, size = 180): string[] {
-  const remaining = Array.from(message.replace(/\r\n?/g, "\n").trim());
-  const pages: string[] = [];
-  while (remaining.length) {
-    let end = Math.min(size, remaining.length);
-    if (end < remaining.length) {
-      // Prefer a nearby paragraph boundary over stranding a word on a page.
-      let paragraph = -1;
-      for (let i = end - 1; i > Math.floor(size / 2); i--)
-        if (remaining[i] === "\n" && remaining[i - 1] === "\n") {
-          paragraph = i - 1;
-          break;
-        }
-      if (paragraph >= 0) end = paragraph;
-      else {
-        for (let i = end; i > Math.floor(size / 2); i--) {
-          if (/\s/u.test(remaining[i])) {
-            end = i;
-            break;
-          }
-        }
-      }
-    }
-    pages.push(remaining.splice(0, end).join("").trim());
-    while (remaining.length && /\s/u.test(remaining[0])) remaining.shift();
-  }
-  return pages.length ? pages : [""];
-}
+import { layoutLetterPages, type LetterPage } from "@/lib/letter-pages";
+import { TypewriterText, type TypewriterHandle } from "./typewriter-text";
 
 /** Inline Radix content: focus/escape support without a portal or backdrop. */
 export function GameDialogueContent({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
-  const release = useRef<() => void>(() => {});
-  const bind = useCallback((node: HTMLDivElement | null) => {
-    release.current();
-    ref.current = node;
-    const stage = node?.closest<HTMLElement>(".game-stage");
-    if (!node || !stage) return;
-    const reserve = () =>
-      stage.style.setProperty(
-        "--letter-window-height",
-        `${Math.ceil(node.getBoundingClientRect().height) + 34}px`,
-      );
-    reserve();
-    const observer =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(reserve);
-    observer?.observe(node);
-    release.current = () => {
-      observer?.disconnect();
-      stage.style.removeProperty("--letter-window-height");
-    };
-  }, []);
   return (
     <DialogPrimitive.Content
-      ref={bind}
+      ref={ref}
       className="windowskin-dialog"
       onOpenAutoFocus={(event) => {
         event.preventDefault();
@@ -157,15 +101,65 @@ export function LetterWindow({
   onClose: () => void;
   returnLabel: string;
 }) {
-  const [page, setPage] = useState(0);
-  const reading = useRef<HTMLDivElement>(null);
+  const [pages, setPages] = useState<LetterPage[]>(() => [
+    { text: message, start: 0, end: Array.from(message).length },
+  ]);
+  const [pageStart, setPageStart] = useState(0);
+  const [memories, setMemories] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const reading = useRef<HTMLDivElement>(null),
+    probe = useRef<HTMLParagraphElement>(null);
+  const typewriter = useRef<TypewriterHandle>(null);
+  useLayoutEffect(() => {
+    const area = reading.current,
+      measure = probe.current;
+    if (!area || !measure) return;
+    let live = true;
+    const paginate = () => {
+      if (!live || area.clientWidth < 1 || area.clientHeight < 1) return;
+      measure.style.width = area.clientWidth + "px";
+      const next = layoutLetterPages(message, (value) => {
+        measure.textContent = value;
+        return measure.scrollHeight <= area.clientHeight;
+      });
+      measure.textContent = "";
+      setPages((previous) =>
+        JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
+      );
+    };
+    paginate();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(paginate);
+    observer?.observe(area);
+    void document.fonts?.ready.then(paginate);
+    return () => {
+      live = false;
+      observer?.disconnect();
+    };
+  }, [message]);
   useLayoutEffect(() => {
     if (reading.current) reading.current.scrollTop = 0;
-  }, [page]);
-  const pages = letterPages(message);
+  }, [pageStart, memories]);
+  const current = memories
+    ? pages.length
+    : Math.max(
+        0,
+        pages.findIndex((part) => part.end > pageStart),
+      );
   const total = pages.length + (attachments ? 1 : 0);
-  const current = Math.min(page, total - 1),
-    memories = current === pages.length;
+  const currentPage = pages[Math.min(current, pages.length - 1)];
+  function previous() {
+    setMemories(false);
+    setPageStart(pages[Math.max(0, current - 1)].start);
+  }
+  function next() {
+    if (!memories && typewriter.current?.finish()) return;
+    if (current === total - 1) onClose();
+    else if (current === pages.length - 1) setMemories(true);
+    else setPageStart(pages[current + 1].start);
+  }
   return (
     <>
       <div className="windowskin-heading">
@@ -196,7 +190,12 @@ export function LetterWindow({
             {attachments}
           </div>
         ) : (
-          <p className="windowskin-text">{pages[current]}</p>
+          <TypewriterText
+            key={currentPage.start + ":" + currentPage.end}
+            ref={typewriter}
+            text={currentPage.text}
+            onTypingChange={setTyping}
+          />
         )}
         {notice}
       </div>
@@ -207,7 +206,7 @@ export function LetterWindow({
             data-window-previous
             aria-label="Previous page"
             disabled={current === 0}
-            onClick={() => setPage(current - 1)}
+            onClick={previous}
           >
             <ChevronLeft size={17} />
           </button>
@@ -215,22 +214,27 @@ export function LetterWindow({
             {memories ? "Memories" : `${current + 1} / ${total}`}
           </span>
         </div>
-        <span className="windowskin-key-hint">Enter / Space to continue</span>
+        <span className="windowskin-key-hint">
+          Enter / Space to {typing && !memories ? "reveal" : "continue"}
+        </span>
         <button
           type="button"
           data-window-next
           className="windowskin-continue"
-          onClick={() =>
-            current === total - 1 ? onClose() : setPage(current + 1)
-          }
+          onClick={next}
         >
-          {current === total - 1
-            ? returnLabel
-            : current === pages.length - 1
-              ? "View memories"
-              : "Continue"}
+          {typing && !memories
+            ? "Show all"
+            : current === total - 1
+              ? returnLabel
+              : current === pages.length - 1
+                ? "View memories"
+                : "Continue"}
           <ChevronRight size={17} />
         </button>
+      </div>
+      <div className="windowskin-measure-host" aria-hidden="true">
+        <p ref={probe} className="windowskin-measure" />
       </div>
     </>
   );

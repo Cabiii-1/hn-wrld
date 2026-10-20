@@ -127,7 +127,7 @@ export function World({
   return (
     <main className="world-shell">
       {mapKey === "tuguegarao_park" && (
-        <ParkAudio paused={dialogue || help || paused || status !== "ready"} />
+        <ParkAudio paused={help || paused || status !== "ready"} />
       )}
       <header className="site-header">
         <Link

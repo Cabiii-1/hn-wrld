@@ -166,9 +166,7 @@ it("opens only opted-in letters, pauses the world, never requests recipient medi
     expect(screen.queryByText("Synthetic shared words")).toBeNull(),
   );
   expect(screen.getByRole("alert").textContent).toContain("no longer shared");
-  fireEvent.click(
-    screen.getByRole("button", { name: "Back to our little place" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "Close dialogue" }));
   expect(mock.bridge!.paused).toBe(false);
 });
 
@@ -228,8 +226,6 @@ it("uses the same nearby Talk interaction for invited players while blocking pri
   expect(
     mock.api.mock.calls.every(([path]) => !path.startsWith("recipient/")),
   ).toBe(true);
-  fireEvent.click(
-    screen.getByRole("button", { name: "Back to our little place" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "Close dialogue" }));
   expect(mock.bridge!.paused).toBe(false);
 });

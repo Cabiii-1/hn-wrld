@@ -13,3 +13,14 @@ Local browser: sample Park Talk opens the windowskin, Enter advances, Previous r
 Final production build passes, including TypeScript and prerendering. Local development hot reload and repeated viewport resizing emitted two WebGL framebuffer warnings; the final loaded sample remained renderable. Hosted runtime verification follows deployment.
 
 Hosted result: 6eeb593 deployed Ready. Production sample Park Talk opens the inline windowskin, Enter advances to the final page, Previous returns, and Escape closes while clearing reserved space and returning focus to CANVAS. Responsive 375px content width was rechecked on the hosted app. No browser errors were reported during these fresh production checks, including the viewport change; the local hot-reload framebuffer warnings did not reproduce. Screenshots: test-results/windowskin-live-desktop.png and windowskin-live-mobile.png. No real submissions or recipient sessions were touched.
+
+## Overlay/typewriter refinement
+The owner requested a true overlay, continued Park music, gradual text, and natural page breaks. Canvas reservation/resize code is removed. The soundtrack no longer pauses for letter dialogue; other pause conditions remain.
+
+layoutLetterPages now uses a DOM line-height/width measurement probe rather than a character quota. Authored line breaks take priority, then sentence endings and word boundaries. Long unbroken strings fall back to a fitting Unicode code-point boundary so content always progresses. Paragraph whitespace inside a page remains intact. A character-offset reading anchor preserves the place when responsive layout changes.
+
+TypewriterText reveals whole graphemes every 24ms, supports instant reveal before advance, cancels timers on unmount, and bypasses animation for reduced motion. Screen readers get the complete page without character-by-character live announcements. Unrevealed text reserves its layout, so the window does not move during typing.
+
+182 tests pass, including content preservation, measured line fit, explicit line breaks, complete sentences, no fixed character cap, grapheme reveal, instant finish, reduced motion and reveal-before-advance. ESLint passes. Local browser checks measured the Park canvas at 612px both before and during dialogue; music remained unpaused and its playback time increased while the window was open. Phone content width was 375px at 844px height; landscape was 829px at 390px height. No horizontal overflow, reading scroll height matched the available height, and the reveal-first keyboard flow passed. No real content or database state changed. Screenshots: test-results/windowskin-overlay-desktop.png and windowskin-overlay-mobile.png.
+
+The overlay/typewriter production build passes, including TypeScript and prerendering.

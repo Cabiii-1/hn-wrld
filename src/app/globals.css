@@ -875,6 +875,7 @@ h1 em {
   inset: auto 16px 16px;
   display: flex;
   flex-direction: column;
+  height: min(54%, 340px);
   max-height: min(84%, 430px);
   padding: 16px 18px 10px;
   border: 4px solid #eadbb2;
@@ -973,6 +974,7 @@ h1 em {
   cursor: default;
 }
 .windowskin-reading {
+  flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
   min-height: 0;
@@ -982,6 +984,34 @@ h1 em {
 .windowskin-text {
   margin: 0;
   min-height: 3.4em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.windowskin-unrevealed {
+  visibility: hidden;
+}
+.windowskin-accessible-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.windowskin-measure-host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.windowskin-measure {
+  margin: 0;
+  font: inherit;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1043,9 +1073,6 @@ h1 em {
 .game-stage:has(.windowskin-dialog) .yard-caption {
   visibility: hidden;
 }
-.game-stage:has(.windowskin-dialog) .game-canvas {
-  height: max(96px, calc(100% - var(--letter-window-height, 260px)));
-}
 @keyframes windowskin-arrive {
   from {
     opacity: 0;
@@ -1058,6 +1085,7 @@ h1 em {
 }
 @media (max-width: 600px) {
   .windowskin-dialog {
+    height: min(72%, 360px);
     inset: auto 9px 12px;
     padding: 12px 12px 8px;
     font-size: 13px;
@@ -1093,6 +1121,28 @@ h1 em {
   .windowskin-footer .windowskin-continue {
     padding: 5px 7px;
     font-size: 11px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .windowskin-dialog {
+    height: 90%;
+    max-height: 90%;
+    padding: 8px 12px;
+  }
+  .windowskin-portrait {
+    width: 36px;
+    height: 36px;
+  }
+  .windowskin-bear {
+    width: 32px;
+    height: 32px;
+  }
+  .windowskin-speaker p,
+  .windowskin-eyebrow {
+    display: none;
+  }
+  .windowskin-reading {
+    margin: 6px 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
