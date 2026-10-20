@@ -169,11 +169,13 @@ it("uses the first Continue action to reveal, then advances on the next action",
     })),
   );
   render(<Example />);
-  const first = screen.getByRole("status").textContent;
+  const first = screen
+    .getByLabelText("Letter text")
+    .querySelector(".windowskin-accessible-text")!.textContent;
   await userEvent.click(screen.getByRole("button", { name: "Show all" }));
-  expect(screen.getByRole("status").textContent).toBe(first);
+  expect(screen.getByLabelText("Letter text").textContent).toBe(first);
   await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-  expect(screen.getByRole("status").textContent).not.toBe(first);
+  expect(screen.getByLabelText("Letter text").textContent).not.toBe(first);
   expect(screen.getByRole("button", { name: "Show all" })).toBeTruthy();
 });
 it("overlays a closed scene without reserving space or changing its canvas", async () => {
@@ -200,7 +202,7 @@ it("anchors the accessible window inside the scene without a viewport backdrop",
   );
   fireEvent.keyDown(dialog, { key: "ArrowLeft" });
   expect(screen.getByLabelText("Letter text").textContent).toBe(
-    pagesFor(longLetter)[0].text,
+    pagesFor(longLetter)[1].text,
   );
   await userEvent.keyboard("{Escape}");
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -216,6 +218,52 @@ it("supports touch buttons through the final page and closes without losing the 
     screen.getByRole("button", { name: "Return to the Park" }),
   );
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+it("advances when tapping the letter and has no back button or page counter", async () => {
+  render(<Example />);
+  expect(screen.queryByRole("button", { name: "Previous page" })).toBeNull();
+  expect(document.querySelector(".windowskin-pagination")).toBeNull();
+  await userEvent.click(screen.getByLabelText("Letter text"));
+  expect(screen.getByLabelText("Letter text").textContent).toBe(
+    pagesFor(longLetter)[1].text,
+  );
+});
+
+it("presents each attachment separately and leaves media controls independent of advancing", async () => {
+  const close = vi.fn();
+  render(
+    <Dialog open>
+      <GameDialogueContent>
+        <LetterWindow
+          name="Sample friend"
+          subtitle="Synthetic memories"
+          message="Hello Hanna."
+          onClose={close}
+          returnLabel="Return to the Park"
+          attachments={[
+            <figure key="photo">
+              <a href="/sample-photo">Open sample photo</a>
+            </figure>,
+            <figure key="audio">
+              <audio aria-label="Sample voice" controls preload="none" />
+            </figure>,
+          ]}
+        />
+      </GameDialogueContent>
+    </Dialog>,
+  );
+  expect(screen.queryByText("Open sample photo")).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "View memories" }));
+  expect(screen.getByText("Open sample photo")).toBeTruthy();
+  expect(screen.queryByLabelText("Sample voice")).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+  expect(screen.queryByText("Open sample photo")).toBeNull();
+  const voice = screen.getByLabelText("Sample voice");
+  fireEvent.click(voice);
+  fireEvent.keyDown(voice, { key: " " });
+  expect(close).not.toHaveBeenCalled();
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Enter" });
+  expect(close).toHaveBeenCalledOnce();
 });
 it("loads recipient media only on the memories page, keeping voice playback user initiated", async () => {
   const id = "11111111-1111-4111-8111-111111111111",

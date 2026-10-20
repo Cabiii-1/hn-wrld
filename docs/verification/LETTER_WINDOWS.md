@@ -33,3 +33,10 @@ Hosted overlay result: a69ecc3 deployed Ready. After refreshing the promoted bun
 - Full suite: 184 tests passed; added autoplay-denial click regression: seven audio tests passed. ESLint and production build passed.
 - Built app browser check: track playing and vinyl running; manual pause survived movement input; opening a sample letter preserved playback.
 - Phone viewport 390px (375px content): player 232x52px inside a 341px stage, control 44x44px; document width equals scroll width. No private content used or database changes.
+
+
+## Slim forward-only footer and media pages — 2026-10-21
+- Removed back navigation, visible counters and button chrome; retained accessible text hint and Enter/Space actions. Tapping letter text reveals then advances; media controls remain independent.
+- Recipient attachments appear individually after text. Photo windows expand for a contained preview; full-size links remain. Voice playback is user initiated; opted-in contributor visits remain text-only.
+- 187 tests passed, including tap advancement, no backward navigation, per-attachment sequencing, and media controls not advancing. ESLint and the final production build passed.
+- Local synthetic-only desktop/390px phone browser check: photo fits, voice player shown separately, autoplay false, footer 24px, no horizontal overflow. No database content used or altered.

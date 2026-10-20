@@ -1038,8 +1038,7 @@ h1 em {
   font-size: 11px;
   line-height: 1.5;
 }
-.windowskin-close,
-.windowskin-footer button {
+.windowskin-close {
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -1063,13 +1062,8 @@ h1 em {
   outline: 2px solid #fff4cb;
   outline-offset: 3px;
 }
-.windowskin-footer button:hover:not(:disabled),
 .windowskin-close:hover {
   background: #45645a;
-}
-.windowskin-footer button:disabled {
-  opacity: 0.35;
-  cursor: default;
 }
 .windowskin-reading {
   flex: 1;
@@ -1123,38 +1117,66 @@ h1 em {
 .windowskin-footer {
   flex: 0 0 auto;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid #728872;
-  padding-top: 8px;
+  justify-content: flex-end;
 }
-.windowskin-pagination {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex-shrink: 0;
-}
-.windowskin-pagination [role="status"] {
-  font-size: 11px;
+.windowskin-advance-hint {
+  border: 0;
+  background: transparent;
   color: #cbd5b5;
-}
-.windowskin-key-hint {
-  font-size: 10px;
-  color: #b6c8b4;
-}
-.windowskin-footer .windowskin-continue {
-  padding: 5px 13px;
-  text-align: left;
-  font-size: 12px;
-}
-.windowskin-memories h3 {
-  margin: 0 0 14px;
+  padding: 0 2px;
+  min-height: 24px;
   font: inherit;
+  font-size: 10px;
+  text-align: right;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.windowskin-tap-hint {
+  display: none;
+}
+.windowskin-advance-hint:hover {
   color: #fff4cb;
 }
-.windowskin-memories .recipient-gallery {
+.windowskin-memories {
+  height: 100%;
+}
+.windowskin-dialog:has(.windowskin-memories) {
+  height: min(78%, 430px);
+}
+.windowskin-dialog:has(.windowskin-memories) .windowskin-portrait {
+  width: 44px;
+  height: 44px;
+}
+.windowskin-dialog:has(.windowskin-memories) .windowskin-bear {
+  width: 40px;
+  height: 40px;
+}
+.windowskin-attachment {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
   margin: 0;
+  min-height: 100%;
+}
+.windowskin-attachment:has(img) {
+  height: 100%;
+}
+.windowskin-attachment-title {
+  margin: 0;
+  font-size: 11px;
+}
+.windowskin-attachment a {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  justify-content: center;
+}
+.windowskin-attachment img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 .windowskin-memories audio {
   display: block;
@@ -1213,12 +1235,11 @@ h1 em {
   .windowskin-key-hint {
     display: none;
   }
-  .windowskin-footer {
-    gap: 6px;
+  .windowskin-tap-hint {
+    display: inline;
   }
-  .windowskin-footer .windowskin-continue {
-    padding: 5px 7px;
-    font-size: 11px;
+  .windowskin-advance-hint {
+    width: 100%;
   }
 }
 @media (max-height: 500px) and (orientation: landscape) {
@@ -1246,5 +1267,17 @@ h1 em {
 @media (prefers-reduced-motion: reduce) {
   .windowskin-dialog {
     animation: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .windowskin-key-hint {
+    display: none;
+  }
+  .windowskin-tap-hint {
+    display: inline;
+  }
+  .windowskin-advance-hint {
+    width: 100%;
   }
 }

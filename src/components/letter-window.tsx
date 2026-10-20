@@ -1,7 +1,13 @@
 "use client";
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Children,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X } from "lucide-react";
 import type { WorldNpc } from "@/game/connected";
 import { layoutLetterPages, type LetterPage } from "@/lib/letter-pages";
 import { TypewriterText, type TypewriterHandle } from "./typewriter-text";
@@ -26,6 +32,19 @@ export function GameDialogueContent({ children }: { children: ReactNode }) {
       }}
       onPointerDownOutside={(event) => event.preventDefault()}
       onInteractOutside={(event) => event.preventDefault()}
+      onClick={(event) => {
+        const target = event.target as HTMLElement;
+        if (
+          !target.closest('[data-window-letter="true"]') ||
+          target.closest("button,a,audio,input,textarea,select") ||
+          event.defaultPrevented ||
+          window.getSelection()?.isCollapsed === false
+        )
+          return;
+        ref.current
+          ?.querySelector<HTMLButtonElement>("[data-window-next]")
+          ?.click();
+      }}
       onKeyDown={(event) => {
         if (
           event.repeat ||
@@ -34,15 +53,12 @@ export function GameDialogueContent({ children }: { children: ReactNode }) {
           )
         )
           return;
-        const next = ["Enter", " ", "ArrowRight"].includes(event.key);
-        if (!next && event.key !== "ArrowLeft") return;
+        if (!["Enter", " "].includes(event.key)) return;
         event.preventDefault();
         event.stopPropagation();
         event.nativeEvent.stopImmediatePropagation();
         ref.current
-          ?.querySelector<HTMLButtonElement>(
-            next ? "[data-window-next]" : "[data-window-previous]",
-          )
+          ?.querySelector<HTMLButtonElement>("[data-window-next]")
           ?.click();
       }}
     >
@@ -106,6 +122,8 @@ export function LetterWindow({
   ]);
   const [pageStart, setPageStart] = useState(0);
   const [memories, setMemories] = useState(false);
+  const [memoryIndex, setMemoryIndex] = useState(0);
+  const mediaPages = Children.toArray(attachments);
   const [typing, setTyping] = useState(false);
   const reading = useRef<HTMLDivElement>(null),
     probe = useRef<HTMLParagraphElement>(null);
@@ -141,22 +159,19 @@ export function LetterWindow({
   }, [message]);
   useLayoutEffect(() => {
     if (reading.current) reading.current.scrollTop = 0;
-  }, [pageStart, memories]);
+  }, [pageStart, memories, memoryIndex]);
   const current = memories
-    ? pages.length
+    ? pages.length + memoryIndex
     : Math.max(
         0,
         pages.findIndex((part) => part.end > pageStart),
       );
-  const total = pages.length + (attachments ? 1 : 0);
+  const total = pages.length + mediaPages.length;
   const currentPage = pages[Math.min(current, pages.length - 1)];
-  function previous() {
-    setMemories(false);
-    setPageStart(pages[Math.max(0, current - 1)].start);
-  }
   function next() {
     if (!memories && typewriter.current?.finish()) return;
     if (current === total - 1) onClose();
+    else if (memories) setMemoryIndex((index) => index + 1);
     else if (current === pages.length - 1) setMemories(true);
     else setPageStart(pages[current + 1].start);
   }
@@ -181,14 +196,12 @@ export function LetterWindow({
       <div
         ref={reading}
         className="windowskin-reading"
+        data-window-letter={!memories}
         tabIndex={0}
         aria-label={memories ? "Photos and voice notes" : "Letter text"}
       >
         {memories ? (
-          <div className="windowskin-memories">
-            <h3>A few memories, just for you.</h3>
-            {attachments}
-          </div>
+          <div className="windowskin-memories">{mediaPages[memoryIndex]}</div>
         ) : (
           <TypewriterText
             key={currentPage.start + ":" + currentPage.end}
@@ -200,37 +213,28 @@ export function LetterWindow({
         {notice}
       </div>
       <div className="windowskin-footer">
-        <div className="windowskin-pagination">
-          <button
-            type="button"
-            data-window-previous
-            aria-label="Previous page"
-            disabled={current === 0}
-            onClick={previous}
-          >
-            <ChevronLeft size={17} />
-          </button>
-          <span role="status">
-            {memories ? "Memories" : `${current + 1} / ${total}`}
-          </span>
-        </div>
-        <span className="windowskin-key-hint">
-          Enter / Space to {typing && !memories ? "reveal" : "continue"}
-        </span>
         <button
           type="button"
           data-window-next
-          className="windowskin-continue"
+          className="windowskin-advance-hint"
           onClick={next}
+          aria-label={
+            typing && !memories
+              ? "Show all"
+              : current === total - 1
+                ? returnLabel
+                : current === pages.length - 1
+                  ? "View memories"
+                  : "Continue"
+          }
         >
-          {typing && !memories
-            ? "Show all"
-            : current === total - 1
-              ? returnLabel
-              : current === pages.length - 1
-                ? "View memories"
-                : "Continue"}
-          <ChevronRight size={17} />
+          <span className="windowskin-key-hint">
+            Enter / Space to {typing && !memories ? "reveal" : "continue"}
+          </span>
+          <span className="windowskin-tap-hint">
+            Tap to {typing && !memories ? "reveal" : "continue"}
+          </span>
+          <span aria-hidden="true"> ▾</span>
         </button>
       </div>
       <div className="windowskin-measure-host" aria-hidden="true">

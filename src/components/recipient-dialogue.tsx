@@ -82,34 +82,33 @@ export function RecipientDialogue({
           )}
         </>
       }
-      attachments={
-        message?.media.length ? (
-          <div className="recipient-gallery">
-            {message.media.map((m) => (
-              <figure key={m.id}>
-                {m.kind === "photo" ? (
-                  <Photo id={m.id} description={m.description} />
-                ) : (
-                  <>
-                    <audio
-                      controls
-                      preload="none"
-                      src={`/api/manage/recipient/media/${m.id}`}
-                      aria-label={m.description || "Voice note"}
-                      onError={() =>
-                        setError(
-                          "The voice note couldn’t load. Your message is still here.",
-                        )
-                      }
-                    />
-                    {m.description && <figcaption>{m.description}</figcaption>}
-                  </>
-                )}
-              </figure>
-            ))}
-          </div>
-        ) : undefined
-      }
+      attachments={message?.media.map((m) => (
+        <figure className="windowskin-attachment" key={m.id}>
+          <p className="windowskin-attachment-title">
+            {m.kind === "photo"
+              ? "A memory, just for you."
+              : "A hello in their voice."}
+          </p>
+          {m.kind === "photo" ? (
+            <Photo id={m.id} description={m.description} />
+          ) : (
+            <>
+              <audio
+                controls
+                preload="none"
+                src={`/api/manage/recipient/media/${m.id}`}
+                aria-label={m.description || "Voice note"}
+                onError={() =>
+                  setError(
+                    "The voice note couldn’t load. Your message is still here.",
+                  )
+                }
+              />
+              {m.description && <figcaption>{m.description}</figcaption>}
+            </>
+          )}
+        </figure>
+      ))}
     />
   );
 }

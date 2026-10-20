@@ -103,3 +103,7 @@ The windowskin must overlap the full game canvas, with no reserved space or came
 
 ## Compact Park music player (owner update, 2026-10-21)
 Replace the Park greeting overlay for Hanna and invited contributors with a compact player titled Haikyuu!! OST - Adults, a rotating vinyl icon and an accessible play/pause button. The vinyl rotates only during playback; reduced motion stops rotation. Preserve quiet looping autoplay with normal-input fallback, continuous music through letters, tab visibility handling and explicit pause preference. Remove THE OPEN PLAZA caption in Park, the header's A little world, just for you note, and the redundant How to play button/dialog. Keep the movement indicators below the game and existing touch controls. Other scenes retain their greetings until music is supplied.
+
+
+## Forward-only letters and memory pages (owner update, 2026-10-21)
+The windowskin footer is a slim Enter / Space to reveal or continue hint (Tap on mobile). Remove visible previous/next buttons and page counters; the hint remains keyboard/screen-reader operable. Tapping letter text reveals then advances, while selection and interactive controls are ignored. Remove arrow-key page navigation. After text, present authorized attachments individually within an expanded windowskin: one contained photo preview or one user-initiated voice player at a time. Photos retain the full-size link; other contributors still receive opted-in text only. Preserve measured pagination, typewriter, close/Escape, movement pause and continuous Park music.
