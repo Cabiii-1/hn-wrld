@@ -12,6 +12,7 @@ import type { WorldNpc, ContributorVisit } from "@/game/connected";
 import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
 import { RecipientDialogue } from "./recipient-dialogue";
 import { ParkAudio } from "./park-audio";
+import { GameDialogueContent, LetterWindow } from "./letter-window";
 import { SharedLetterBody } from "./shared-letters";
 import { api } from "@/lib/backend/browser-api";
 import {
@@ -74,6 +75,9 @@ export function World({
     setPrivateSeen((s) => new Set([...s, id]));
     window.dispatchEvent(new Event("hanna:seen"));
   }, []);
+  const speaker = npcs?.find((n) => n.id === talkId);
+  const speakerName = speaker?.name ?? "Teddy · sample";
+  const speakerVariant = speaker?.variant ?? "npc-cream-1";
   const near = !!nearId;
   const canReadLetters = !visitor || !!npcs?.some((npc) => npc.readable);
   const nearName = npcs?.find((n) => n.id === nearId)?.name ?? "Teddy";
@@ -326,6 +330,39 @@ export function World({
               </Button>
             )}
           </div>
+          <Dialog open={dialogue} onOpenChange={closeDialogue}>
+            <GameDialogueContent>
+              {visitor ? (
+                <SharedLetterBody
+                  key={talkId}
+                  id={talkId}
+                  name={speakerName}
+                  variant={speakerVariant}
+                  onClose={() => closeDialogue(false)}
+                />
+              ) : connected ? (
+                <RecipientDialogue
+                  key={talkId}
+                  id={talkId}
+                  name={speakerName}
+                  variant={speakerVariant}
+                  onClose={() => closeDialogue(false)}
+                  onSeen={markSeen}
+                />
+              ) : (
+                <LetterWindow
+                  name={speakerName}
+                  subtitle="Your friendly sample companion"
+                  variant={speakerVariant}
+                  message={
+                    "Welcome home, Hanna! 🌼\n\nThis is a little practice hello from your sample bear friend. Take a walk around the yard, enjoy the sunshine, and make yourself at home.\n\nWalang nagmamadali dito. There’s always time for a little rest and a friendly hello. ♡\n\nSynthetic demo text. Open your private recipient link to read published personal messages."
+                  }
+                  onClose={() => closeDialogue(false)}
+                  returnLabel="Back to the sunshine"
+                />
+              )}
+            </GameDialogueContent>
+          </Dialog>
         </div>
         <div className="stage-bottom">
           <div className="keyboard-hint">
@@ -431,81 +468,6 @@ export function World({
           recipient link for published hellos.
         </p>
       )}
-      <Dialog open={dialogue} onOpenChange={closeDialogue}>
-        <DialogContent
-          className="message-dialog"
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            document
-              .querySelector<HTMLButtonElement>(".help-button")
-              ?.focus({ preventScroll: true });
-          }}
-        >
-          {visitor ? (
-            <>
-              <SharedLetterBody key={talkId} id={talkId} />
-              <div className="message-footer">
-                <span>The world can wait.</span>
-                <Button onClick={() => closeDialogue(false)}>
-                  Back to our little place
-                </Button>
-              </div>
-            </>
-          ) : connected ? (
-            <>
-              <RecipientDialogue key={talkId} id={talkId} onSeen={markSeen} />
-              <div className="message-footer">
-                <span>The world can wait.</span>
-                <Button onClick={() => closeDialogue(false)}>
-                  Back to the sunshine
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="dialog-eyebrow">
-                <MessageCircle size={16} /> A LITTLE HELLO · SAMPLE MESSAGE
-              </div>
-              <div className="sender">
-                <span className="bear-avatar" aria-hidden>
-                  ʕ•ᴥ•ʔ
-                </span>
-                <div>
-                  <DialogTitle>{nearName}</DialogTitle>
-                  <span>Your friendly sample companion</span>
-                </div>
-                <Heart size={23} className="message-heart" />
-              </div>
-              <DialogDescription asChild>
-                <div className="message-body">
-                  <p>Welcome home, Hanna! 🌼</p>
-                  <p>
-                    This is a little practice hello from your sample bear
-                    friend. Take a walk around the yard, enjoy the sunshine, and
-                    make yourself at home.
-                  </p>
-                  <p>
-                    Walang nagmamadali dito. There’s always time for a little
-                    rest and a friendly hello. ♡
-                  </p>
-                  <p className="sample-note">
-                    Synthetic demo text. Open your private recipient link to
-                    read published personal messages.
-                  </p>
-                </div>
-              </DialogDescription>
-              <div className="message-footer">
-                <span>
-                  <Leaf size={14} /> The world can wait.
-                </span>
-                <Button onClick={() => closeDialogue(false)}>
-                  Back to the sunshine <ArrowRight size={17} />
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }

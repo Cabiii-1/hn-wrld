@@ -33,6 +33,7 @@ export default function GameCanvas({ bridge }: { bridge: GameBridge }) {
             : `${SCENES[bridge.mapKey].name}. Use WASD or arrow keys to move Hanna, and E to talk to a nearby bear.`,
         );
         game.canvas.setAttribute("role", "img");
+        game.canvas.tabIndex = 0;
       })
       .catch(() => {
         if (!cancelled) bridge.onStatus("error");

@@ -1,16 +1,26 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Session-authorized media bypasses the public optimizer. */
 import { useEffect, useState } from "react";
-import { DialogTitle, DialogDescription } from "./ui/dialog";
+import { LetterWindow } from "./letter-window";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
-import { messageSchema, type WorldMessage } from "@/game/connected";
+import {
+  messageSchema,
+  type WorldMessage,
+  type WorldNpc,
+} from "@/game/connected";
 export function RecipientDialogue({
   id,
   onSeen,
+  onClose,
+  variant,
+  name,
 }: {
   id: string;
   onSeen: (id: string) => void;
+  onClose: () => void;
+  variant: WorldNpc["variant"];
+  name: string;
 }) {
   const [message, setMessage] = useState<WorldMessage | null>(null),
     [error, setError] = useState(""),
@@ -45,15 +55,35 @@ export function RecipientDialogue({
     };
   }, [id, attempt, onSeen]);
   return (
-    <>
-      <DialogTitle>{message?.name ?? "A little hello"}</DialogTitle>
-      <DialogDescription>
-        {message?.relationship || "From someone who cares about you."}
-      </DialogDescription>
-      {!message && !error && <p role="status">Opening your hello…</p>}
-      {message && (
-        <div className="message-body">
-          <p className="private-message-text">{message.message}</p>
+    <LetterWindow
+      key={message?.message ?? "unavailable"}
+      name={message?.name ?? name}
+      subtitle={message?.relationship || "From someone who cares about you."}
+      message={message?.message ?? ""}
+      variant={variant}
+      onClose={onClose}
+      returnLabel="Back to the sunshine"
+      notice={
+        <>
+          {!message && !error && <p role="status">Opening your hello…</p>}
+          {error && (
+            <div role="alert">
+              <p>{error}</p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setError("");
+                  setAttempt((v) => v + 1);
+                }}
+              >
+                Try again
+              </Button>
+            </div>
+          )}
+        </>
+      }
+      attachments={
+        message?.media.length ? (
           <div className="recipient-gallery">
             {message.media.map((m) => (
               <figure key={m.id}>
@@ -78,25 +108,12 @@ export function RecipientDialogue({
               </figure>
             ))}
           </div>
-        </div>
-      )}
-      {error && (
-        <div role="alert">
-          <p>{error}</p>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setError("");
-              setAttempt((v) => v + 1);
-            }}
-          >
-            Try again
-          </Button>
-        </div>
-      )}
-    </>
+        ) : undefined
+      }
+    />
   );
 }
+
 function Photo({ id, description }: { id: string; description: string }) {
   const [failed, setFailed] = useState(false);
   return failed ? (

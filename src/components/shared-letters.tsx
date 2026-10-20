@@ -2,11 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/backend/browser-api";
-import { sharedLetterSchema, type SharedLetter } from "@/game/connected";
+import {
+  sharedLetterSchema,
+  type SharedLetter,
+  type WorldNpc,
+} from "@/game/connected";
 import { Button } from "./ui/button";
-import { DialogDescription, DialogTitle } from "./ui/dialog";
+import { LetterWindow } from "./letter-window";
 
-export function SharedLetterBody({ id }: { id: string }) {
+export function SharedLetterBody({
+  id,
+  onClose,
+  name,
+  variant,
+}: {
+  id: string;
+  onClose: () => void;
+  name: string;
+  variant: WorldNpc["variant"];
+}) {
   const [letter, setLetter] = useState<SharedLetter | null>(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -45,26 +59,30 @@ export function SharedLetterBody({ id }: { id: string }) {
     };
   }, [id, attempt]);
   return (
-    <>
-      <DialogTitle>{letter?.name ?? "A shared letter"}</DialogTitle>
-      <DialogDescription>
-        Shared by its author with invited friends. Photos and voice notes remain
-        private.
-      </DialogDescription>
-      {!letter && !error && <p role="status">Opening their letter…</p>}
-      {letter && (
-        <div className="message-body">
-          <p className="private-message-text">{letter.message}</p>
-        </div>
-      )}
-      {error && (
-        <div role="alert">
-          <p>{error}</p>
-          <Button variant="outline" onClick={() => setAttempt((n) => n + 1)}>
-            Try again
-          </Button>
-        </div>
-      )}
-    </>
+    <LetterWindow
+      key={letter?.message ?? "unavailable"}
+      name={letter?.name ?? name}
+      subtitle="Shared with invited friends. Photos and voice notes stay private."
+      message={letter?.message ?? ""}
+      variant={variant}
+      onClose={onClose}
+      returnLabel="Back to our little place"
+      notice={
+        <>
+          {!letter && !error && <p role="status">Opening their letter…</p>}
+          {error && (
+            <div role="alert">
+              <p>{error}</p>
+              <Button
+                variant="outline"
+                onClick={() => setAttempt((n) => n + 1)}
+              >
+                Try again
+              </Button>
+            </div>
+          )}
+        </>
+      }
+    />
   );
 }
