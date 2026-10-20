@@ -26,3 +26,10 @@ TypewriterText reveals whole graphemes every 24ms, supports instant reveal befor
 The overlay/typewriter production build passes, including TypeScript and prerendering.
 
 Hosted overlay result: a69ecc3 deployed Ready. After refreshing the promoted bundle, the Park canvas measured 504px both before and during dialogue; no reserved height remained. The supplied soundtrack stayed unpaused and advanced from 15s through 37s during reading. Enter first completed page 1 without advancing, then the next Enter opened page 2 with a partial typewriter reveal. Pagination adapted to 3 pages at that viewport. No production browser errors were recorded. Screenshot: test-results/windowskin-overlay-live.png. Existing real invitation/submission data was untouched.
+
+
+## Compact Park player — 2026-10-21
+- Park greetings replaced by Haikyuu!! OST - Adults with an animated vinyl and 44px play/pause control. Removed Park caption, header note and redundant help dialog.
+- Full suite: 184 tests passed; added autoplay-denial click regression: seven audio tests passed. ESLint and production build passed.
+- Built app browser check: track playing and vinyl running; manual pause survived movement input; opening a sample letter preserved playback.
+- Phone viewport 390px (375px content): player 232x52px inside a 341px stage, control 44x44px; document width equals scroll width. No private content used or database changes.

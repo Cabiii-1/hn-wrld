@@ -255,6 +255,71 @@ h1 em {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+.park-music-player {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 28px);
+  padding: 3px 3px 3px 12px;
+  border: 1px solid #fff8d4a6;
+  border-radius: 9px;
+  background: #fffcecf0;
+  color: #556443;
+  box-shadow: 0 3px 0 #625e3320;
+}
+.park-music-player[hidden] {
+  display: none;
+}
+.music-track {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.music-vinyl {
+  flex-shrink: 0;
+  color: #46523c;
+  animation: vinyl-turn 5s linear infinite;
+  animation-play-state: paused;
+}
+.park-music-player[data-playing="true"] .music-vinyl {
+  animation-play-state: running;
+}
+.park-music-player button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.park-music-player button:hover {
+  background: #83986720;
+}
+.park-music-player button:focus-visible {
+  outline: 2px solid #556443;
+  outline-offset: -3px;
+}
+@keyframes vinyl-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .music-vinyl {
+    animation: none;
+  }
+}
 .welcome-chip {
   position: absolute;
   top: 18px;

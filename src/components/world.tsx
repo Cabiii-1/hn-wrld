@@ -31,13 +31,7 @@ import {
   Trees,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { GameBridge, type GameStatus } from "@/game/bridge";
 import type { Direction } from "@/game/world";
 const GameCanvas = dynamic(() => import("./game-canvas"), { ssr: false });
@@ -82,7 +76,6 @@ export function World({
   const canReadLetters = !visitor || !!npcs?.some((npc) => npc.readable);
   const nearName = npcs?.find((n) => n.id === nearId)?.name ?? "Teddy";
   const [dialogue, setDialogue] = useState(false);
-  const [help, setHelp] = useState(false);
   const [status, setStatus] = useState<GameStatus>("loading");
   const [seen, setSeen] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -105,8 +98,8 @@ export function World({
     };
   }, [bridge, visitor]);
   useEffect(() => {
-    bridge.pause(dialogue || help || paused);
-  }, [bridge, dialogue, help, paused]);
+    bridge.pause(dialogue || paused);
+  }, [bridge, dialogue, paused]);
   const actions = useMemo(
     () => ({
       press(direction: Direction, event: PointerEvent<HTMLButtonElement>) {
@@ -126,9 +119,6 @@ export function World({
   }
   return (
     <main className="world-shell">
-      {mapKey === "tuguegarao_park" && (
-        <ParkAudio paused={help || paused || status !== "ready"} />
-      )}
       <header className="site-header">
         <Link
           className="brand"
@@ -143,54 +133,6 @@ export function World({
             <small>A LITTLE PLACE TO FEEL LOVED</small>
           </span>
         </Link>
-        <div className="header-note">
-          <span className="status-dot" /> A little world, just for you
-        </div>
-        <Dialog open={help} onOpenChange={setHelp}>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="help-button">
-              How to play <span aria-hidden>↗</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <div className="dialog-eyebrow">
-              <Leaf size={16} /> A gentle little guide
-            </div>
-            <DialogTitle>Make yourself at home.</DialogTitle>
-            <DialogDescription>
-              {visitor
-                ? "Take a little walk with your bear. Everyone here is part of Hanna’s circle of support."
-                : "There’s no rush and nothing to win. Wander around the yard and say hello."}
-            </DialogDescription>
-            <ul className="help-list">
-              <li>
-                <strong>Move</strong> with WASD, arrow keys, or the on-screen
-                direction pad.
-              </li>
-              {canReadLetters && (
-                <>
-                  <li>
-                    <strong>Talk</strong> when you’re near a bear. Press E,
-                    Space, Enter, or tap Talk.
-                  </li>
-                </>
-              )}
-              <li>
-                <strong>Take your time.</strong>{" "}
-                {visitor
-                  ? "The world pauses while a shared letter is open. Escape closes it."
-                  : "The world pauses while a message is open. Escape closes it."}
-              </li>
-            </ul>
-            <p className="sample-note">
-              {visitor
-                ? "Walk up to a bear who shared their letter and press E or tap Talk. Private letters, photos and voice notes stay private."
-                : connected
-                  ? "Your hellos are saved as you open them. You can always read them again."
-                  : "Sample world · all characters and dialogue are synthetic."}
-            </p>
-          </DialogContent>
-        </Dialog>
       </header>
       <section className="intro">
         <div>
@@ -223,7 +165,7 @@ export function World({
               variant="outline"
               aria-pressed={mapKey === key}
               aria-label={`Visit ${SCENES[key].name}`}
-              disabled={dialogue || help || mapKey === key}
+              disabled={dialogue || mapKey === key}
               onClick={() => onSceneChange(key)}
             >
               <span>CHAPTER {SCENES[key].chapter}</span>
@@ -248,6 +190,9 @@ export function World({
         </div>
         <div className="game-stage">
           <GameCanvas key={attempt} bridge={bridge} />
+          {mapKey === "tuguegarao_park" && (
+            <ParkAudio paused={paused || status !== "ready"} />
+          )}
           {status === "loading" && (
             <div className="loading-state" role="status">
               <Heart size={30} /> Making a little room for you…
@@ -268,28 +213,32 @@ export function World({
           )}
           {status === "ready" && (
             <>
-              <div className="welcome-chip">
-                <Sparkles size={16} />
-                <span>
-                  {visitor ? `Welcome, ${visitor.name}.` : place.welcome}
-                  <small>
-                    {visitor
-                      ? "Take a little walk. Every bear is cheering her on."
-                      : connected && !npcs.length
-                        ? "A quiet little moment. More hellos will arrive soon."
-                        : "Take a little walk. Someone’s here for you."}
-                  </small>
-                </span>
-              </div>
-              <div className="yard-caption">
-                <span /> {place.caption}
-              </div>
+              {mapKey !== "tuguegarao_park" && (
+                <>
+                  <div className="welcome-chip">
+                    <Sparkles size={16} />
+                    <span>
+                      {visitor ? `Welcome, ${visitor.name}.` : place.welcome}
+                      <small>
+                        {visitor
+                          ? "Take a little walk. Every bear is cheering her on."
+                          : connected && !npcs.length
+                            ? "A quiet little moment. More hellos will arrive soon."
+                            : "Take a little walk. Someone’s here for you."}
+                      </small>
+                    </span>
+                  </div>
+                  <div className="yard-caption">
+                    <span /> {place.caption}
+                  </div>
+                </>
+              )}
             </>
           )}
           <div
             className="touch-controls"
             aria-label="Movement controls"
-            hidden={dialogue || help || paused || status !== "ready"}
+            hidden={dialogue || paused || status !== "ready"}
           >
             <div className="dpad">
               {directions.map(({ direction, Icon }) => (

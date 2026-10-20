@@ -1,15 +1,25 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Disc3, Pause, Play } from "lucide-react";
 
 /** Park-only soundtrack. Browser autoplay denial is retried on normal input. */
 export function ParkAudio({ paused }: { paused: boolean }) {
   const ref = useRef<HTMLAudioElement>(null);
+  const manuallyPaused = useRef(false);
+  const [playing, setPlaying] = useState(false);
   useEffect(() => {
     const audio = ref.current;
     if (!audio) return;
     audio.volume = 0.22;
-    const play = () => {
-      if (paused || document.hidden || !audio.paused) return;
+    const play = (event?: Event) => {
+      // Let the player's explicit click handle its own playback action.
+      if (
+        event?.target instanceof Element &&
+        event.target.closest(".park-music-player button")
+      )
+        return;
+      if (paused || manuallyPaused.current || document.hidden || !audio.paused)
+        return;
       // A denied autoplay or interrupted load must never block the world.
       void audio.play().catch(() => {});
     };
@@ -33,13 +43,39 @@ export function ParkAudio({ paused }: { paused: boolean }) {
       audio.pause();
     };
   }, [paused]);
+  function toggle() {
+    const audio = ref.current;
+    if (!audio || paused) return;
+    manuallyPaused.current = !audio.paused;
+    if (manuallyPaused.current) audio.pause();
+    else void audio.play().catch(() => {});
+  }
   return (
-    <audio
-      ref={ref}
-      src="/game/audio/park-adults-v1.mp3"
-      loop
-      preload="auto"
-      hidden
-    />
+    <div className="park-music-player" data-playing={playing} hidden={paused}>
+      <Disc3 className="music-vinyl" size={30} aria-hidden="true" />
+      <span className="music-track">Haikyuu!! OST - Adults</span>
+      <button
+        type="button"
+        aria-label={playing ? "Pause Park music" : "Play Park music"}
+        onClick={toggle}
+      >
+        {playing ? (
+          <Pause size={16} aria-hidden="true" />
+        ) : (
+          <Play size={16} aria-hidden="true" />
+        )}
+      </button>
+      <audio
+        ref={ref}
+        src="/game/audio/park-adults-v1.mp3"
+        loop
+        preload="auto"
+        hidden
+        onPlaying={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onWaiting={() => setPlaying(false)}
+        onError={() => setPlaying(false)}
+      />
+    </div>
   );
 }
