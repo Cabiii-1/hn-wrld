@@ -107,3 +107,7 @@ Replace the Park greeting overlay for Hanna and invited contributors with a comp
 
 ## Forward-only letters and memory pages (owner update, 2026-10-21)
 The windowskin footer is a slim Enter / Space to reveal or continue hint (Tap on mobile). Remove visible previous/next buttons and page counters; the hint remains keyboard/screen-reader operable. Tapping letter text reveals then advances, while selection and interactive controls are ignored. Remove arrow-key page navigation. After text, present authorized attachments individually within an expanded windowskin: one contained photo preview or one user-initiated voice player at a time. Photos retain the full-size link; other contributors still receive opted-in text only. Preserve measured pagination, typewriter, close/Escape, movement pause and continuous Park music.
+
+
+## Visual placement editor (owner update, 2026-10-27)
+Replace manual Foot X/Y and radius entry in Their little places with a scene-backed visual editor. Choose one contributor, drag/tap their bear position, and drag a separate handle or slider to resize the square wander area. Display exact scene collision exclusions and other saved bears. Provide keyboard arrows, touch nudge buttons, zoom/pan, and live safety feedback; disable unsafe saves. Draft changes apply only through the existing explicit Save action and authenticated, server-validated placement endpoint. Preserve publication rules and all saved content. No database migration or automatic repositioning.

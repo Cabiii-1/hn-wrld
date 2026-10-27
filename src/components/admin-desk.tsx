@@ -16,8 +16,9 @@ import {
 } from "lucide-react";
 import { ContributionShell, SetupNotice } from "./contribution-shell";
 import { RecipientAccess } from "./recipient-access";
+import { PlacementEditor } from "./placement-editor";
 import { FinaleEditor } from "./finale-editor";
-import { SCENES, SCENE_KEYS, isSceneKey } from "@/game/scenes";
+import { SCENES, SCENE_KEYS, isSceneKey, safePlacement } from "@/game/scenes";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -525,25 +526,39 @@ export function AdminDesk({
             <h2>A little place for each person.</h2>
           </div>
           <p className="quiet-copy">
-            All places use the 836 × 470 game world. Changing a scene suggests a
-            safe starting spot. Keep the whole wander area clear of scenery; use
-            separate spots for different bears. At SLU, only the lower
-            central/left stairs and sidewalk are walkable; the road is blocked.
+            Choose a person, then move their bear directly on the scene. Save
+            when you’re happy with their spot.
           </p>
+          {current && (
+            <label>
+              Choose a person
+              <select
+                value={current.id}
+                onChange={(e) => setSelected(e.target.value)}
+                disabled={busy}
+              >
+                {data.contributions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.display_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           {!data.contributions.length && (
             <p className="empty-copy">
               Their places will be ready when the first messages arrive.
             </p>
           )}
-          {data.contributions.map((c) => (
+          {current && (
             <PlacementForm
-              key={`${c.id}-${JSON.stringify(data.placements.find((p) => p.contribution_id === c.id))}`}
-              contribution={c}
+              key={`${current.id}-${JSON.stringify(data.placements.find((p) => p.contribution_id === current.id))}`}
+              contribution={current}
               data={data}
               action={action}
               busy={busy}
             />
-          ))}
+          )}
         </section>
       )}
       <div className="desk-maintenance">
@@ -787,7 +802,7 @@ function ReviewCard({
     </article>
   );
 }
-function PlacementForm({
+export function PlacementForm({
   contribution: c,
   data,
   action,
@@ -814,8 +829,15 @@ function PlacementForm({
     y: placement?.spawn_y ?? start.y,
     radius: placement?.wander_radius ?? start.radius,
   });
+  const [variant, setVariant] = useState(
+    placement?.sprite_variant ?? "npc-brown-scarf",
+  );
+  const mapValue = data.areas.find((a) => a.id === areaId)?.map_key;
+  const map = mapValue && isSceneKey(mapValue) ? mapValue : null;
+  const valid = !!map && safePlacement(map, point.x, point.y, point.radius);
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy || !valid) return;
     const f = new FormData(e.currentTarget);
     void action("admin/placements", "POST", {
       contributionId: c.id,
@@ -859,7 +881,8 @@ function PlacementForm({
           Bear style
           <select
             name="variant"
-            defaultValue={placement?.sprite_variant ?? "npc-brown-scarf"}
+            value={variant}
+            onChange={(e) => setVariant(e.target.value)}
             disabled={busy}
           >
             <option value="npc-cream-1">Cream bear</option>
@@ -867,52 +890,34 @@ function PlacementForm({
             <option value="npc-rose-bow">Cream bear · rose bow</option>
           </select>
         </label>
-        <label>
-          Foot X
-          <input
-            type="number"
-            name="x"
-            min={0}
-            max={2000}
-            value={point.x}
-            onChange={(e) =>
-              setPoint((p) => ({ ...p, x: Number(e.target.value) }))
-            }
-            required
-            disabled={busy}
-          />
-        </label>
-        <label>
-          Foot Y
-          <input
-            type="number"
-            name="y"
-            min={0}
-            max={2000}
-            value={point.y}
-            onChange={(e) =>
-              setPoint((p) => ({ ...p, y: Number(e.target.value) }))
-            }
-            required
-            disabled={busy}
-          />
-        </label>
-        <label>
-          Wander radius
-          <input
-            type="number"
-            name="radius"
-            min={0}
-            max={80}
-            value={point.radius}
-            onChange={(e) =>
-              setPoint((p) => ({ ...p, radius: Number(e.target.value) }))
-            }
-            required
-            disabled={busy}
-          />
-        </label>
       </div>
+      <input type="hidden" name="x" value={point.x} />
+      <input type="hidden" name="y" value={point.y} />
+      <input type="hidden" name="radius" value={point.radius} />
+      {map && (
+        <PlacementEditor
+          key={map}
+          map={map}
+          point={point}
+          onChange={setPoint}
+          variant={variant}
+          name={c.display_name}
+          disabled={busy}
+          neighbors={data.placements
+            .filter((p) => p.area_id === areaId && p.contribution_id !== c.id)
+            .map((p) => ({
+              id: p.id,
+              name:
+                data.contributions.find((c) => c.id === p.contribution_id)
+                  ?.display_name ?? "Bear",
+              variant: p.sprite_variant,
+              x: p.spawn_x,
+              y: p.spawn_y,
+              radius: p.wander_radius,
+              published: p.published,
+            }))}
+        />
+      )}
       <div className="placement-footer">
         <label>
           <input
@@ -923,7 +928,7 @@ function PlacementForm({
           />
           Publish this NPC when saved
         </label>
-        <Button variant="outline" type="submit" disabled={busy}>
+        <Button variant="outline" type="submit" disabled={busy || !valid}>
           Save their place
         </Button>
       </div>

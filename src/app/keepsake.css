@@ -1751,3 +1751,130 @@
     aspect-ratio: 16 / 7;
   }
 }
+
+/* Visual administrator placement editor. */
+.placement-row .placement-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.placement-row .placement-fields > label {
+  grid-column: auto;
+}
+.placement-editor {
+  margin-top: 16px;
+  min-width: 0;
+}
+.placement-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 0;
+  box-shadow: 0 0 0 1px #aaad8d;
+  border-radius: 8px;
+  touch-action: none;
+  user-select: none;
+  background: #f3ecd8;
+}
+.placement-map image {
+  image-rendering: pixelated;
+}
+.placement-map [data-placement-control] {
+  cursor: grab;
+  outline: none;
+}
+.placement-map [data-placement-control="radius"] {
+  cursor: ew-resize;
+}
+.placement-map [data-placement-control]:focus-visible > circle:first-child {
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-dasharray: 4 2;
+}
+.placement-map-name {
+  fill: #fff9e7;
+  stroke: #3c4537;
+  stroke-width: 3;
+  paint-order: stroke;
+  font: 10px monospace;
+}
+.placement-map-tools {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.placement-map-tools label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.placement-map-tools input[type="range"] {
+  width: 140px;
+  min-height: 44px;
+  padding: 0;
+}
+.placement-map-status {
+  font-size: 12px;
+  color: #4b714c;
+  margin: 8px 0;
+}
+.placement-map-status.invalid {
+  color: #a03932;
+}
+@media (max-width: 600px) {
+  .placement-row .placement-fields {
+    grid-template-columns: 1fr;
+  }
+  .placement-map-tools {
+    display: grid;
+  }
+}
+
+.placement-nudge {
+  display: flex;
+  gap: 5px;
+}
+.placement-nudge button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #c5c9ac;
+  border-radius: 6px;
+  background: #f7f5e8;
+  color: #4b6445;
+  cursor: pointer;
+}
+.placement-nudge button:focus-visible {
+  outline: 2px solid #4b6445;
+  outline-offset: 2px;
+}
+.placement-nudge button:disabled {
+  opacity: 0.5;
+}
+
+.placement-map-viewport {
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #aaad8d;
+  border-radius: 8px;
+}
+.placement-map {
+  box-shadow: none;
+}
+.placement-map.zoomed {
+  min-width: 836px;
+  touch-action: auto;
+}
+.placement-map [data-placement-control] {
+  touch-action: none;
+}
+.placement-zoom {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #c5c9ac;
+  border-radius: 6px;
+  background: #f7f5e8;
+  color: #4b6445;
+  cursor: pointer;
+}
