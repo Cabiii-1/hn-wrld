@@ -2,11 +2,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Disc3, Pause, Play } from "lucide-react";
 
+const tracks = [
+  { title: "Haikyuu!! OST - Adults", src: "/game/audio/park-adults-v1.mp3" },
+  {
+    title: "Frieren OST - The Precious Moments We Share",
+    src: "/game/audio/park-frieren.mp3",
+  },
+] as const;
+
 /** Park-only soundtrack. Browser autoplay denial is retried on normal input. */
 export function ParkAudio({ paused }: { paused: boolean }) {
   const ref = useRef<HTMLAudioElement>(null);
   const manuallyPaused = useRef(false);
   const [playing, setPlaying] = useState(false);
+  const [trackIndex, setTrackIndex] = useState(0);
+  const track = tracks[trackIndex];
   useEffect(() => {
     const audio = ref.current;
     if (!audio) return;
@@ -42,7 +52,7 @@ export function ParkAudio({ paused }: { paused: boolean }) {
       audio.removeEventListener("canplay", play);
       audio.pause();
     };
-  }, [paused]);
+  }, [paused, trackIndex]);
   function toggle() {
     const audio = ref.current;
     if (!audio || paused) return;
@@ -53,7 +63,9 @@ export function ParkAudio({ paused }: { paused: boolean }) {
   return (
     <div className="park-music-player" data-playing={playing} hidden={paused}>
       <Disc3 className="music-vinyl" size={30} aria-hidden="true" />
-      <span className="music-track">Haikyuu!! OST - Adults</span>
+      <span className="music-track" title={track.title}>
+        {track.title}
+      </span>
       <button
         type="button"
         aria-label={playing ? "Pause Park music" : "Play Park music"}
@@ -67,14 +79,17 @@ export function ParkAudio({ paused }: { paused: boolean }) {
       </button>
       <audio
         ref={ref}
-        src="/game/audio/park-adults-v1.mp3"
-        loop
+        src={track.src}
         preload="auto"
         hidden
         onPlaying={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onWaiting={() => setPlaying(false)}
         onError={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false);
+          setTrackIndex((index) => (index + 1) % tracks.length);
+        }}
       />
     </div>
   );

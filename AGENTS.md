@@ -101,3 +101,7 @@ The windowskin footer is a slim Enter / Space to reveal or continue hint (Tap on
 
 ## Visual placement editor (owner update, 2026-10-27)
 Replace manual Foot X/Y and radius entry in Their little places with a scene-backed visual editor. Choose one contributor, drag/tap their bear position, and drag a separate handle or slider to resize the square wander area. Display exact scene collision exclusions and other saved bears. Provide keyboard arrows, touch nudge buttons, zoom/pan, and live safety feedback; disable unsafe saves. Draft changes apply only through the existing explicit Save action and authenticated, server-validated placement endpoint. Preserve publication rules and all saved content. No database migration or automatic repositioning.
+
+
+## Repeating Park playlist (owner update, 2026-10-28)
+Play Haikyuu!! OST - Adults, then the supplied park-frieren.mp3 titled Frieren OST - The Precious Moments We Share, repeating both tracks in order. Update the compact player's title on each transition. Preserve quiet volume, autoplay/gesture fallback, explicit pause preference, tab visibility handling and music during letters. Individual tracks must not loop on their own.

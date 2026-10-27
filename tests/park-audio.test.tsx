@@ -39,7 +39,7 @@ it("starts the supplied looping track quietly with a compact player", () => {
   const { container } = render(<ParkAudio paused={false} />);
   const audio = container.querySelector("audio")!;
   expect(audio.getAttribute("src")).toBe("/game/audio/park-adults-v1.mp3");
-  expect(audio.loop).toBe(true);
+  expect(audio.loop).toBe(false);
   expect(audio.controls).toBe(false);
   expect(audio.hidden).toBe(true);
   expect(audio.volume).toBe(0.22);
@@ -49,6 +49,32 @@ it("starts the supplied looping track quietly with a compact player", () => {
   expect(
     container.querySelector(".park-music-player")?.getAttribute("data-playing"),
   ).toBe("true");
+});
+
+it("plays Adults then Frieren, then repeats the two-track playlist", () => {
+  const { container } = render(<ParkAudio paused={false} />);
+  const audio = container.querySelector("audio")!;
+  fireEvent.ended(audio);
+  expect(audio.getAttribute("src")).toBe("/game/audio/park-frieren.mp3");
+  expect(
+    screen.getByText("Frieren OST - The Precious Moments We Share"),
+  ).toBeTruthy();
+  expect(playing).toBe(true);
+  fireEvent.ended(audio);
+  expect(audio.getAttribute("src")).toBe("/game/audio/park-adults-v1.mp3");
+  expect(screen.getByText("Haikyuu!! OST - Adults")).toBeTruthy();
+  expect(playing).toBe(true);
+});
+
+it("preserves explicit pause on a track transition and resumes the selected track", () => {
+  const { container } = render(<ParkAudio paused={false} />);
+  const audio = container.querySelector("audio")!;
+  fireEvent.click(screen.getByRole("button", { name: "Pause Park music" }));
+  fireEvent.ended(audio);
+  expect(audio.getAttribute("src")).toBe("/game/audio/park-frieren.mp3");
+  expect(playing).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Play Park music" }));
+  expect(playing).toBe(true);
 });
 
 it("keeps an explicit pause through game input, tab return and external pauses", () => {
