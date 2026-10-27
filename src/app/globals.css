@@ -1281,3 +1281,126 @@ h1 em {
     width: 100%;
   }
 }
+
+/* Quiet windowskin loading states. */
+.windowskin-reading.is-loading {
+  display: grid;
+  place-items: center;
+}
+.windowskin-footer[hidden] {
+  display: none;
+}
+.windowskin-loader {
+  display: grid;
+  place-items: center;
+  color: #eadbb2;
+  min-height: 48px;
+}
+.windowskin-loader svg {
+  display: block;
+  width: 56px;
+  height: 56px;
+}
+.loader-envelope-flap {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: envelope-open 1.8s ease-in-out infinite alternate;
+}
+.loader-envelope-paper {
+  animation: envelope-letter 1.8s ease-in-out infinite alternate;
+}
+.loader-photo-icon {
+  animation: memory-loading 1.4s ease-in-out infinite;
+}
+.loader-wave-bar {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: voice-buffer 0.9s ease-in-out infinite alternate;
+}
+.windowskin-photo {
+  position: relative;
+  align-items: center;
+}
+.windowskin-photo-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #294743;
+  border: 1px dashed #91a58b;
+  pointer-events: none;
+}
+.windowskin-photo img.photo-loading {
+  opacity: 0;
+}
+.windowskin-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.windowskin-voice audio {
+  flex: 1;
+  min-width: 0;
+}
+.windowskin-loader-voice {
+  min-height: 32px;
+  flex: 0 0 32px;
+}
+.windowskin-loader-voice svg {
+  width: 32px;
+  height: 32px;
+}
+.windowskin-media-retry {
+  min-height: 44px;
+  padding: 8px 12px;
+  background: #e7d9b1;
+  color: #273e38;
+  border: 1px solid #91a58b;
+  cursor: pointer;
+}
+@keyframes envelope-open {
+  0%,
+  15% {
+    transform: scaleY(-0.35);
+  }
+  70%,
+  100% {
+    transform: scaleY(1);
+  }
+}
+@keyframes envelope-letter {
+  0%,
+  15% {
+    transform: translateY(10px);
+  }
+  70%,
+  100% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes memory-loading {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(2px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+@keyframes voice-buffer {
+  from {
+    transform: scaleY(0.3);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .windowskin-loader *,
+  .windowskin-loader svg {
+    animation: none;
+  }
+}

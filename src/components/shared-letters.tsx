@@ -67,15 +67,18 @@ export function SharedLetterBody({
       variant={variant}
       onClose={onClose}
       returnLabel="Back to our little place"
+      loading={!letter && !error}
       notice={
         <>
-          {!letter && !error && <p role="status">Opening their letter…</p>}
           {error && (
             <div role="alert">
               <p>{error}</p>
               <Button
                 variant="outline"
-                onClick={() => setAttempt((n) => n + 1)}
+                onClick={() => {
+                  setError("");
+                  setAttempt((n) => n + 1);
+                }}
               >
                 Try again
               </Button>

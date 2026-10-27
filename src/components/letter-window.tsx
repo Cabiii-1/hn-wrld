@@ -11,6 +11,7 @@ import { X } from "lucide-react";
 import type { WorldNpc } from "@/game/connected";
 import { layoutLetterPages, type LetterPage } from "@/lib/letter-pages";
 import { TypewriterText, type TypewriterHandle } from "./typewriter-text";
+import { WindowskinLoader } from "./windowskin-loader";
 
 /** Inline Radix content: focus/escape support without a portal or backdrop. */
 export function GameDialogueContent({ children }: { children: ReactNode }) {
@@ -107,6 +108,7 @@ export function LetterWindow({
   attachments,
   onClose,
   returnLabel,
+  loading = false,
 }: {
   name: string;
   subtitle: string;
@@ -116,6 +118,7 @@ export function LetterWindow({
   attachments?: ReactNode;
   onClose: () => void;
   returnLabel: string;
+  loading?: boolean;
 }) {
   const [pages, setPages] = useState<LetterPage[]>(() => [
     { text: message, start: 0, end: Array.from(message).length },
@@ -169,6 +172,7 @@ export function LetterWindow({
   const total = pages.length + mediaPages.length;
   const currentPage = pages[Math.min(current, pages.length - 1)];
   function next() {
+    if (loading) return;
     if (!memories && typewriter.current?.finish()) return;
     if (current === total - 1) onClose();
     else if (memories) setMemoryIndex((index) => index + 1);
@@ -195,12 +199,15 @@ export function LetterWindow({
       </div>
       <div
         ref={reading}
-        className="windowskin-reading"
-        data-window-letter={!memories}
+        className={`windowskin-reading${loading ? " is-loading" : ""}`}
+        aria-busy={loading}
+        data-window-letter={!memories && !loading}
         tabIndex={0}
         aria-label={memories ? "Photos and voice notes" : "Letter text"}
       >
-        {memories ? (
+        {loading ? (
+          <WindowskinLoader />
+        ) : memories ? (
           <div className="windowskin-memories">{mediaPages[memoryIndex]}</div>
         ) : (
           <TypewriterText
@@ -212,7 +219,7 @@ export function LetterWindow({
         )}
         {notice}
       </div>
-      <div className="windowskin-footer">
+      <div className="windowskin-footer" hidden={loading}>
         <button
           type="button"
           data-window-next

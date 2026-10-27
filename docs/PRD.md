@@ -166,3 +166,7 @@ Replace manual Foot X/Y and radius entry in Their little places with a scene-bac
 
 ## Repeating Park playlist (owner update, 2026-10-28)
 Play Haikyuu!! OST - Adults, then the supplied park-frieren.mp3 titled Frieren OST - The Precious Moments We Share, repeating both tracks in order. Update the compact player's title on each transition. Preserve quiet volume, autoplay/gesture fallback, explicit pause preference, tab visibility handling and music during letters. Individual tracks must not loop on their own.
+
+
+## Windowskin loading animations (owner update, 2026-10-28)
+Use a centered opening-envelope animation while recipient/shared letters load, replacing visible loading copy and hiding the continue hint until ready. Screen readers retain a loading status. Authorized photo pages display an animated image placeholder until onLoad; errors stop the animation. Voice notes fetch metadata only when their media page mounts and show a waveform while loading, buffering or seeking, with explicit retry on failure and no autoplay. All loaders have static reduced-motion fallbacks. Preserve privacy checks, media URLs, game pause and uninterrupted Park music.

@@ -308,7 +308,7 @@ it("loads recipient media only on the memories page, keeping voice playback user
   expect(audio.getAttribute("src")).toBe(
     `/api/manage/recipient/media/${mediaId}`,
   );
-  expect(audio.preload).toBe("none");
+  expect(audio.preload).toBe("metadata");
   expect(audio.autoplay).toBe(false);
   await waitFor(() => expect(onSeen).toHaveBeenCalledWith(id));
 });
