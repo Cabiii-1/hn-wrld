@@ -6,6 +6,7 @@ import { Crowd, facingDirection, type BearState } from "./crowd";
 import { demoNpcs } from "./demo-fixtures";
 import { SCENES } from "./scenes";
 import { sluCheeringCast, type CheeringBear } from "./slu-cheerers";
+import { CheerSpeech } from "./cheer-speech";
 type Actor = {
   data: BearState;
   sprite: Phaser.GameObjects.Sprite;
@@ -25,6 +26,14 @@ export class PlaceScene extends Phaser.Scene {
   private actors: Actor[] = [];
   private cheeringActors: CheerActor[] = [];
   private cheeringIds: ReadonlySet<string> = new Set();
+  private cheeringPositions: { id: string; x: number; y: number }[] = [];
+  private cheerSpeech?: CheerSpeech;
+  private cheerBubble?: Phaser.GameObjects.Container;
+  private cheerBubbleSkin?: Phaser.GameObjects.Graphics;
+  private cheerBubbleText?: Phaser.GameObjects.Text;
+  private speechWrapWidth = 0;
+  private speechSkinKey = "";
+  private activeSpeech: { id: string; text: string } | null = null;
   private crowd!: Crowd;
   private marker!: Phaser.GameObjects.Text;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
@@ -133,6 +142,27 @@ export class PlaceScene extends Phaser.Scene {
       });
       return actor;
     });
+    this.cheeringPositions = [
+      ...this.crowd.bears.filter((bear) => this.cheeringIds.has(bear.id)),
+      ...cast.decorative,
+    ];
+    if (this.cheeringPositions.length) {
+      this.cheerSpeech = new CheerSpeech(
+        this.cheeringPositions.map((bear) => bear.id),
+      );
+      this.cheerBubbleSkin = this.add.graphics();
+      this.cheerBubbleText = this.add.text(8, 7, "", {
+        fontFamily: "monospace",
+        fontSize: "11px",
+        color: "#514638",
+        align: "center",
+        lineSpacing: 3,
+      });
+      this.cheerBubble = this.add
+        .container(0, 0, [this.cheerBubbleSkin, this.cheerBubbleText])
+        .setDepth(1010)
+        .setVisible(false);
+    }
     this.marker = this.add
       .text(0, 0, "E / Talk", {
         ...style,
@@ -233,6 +263,83 @@ export class PlaceScene extends Phaser.Scene {
     else sprite.anims.resume();
     sprite.setDepth(Math.round(sprite.y));
   }
+  private updateCheerSpeech(delta: number, paused: boolean) {
+    if (
+      !this.cheerSpeech ||
+      !this.cheerBubble ||
+      !this.cheerBubbleText ||
+      !this.cheerBubbleSkin
+    )
+      return;
+    const view = this.cameras.main.worldView;
+    const visible = this.cheeringPositions.filter(
+      (bear) =>
+        bear.x >= view.left + 12 &&
+        bear.x <= view.right - 12 &&
+        bear.y - 16 >= view.top &&
+        bear.y - 16 <= view.bottom,
+    );
+    const speech = this.cheerSpeech.step(
+      Math.min(delta, 100),
+      visible.map((bear) => bear.id),
+      paused,
+    );
+    this.activeSpeech = speech;
+    this.cheerBubble.setVisible(!!speech);
+    const speaker = speech && visible.find((bear) => bear.id === speech.id);
+    if (!speech || !speaker) return;
+    const wrapWidth = Math.max(40, Math.floor(Math.min(160, view.width - 32)));
+    if (
+      this.cheerBubbleText.text !== speech.text ||
+      this.speechWrapWidth !== wrapWidth
+    ) {
+      this.speechWrapWidth = wrapWidth;
+      this.cheerBubbleText
+        .setWordWrapWidth(wrapWidth, true)
+        .setText(speech.text);
+    }
+    const width = Math.ceil(this.cheerBubbleText.width) + 16;
+    const height = Math.ceil(this.cheerBubbleText.height) + 14;
+    const x = Math.round(
+      Phaser.Math.Clamp(
+        speaker.x - width / 2,
+        view.left + 6,
+        view.right - width - 6,
+      ),
+    );
+    const y = Math.round(Math.max(view.top + 6, speaker.y - 38 - height));
+    const tail = Phaser.Math.Clamp(Math.round(speaker.x - x), 8, width - 8);
+    this.cheerBubble.setPosition(x, y);
+    const skinKey = `${width},${height},${tail}`;
+    if (skinKey !== this.speechSkinKey) {
+      this.speechSkinKey = skinKey;
+      const skin = this.cheerBubbleSkin;
+      skin.clear();
+      // Stepped corners and tail keep the bubble on the native pixel grid.
+      skin.fillStyle(0x674d3d);
+      skin.fillRect(2, 0, width - 4, height);
+      skin.fillRect(0, 2, width, height - 4);
+      skin.fillRect(tail - 4, height - 2, 8, 3);
+      skin.fillRect(tail - 3, height + 1, 6, 2);
+      skin.fillRect(tail - 2, height + 3, 4, 2);
+      skin.fillRect(tail - 1, height + 5, 2, 2);
+      skin.fillStyle(0xfff9dc);
+      skin.fillRect(3, 2, width - 6, height - 4);
+      skin.fillRect(2, 3, width - 4, height - 6);
+      skin.fillRect(tail - 3, height - 3, 6, 3);
+      skin.fillRect(tail - 2, height, 4, 2);
+      skin.fillRect(tail - 1, height + 2, 2, 2);
+    }
+    // The speech itself identifies its speaker; avoid covering it with a name.
+    this.actors
+      .find((actor) => actor.data.id === speech.id)
+      ?.label.setVisible(false);
+    this.cheeringActors
+      .find((actor) => actor.data.id === speech.id)
+      ?.label.setVisible(false);
+    if (this.crowd.nearest()?.id === speech.id)
+      this.marker.setPosition(Math.round(speaker.x), y - 4);
+  }
   update(time: number, delta: number) {
     if (!this.player) return;
     const paused = this.bridge.paused || !this.activeWindow,
@@ -324,6 +431,7 @@ export class PlaceScene extends Phaser.Scene {
         Math.round(nearest.x),
         Math.round(nearest.y - 59),
       );
+    this.updateCheerSpeech(delta, paused || this.bridge.paused);
     if (!paused) {
       this.frameCount++;
       this.measuredSeconds += delta / 1000;
@@ -336,6 +444,7 @@ export class PlaceScene extends Phaser.Scene {
         npcCount: this.actors.length,
         cheererCount: this.cheeringIds.size,
         decorativeCheererCount: this.cheeringActors.length,
+        ambientSpeech: this.activeSpeech,
         cheeringBears: [
           ...this.cheeringActors.map((a) => ({
             id: a.data.id,

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import type * as Phaser from "phaser";
 import { GameBridge } from "@/game/bridge";
 import { SCENES } from "@/game/scenes";
+import { MOTIVATIONAL_CHEERS } from "@/game/cheer-speech";
 export default function GameCanvas({ bridge }: { bridge: GameBridge }) {
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -26,11 +27,15 @@ export default function GameCanvas({ bridge }: { bridge: GameBridge }) {
           scene: [new PlaceScene(bridge)],
           render: { antialias: false, pixelArt: true, roundPixels: true },
         });
+        const description = bridge.visitor
+          ? `${SCENES[bridge.mapKey].name}. Use WASD, arrow keys, or the direction pad to move your bear. Press E or tap Talk near a bear who shared their letter.`
+          : `${SCENES[bridge.mapKey].name}. Use WASD or arrow keys to move Hanna, and E to talk to a nearby bear.`;
         game.canvas.setAttribute(
           "aria-label",
-          bridge.visitor
-            ? `${SCENES[bridge.mapKey].name}. Use WASD, arrow keys, or the direction pad to move your bear. Press E or tap Talk near a bear who shared their letter.`
-            : `${SCENES[bridge.mapKey].name}. Use WASD or arrow keys to move Hanna, and E to talk to a nearby bear.`,
+          description +
+            (bridge.mapKey === "slu_baguio" && bridge.cheerers?.length
+              ? ` Nearby bears cheer Hanna on: ${MOTIVATIONAL_CHEERS.join(" ")}`
+              : ""),
         );
         game.canvas.setAttribute("role", "img");
         game.canvas.tabIndex = 0;
