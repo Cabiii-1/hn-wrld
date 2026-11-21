@@ -67,6 +67,7 @@ export class Crowd {
   constructor(
     readonly map: SceneKey,
     npcs: WorldNpc[],
+    private readonly nonBlocking: ReadonlySet<string> = new Set(),
   ) {
     this.bears = npcs
       .filter((n) => safePlacement(map, n.x, n.y, n.radius))
@@ -102,7 +103,7 @@ export class Crowd {
               }
             }
         }
-        this.grid.add(bear);
+        if (!this.nonBlocking.has(bear.id)) this.grid.add(bear);
         return bear;
       });
     const start = SCENES[map].player;
@@ -152,7 +153,7 @@ export class Crowd {
     this.grid.add(this.player);
     for (const bear of this.bears) {
       bear.walking = false;
-      if (!bear.radius) continue;
+      if (!bear.radius || this.nonBlocking.has(bear.id)) continue;
       if (this.elapsed > bear.next) {
         bear.seed = nextRandom(bear.seed);
         const x =

@@ -12,9 +12,17 @@ export const npcSchema = z.object({
   readable: z.boolean().optional(),
 });
 export const houseSchema = z.object({ npcs: z.array(npcSchema).max(200) });
-export const sceneSchema = houseSchema.extend({ mapKey: sceneKeySchema });
-export const contributorVisitSchema = sceneSchema
+export const cheererSchema = npcSchema
+  .pick({ id: true, name: true, variant: true })
+  .strict();
+export type Cheerer = z.infer<typeof cheererSchema>;
+export const sceneSchema = houseSchema.extend({
+  mapKey: sceneKeySchema,
+  cheerers: z.array(cheererSchema).max(600).optional(),
+});
+export const contributorVisitSchema = houseSchema
   .extend({
+    mapKey: sceneKeySchema,
     visitor: z
       .object({
         name: z.string().min(1).max(80),

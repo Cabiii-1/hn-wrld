@@ -8,7 +8,7 @@ import {
   useState,
   type PointerEvent,
 } from "react";
-import type { WorldNpc, ContributorVisit } from "@/game/connected";
+import type { WorldNpc, ContributorVisit, Cheerer } from "@/game/connected";
 import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
 import { RecipientDialogue } from "./recipient-dialogue";
 import { ParkAudio } from "./park-audio";
@@ -49,6 +49,7 @@ export function World({
   onSceneChange,
   visitor,
   paused = false,
+  cheerers,
 }: {
   npcs?: WorldNpc[];
   mapKey?: SceneKey;
@@ -56,10 +57,13 @@ export function World({
   onSceneChange?: (map: SceneKey) => void;
   visitor?: ContributorVisit["visitor"];
   paused?: boolean;
+  cheerers?: Cheerer[];
 }) {
   const connected = npcs !== undefined && !preview && !visitor;
   const place = SCENES[mapKey];
-  const [bridge] = useState(() => new GameBridge(npcs, mapKey, visitor));
+  const [bridge] = useState(
+    () => new GameBridge(npcs, mapKey, visitor, cheerers),
+  );
   const [nearId, setNearId] = useState("");
   const [talkId, setTalkId] = useState("");
   const [privateSeen, setPrivateSeen] = useState(
@@ -220,11 +224,13 @@ export function World({
                     <span>
                       {visitor ? `Welcome, ${visitor.name}.` : place.welcome}
                       <small>
-                        {visitor
-                          ? "Take a little walk. Every bear is cheering her on."
-                          : connected && !npcs.length
-                            ? "A quiet little moment. More hellos will arrive soon."
-                            : "Take a little walk. Someone’s here for you."}
+                        {mapKey === "slu_baguio" && cheerers?.length
+                          ? `${cheerers.length} familiar ${cheerers.length === 1 ? "face" : "faces"}, cheering you on.`
+                          : visitor
+                            ? "Take a little walk. Every bear is cheering her on."
+                            : connected && !npcs.length
+                              ? "A quiet little moment. More hellos will arrive soon."
+                              : "Take a little walk. Someone’s here for you."}
                       </small>
                     </span>
                   </div>

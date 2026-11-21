@@ -5,10 +5,17 @@ import { WORLD, normalizedInput, type Direction } from "./world";
 import { Crowd, facingDirection, type BearState } from "./crowd";
 import { demoNpcs } from "./demo-fixtures";
 import { SCENES } from "./scenes";
+import { sluCheeringCast, type CheeringBear } from "./slu-cheerers";
 type Actor = {
   data: BearState;
   sprite: Phaser.GameObjects.Sprite;
   label: Phaser.GameObjects.Text;
+};
+type CheerActor = {
+  data: CheeringBear;
+  sprite: Phaser.GameObjects.Sprite;
+  label: Phaser.GameObjects.Text;
+  showUntil: number;
 };
 const sharedBear = (bear: BearState) => bear.readable === true;
 // Shared scenic renderer; each map supplies separate art, geometry and spawns.
@@ -16,6 +23,8 @@ export class PlaceScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Sprite;
   private playerLabel!: Phaser.GameObjects.Text;
   private actors: Actor[] = [];
+  private cheeringActors: CheerActor[] = [];
+  private cheeringIds: ReadonlySet<string> = new Set();
   private crowd!: Crowd;
   private marker!: Phaser.GameObjects.Text;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
@@ -43,10 +52,13 @@ export class PlaceScene extends Phaser.Scene {
     makeBearTextures(this, "npc-cream-1", "#f1d8b0", "#778b63");
     makeBearTextures(this, "npc-brown-scarf", "#b78459", "#778b63");
     makeBearTextures(this, "npc-rose-bow", "#f3dfc5", "#ce8796");
-    this.crowd = new Crowd(
-      this.bridge.mapKey,
-      this.bridge.npcs ?? demoNpcs(this.bridge.mapKey, 1),
-    );
+    const npcs = this.bridge.npcs ?? demoNpcs(this.bridge.mapKey, 1);
+    const cast =
+      this.bridge.mapKey === "slu_baguio" && this.bridge.cheerers?.length
+        ? sluCheeringCast(npcs, this.bridge.cheerers)
+        : { npcs, decorative: [], cheeringIds: new Set<string>() };
+    this.cheeringIds = cast.cheeringIds;
+    this.crowd = new Crowd(this.bridge.mapKey, cast.npcs, this.cheeringIds);
     this.player = this.add
       .sprite(
         this.crowd.player.x,
@@ -85,6 +97,42 @@ export class PlaceScene extends Phaser.Scene {
         )
         .setOrigin(0.5, 1),
     }));
+    this.cheeringActors = cast.decorative.map((data, index) => {
+      const sprite = this.add
+        .sprite(data.x, data.y, data.variant)
+        .setOrigin(0.5, 30 / 32)
+        .setInteractive({ useHandCursor: true });
+      sprite.play({
+        key: `${data.variant}-cheer`,
+        startFrame: index % 2,
+        delay: (index % 7) * 80,
+      });
+      const actor: CheerActor = {
+        data,
+        sprite,
+        label: this.add
+          .text(
+            data.x,
+            data.y - 34,
+            data.name.length > 22 ? data.name.slice(0, 21) + "…" : data.name,
+            style,
+          )
+          .setOrigin(0.5, 1)
+          .setVisible(false)
+          .setDepth(1000),
+        showUntil: 0,
+      };
+      sprite.on("pointerover", () => {
+        actor.showUntil = Infinity;
+      });
+      sprite.on("pointerout", () => {
+        actor.showUntil = 0;
+      });
+      sprite.on("pointerdown", () => {
+        actor.showUntil = this.time.now + 2500;
+      });
+      return actor;
+    });
     this.marker = this.add
       .text(0, 0, "E / Talk", {
         ...style,
@@ -173,6 +221,18 @@ export class PlaceScene extends Phaser.Scene {
     const depth = Math.round(sprite.y);
     if (sprite.depth !== depth) sprite.setDepth(depth);
   }
+  private animateCheering(
+    sprite: Phaser.GameObjects.Sprite,
+    key: string,
+    paused: boolean,
+  ) {
+    if (sprite.anims.currentAnim?.key !== `${key}-cheer`)
+      sprite.play(`${key}-cheer`);
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+      sprite.anims.pause();
+    else sprite.anims.resume();
+    sprite.setDepth(Math.round(sprite.y));
+  }
   update(time: number, delta: number) {
     if (!this.player) return;
     const paused = this.bridge.paused || !this.activeWindow,
@@ -217,16 +277,26 @@ export class PlaceScene extends Phaser.Scene {
         Math.round(actor.data.x),
         Math.round(actor.data.y),
       );
-      this.animate(
-        actor.sprite,
-        actor.data.variant,
-        actor.data.facing,
-        !paused && actor.data.walking,
-      );
+      if (this.cheeringIds.has(actor.data.id))
+        this.animateCheering(actor.sprite, actor.data.variant, paused);
+      else
+        this.animate(
+          actor.sprite,
+          actor.data.variant,
+          actor.data.facing,
+          !paused && actor.data.walking,
+        );
       actor.label
         .setVisible(this.actors.length <= 10 || actor.data === nearest)
         .setPosition(actor.sprite.x, actor.sprite.y - 34)
         .setDepth(1000);
+    }
+    for (const actor of this.cheeringActors) {
+      this.animateCheering(actor.sprite, actor.data.variant, paused);
+      actor.label.setVisible(
+        !paused &&
+          (this.cheeringIds.size <= 6 || actor.showUntil > this.time.now),
+      );
     }
     const action =
       Phaser.Input.Keyboard.JustDown(this.keys.E) ||
@@ -264,6 +334,18 @@ export class PlaceScene extends Phaser.Scene {
         mapKey: this.bridge.mapKey,
         player: this.crowd.player,
         npcCount: this.actors.length,
+        cheererCount: this.cheeringIds.size,
+        decorativeCheererCount: this.cheeringActors.length,
+        cheeringBears: [
+          ...this.cheeringActors.map((a) => ({
+            id: a.data.id,
+            x: a.data.x,
+            y: a.data.y,
+          })),
+          ...this.crowd.bears
+            .filter((b) => this.cheeringIds.has(b.id))
+            .map((b) => ({ id: b.id, x: b.x, y: b.y })),
+        ],
         moving,
         near: !!nearest,
         paused,

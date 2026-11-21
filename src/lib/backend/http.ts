@@ -15,7 +15,7 @@ import {
   contributorVisitSchema,
   sharedLetterSchema,
 } from "../../game/connected";
-import { isSceneKey, safePlacement } from "../../game/scenes";
+import { SCENE_KEYS, isSceneKey, safePlacement } from "../../game/scenes";
 import {
   finaleAdminSchema,
   finaleDraftSchema,
@@ -407,6 +407,42 @@ export async function handleBackend(request: Request, path: string[]) {
       }
       if (path[1] === "scenes" && path.length === 3 && method === "GET") {
         const map = sceneKeySchema.parse(path[2]);
+        if (map === "slu_baguio") {
+          // Reuse the same protected projections as normal scene navigation.
+          // This is a visual roster, not additional placements or letter access.
+          const scenes = await Promise.all(
+            SCENE_KEYS.map(async (source) => {
+              const result = await db.rpc("recipient_scene", {
+                p_session_hash: hash,
+                p_map: source,
+              });
+              check(result.error);
+              const scene = sceneSchema.parse(result.data);
+              if (scene.mapKey !== source)
+                throw new HttpError(
+                  503,
+                  "This place could not load. Please try again.",
+                );
+              return scene;
+            }),
+          );
+          const slu = scenes.find((scene) => scene.mapKey === map)!;
+          const roster = new Map(
+            scenes.flatMap((scene) =>
+              scene.npcs.map(
+                ({ id, name, variant }) => [id, { id, name, variant }] as const,
+              ),
+            ),
+          );
+          return json(
+            sceneSchema.parse({
+              ...slu,
+              cheerers: [...roster.values()].sort((a, b) =>
+                a.id.localeCompare(b.id),
+              ),
+            }),
+          );
+        }
         const result = await db.rpc("recipient_scene", {
           p_session_hash: hash,
           p_map: map,
@@ -821,7 +857,10 @@ export async function handleBackend(request: Request, path: string[]) {
       check(result.error);
       // The fragment is recovered only through authenticated admin access.
       return json(
-        { id: result.data, url: `${backendEnv().APP_ORIGIN}/contribute#${token}` },
+        {
+          id: result.data,
+          url: `${backendEnv().APP_ORIGIN}/contribute#${token}`,
+        },
         201,
       );
     }

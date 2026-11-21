@@ -1,5 +1,5 @@
 import type { Direction } from "./world";
-import type { WorldNpc, ContributorVisit } from "./connected";
+import type { WorldNpc, ContributorVisit, Cheerer } from "./connected";
 import type { SceneKey } from "./scenes";
 export type GameStatus = "loading" | "ready" | "error";
 export class GameBridge {
@@ -7,6 +7,7 @@ export class GameBridge {
     public readonly npcs?: WorldNpc[],
     public readonly mapKey: SceneKey = "sta_ana_house",
     public readonly visitor?: ContributorVisit["visitor"],
+    public readonly cheerers?: Cheerer[],
   ) {}
   held = new Set<Direction>();
   paused = false;

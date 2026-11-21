@@ -1,6 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { newSecret } from "../src/lib/backend/security";
 import { hashPasscode } from "../src/lib/backend/passcode";
+import { SCENE_KEYS } from "../src/game/scenes";
 const state = vi.hoisted(() => ({
   jar: new Map<string, string>(),
   setters: vi.fn(),
@@ -237,6 +238,138 @@ describe("M5 finale HTTP boundaries", () => {
     expect(state.rpc).not.toHaveBeenCalled();
   });
 });
+describe("SLU recipient cheering roster", () => {
+  const names = ["House friend", "Park friend", "SLU friend"];
+  const npcs = names.map((name, index) => ({
+    id: `${[3, 1, 2][index]}`.repeat(8) + "-1111-4111-8111-111111111111",
+    name,
+    variant: "npc-cream-1",
+    x: 430,
+    y: 360,
+    radius: 0,
+    seen: index === 0,
+    readable: true,
+  }));
+  function scenes() {
+    state.jar.set("bubu-recipient", newSecret());
+    state.rpc.mockImplementation(
+      async (name: string, args: { p_map?: string }) => {
+        if (name === "active_recipient")
+          return { data: "recipient-link", error: null };
+        const index = SCENE_KEYS.indexOf(
+          args.p_map as (typeof SCENE_KEYS)[number],
+        );
+        return {
+          data: { mapKey: args.p_map, npcs: index < 0 ? [] : [npcs[index]] },
+          error: null,
+        };
+      },
+    );
+  }
+  it("aggregates authorized scenes into a sorted, deduplicated visual-only roster", async () => {
+    scenes();
+    const original = state.rpc.getMockImplementation()!;
+    state.rpc.mockImplementation(
+      async (name: string, args: { p_map?: string }) => {
+        const result = await original(name, args);
+        if (name === "recipient_scene" && args.p_map === "tuguegarao_park") {
+          result.data.npcs.push({
+            ...npcs[0],
+            message: "PRIVATE SECRET BODY",
+            media: ["PRIVATE MEDIA ID"],
+          });
+        }
+        return result;
+      },
+    );
+    const result = await request("recipient/scenes/slu_baguio");
+    expect(result.status).toBe(200);
+    const projection = await result.json();
+    expect(projection).toEqual({
+      mapKey: "slu_baguio",
+      npcs: [npcs[2]],
+      cheerers: [npcs[1], npcs[2], npcs[0]].map(({ id, name, variant }) => ({
+        id,
+        name,
+        variant,
+      })),
+    });
+    for (const cheerer of projection.cheerers)
+      expect(Object.keys(cheerer).sort()).toEqual(["id", "name", "variant"]);
+    expect(JSON.stringify(projection)).not.toContain("PRIVATE");
+    const sceneCalls = state.rpc.mock.calls.filter(
+      ([name]) => name === "recipient_scene",
+    );
+    expect(sceneCalls.map(([, args]) => args.p_map)).toEqual(SCENE_KEYS);
+    expect(
+      new Set(sceneCalls.map(([, args]) => args.p_session_hash)).size,
+    ).toBe(1);
+    expect(result.headers.get("cache-control")).toContain("private, no-store");
+    expect(state.from).not.toHaveBeenCalled();
+    expect(state.download).not.toHaveBeenCalled();
+  });
+  it.each(["sta_ana_house", "tuguegarao_park"] as const)(
+    "keeps %s on its single protected scene projection",
+    async (map) => {
+      scenes();
+      const result = await request(`recipient/scenes/${map}`);
+      expect(result.status).toBe(200);
+      expect(await result.json()).toEqual({
+        mapKey: map,
+        npcs: [npcs[SCENE_KEYS.indexOf(map)]],
+      });
+      expect(
+        state.rpc.mock.calls.filter(([name]) => name === "recipient_scene"),
+      ).toHaveLength(1);
+    },
+  );
+  it("rejects anonymous and expired recipient access before fetching any roster", async () => {
+    expect((await request("recipient/scenes/slu_baguio")).status).toBe(401);
+    expect(state.rpc).not.toHaveBeenCalled();
+    state.jar.set("bubu-recipient", newSecret());
+    state.rpc.mockResolvedValue({
+      data: null,
+      error: { message: "Revoked session" },
+    });
+    expect((await request("recipient/scenes/slu_baguio")).status).toBe(401);
+    expect(
+      state.rpc.mock.calls.some(([name]) => name === "recipient_scene"),
+    ).toBe(false);
+  });
+  it.each(SCENE_KEYS)(
+    "fails closed if the authorized %s source fails",
+    async (map) => {
+      scenes();
+      const original = state.rpc.getMockImplementation()!;
+      state.rpc.mockImplementation(
+        async (name: string, args: { p_map?: string }) =>
+          name === "recipient_scene" && args.p_map === map
+            ? { data: null, error: { message: "PRIVATE SOURCE FAILURE" } }
+            : original(name, args),
+      );
+      const result = await request("recipient/scenes/slu_baguio");
+      expect(result.status).not.toBe(200);
+      const projection = await result.json();
+      expect(projection).toHaveProperty("error");
+      expect(projection).not.toHaveProperty("cheerers");
+      expect(JSON.stringify(projection)).not.toContain("PRIVATE");
+    },
+  );
+  it("fails closed on a mismatched source map instead of accepting cross-scene data", async () => {
+    scenes();
+    const original = state.rpc.getMockImplementation()!;
+    state.rpc.mockImplementation(
+      async (name: string, args: { p_map?: string }) =>
+        name === "recipient_scene" && args.p_map === "sta_ana_house"
+          ? { data: { mapKey: "slu_baguio", npcs: [npcs[0]] }, error: null }
+          : original(name, args),
+    );
+    const result = await request("recipient/scenes/slu_baguio");
+    expect(result.status).toBe(503);
+    expect(await result.json()).not.toHaveProperty("cheerers");
+  });
+});
+
 describe("M2 HTTP authorization and privacy", () => {
   it("denies anonymous admin, contributor and private-media reads", async () => {
     for (const path of [

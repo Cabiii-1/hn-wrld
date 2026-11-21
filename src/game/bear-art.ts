@@ -8,28 +8,36 @@ export function makeBearTextures(
   accessory: string,
 ) {
   const canvas = document.createElement("canvas");
-  canvas.width = 32 * 12;
+  canvas.width = 32 * 14;
   canvas.height = 32;
   const c = canvas.getContext("2d")!;
   const rect = (x: number, y: number, w: number, h: number, color: string) => {
     c.fillStyle = color;
     c.fillRect(x, y, w, h);
   };
-  for (let frame = 0; frame < 12; frame++) {
+  for (let frame = 0; frame < 14; frame++) {
     c.save();
     c.translate(frame * 32, 0);
-    const direction = Math.floor(frame / 4);
-    const walking = frame % 4 >= 2;
+    const cheering = frame >= 12;
+    const direction = cheering ? 0 : Math.floor(frame / 4);
+    const walking = !cheering && frame % 4 >= 2;
     const step = frame % 2;
     const bob = step;
     const outline = "#65483b";
     rect(7, 27, 19, 3, "#80634440");
     rect(9, 19 + bob, 14, 9, outline);
     rect(10, 19 + bob, 12, 7, coat);
-    rect(7, 20 + bob, 3, 5, outline);
-    rect(23, 20 + bob, 3, 5, outline);
-    rect(8, 20 + bob, 2, 4, coat);
-    rect(23, 20 + bob, 2, 4, coat);
+    if (cheering) {
+      rect(3, 13 + step * 2, 5, 8, outline);
+      rect(25, 15 - step * 2, 5, 8, outline);
+      rect(4, 14 + step * 2, 3, 5, coat);
+      rect(26, 16 - step * 2, 3, 5, coat);
+    } else {
+      rect(7, 20 + bob, 3, 5, outline);
+      rect(23, 20 + bob, 3, 5, outline);
+      rect(8, 20 + bob, 2, 4, coat);
+      rect(23, 20 + bob, 2, 4, coat);
+    }
     rect(10, 26 + (walking ? step : 0), 5, 3, outline);
     rect(18, 26 + (walking ? 1 - step : 0), 5, 3, outline);
     rect(6, 4 + bob, 7, 8, outline);
@@ -60,7 +68,16 @@ export function makeBearTextures(
   }
   const texture = scene.textures.addCanvas(key, canvas)!;
   texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
-  for (let i = 0; i < 12; i++) texture.add(i, 0, i * 32, 0, 32, 32);
+  for (let i = 0; i < 14; i++) texture.add(i, 0, i * 32, 0, 32, 32);
+  scene.anims.create({
+    key: `${key}-cheer`,
+    frames: [
+      { key, frame: 12 },
+      { key, frame: 13 },
+    ],
+    frameRate: 3,
+    repeat: -1,
+  });
   for (const [index, direction] of ["down", "up", "side"].entries()) {
     for (const [action, offset, rate] of [
       ["idle", 0, 2],

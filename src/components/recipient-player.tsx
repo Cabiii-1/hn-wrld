@@ -4,14 +4,18 @@ import Link from "next/link";
 import { World } from "./world";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
-import { sceneSchema, type WorldNpc } from "@/game/connected";
+import { sceneSchema, type Cheerer, type WorldNpc } from "@/game/connected";
 import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
 export function RecipientPlayer({
   initialScene,
   initialResolved = false,
   initialError = "",
 }: {
-  initialScene?: { mapKey: SceneKey; npcs: WorldNpc[] } | null;
+  initialScene?: {
+    mapKey: SceneKey;
+    npcs: WorldNpc[];
+    cheerers?: Cheerer[];
+  } | null;
   initialResolved?: boolean;
   initialError?: string;
 }) {
@@ -19,6 +23,9 @@ export function RecipientPlayer({
       initialScene?.npcs ?? null,
     ),
     [error, setError] = useState(initialError);
+  const [cheerers, setCheerers] = useState<Cheerer[]>(
+    initialScene?.cheerers ?? [],
+  );
   const [attempt, setAttempt] = useState(0);
   const [mapKey, setMapKey] = useState<SceneKey>(
     initialScene?.mapKey ?? "sta_ana_house",
@@ -37,6 +44,7 @@ export function RecipientPlayer({
           throw new Error("This place couldn’t load. Please try again.");
         if (live && request === generation) {
           setNpcs(result.npcs);
+          setCheerers(result.cheerers ?? []);
           setError("");
         }
       } catch (e) {
@@ -105,11 +113,13 @@ export function RecipientPlayer({
     <World
       key={
         mapKey +
+        JSON.stringify(cheerers) +
         JSON.stringify(
           npcs.map((n) => [n.id, n.name, n.variant, n.x, n.y, n.radius]),
         )
       }
       npcs={npcs}
+      cheerers={cheerers}
       mapKey={mapKey}
       onSceneChange={changeScene}
     />

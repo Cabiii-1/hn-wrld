@@ -32,7 +32,14 @@ export function DemoWorld() {
       <World
         key={`${map}-${count}`}
         mapKey={map}
-        npcs={demoNpcs(map, count)}
+        npcs={demoNpcs(map, map === "slu_baguio" ? 1 : count)}
+        cheerers={
+          map === "slu_baguio"
+            ? demoNpcs("tuguegarao_park", count).map(
+                ({ id, name, variant }) => ({ id, name, variant }),
+              )
+            : undefined
+        }
         preview
         onSceneChange={setMap}
       />
