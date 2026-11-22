@@ -38,20 +38,22 @@ afterEach(() => {
 it("starts the supplied looping track quietly with a compact player", () => {
   const { container } = render(<ParkAudio paused={false} />);
   const audio = container.querySelector("audio")!;
-  expect(audio.getAttribute("src")).toBe("/game/audio/park-adults-v1.mp3");
-  expect(audio.loop).toBe(false);
+  expect(audio.getAttribute("src")).toBe("/game/audio/park-frieren.mp3");
+  expect(audio.loop).toBe(true);
   expect(audio.controls).toBe(false);
   expect(audio.hidden).toBe(true);
   expect(audio.volume).toBe(0.22);
   expect(audio.play).toHaveBeenCalledOnce();
-  expect(screen.getByText("Haikyuu!! OST - Adults")).toBeTruthy();
+  expect(
+    screen.getByText("Frieren OST - The Precious Moments We Share"),
+  ).toBeTruthy();
   expect(screen.getByRole("button", { name: "Pause Park music" })).toBeTruthy();
   expect(
     container.querySelector(".park-music-player")?.getAttribute("data-playing"),
   ).toBe("true");
 });
 
-it("plays Adults then Frieren, then repeats the two-track playlist", () => {
+it("keeps Frieren assigned to Park instead of switching tracks", () => {
   const { container } = render(<ParkAudio paused={false} />);
   const audio = container.querySelector("audio")!;
   fireEvent.ended(audio);
@@ -61,12 +63,28 @@ it("plays Adults then Frieren, then repeats the two-track playlist", () => {
   ).toBeTruthy();
   expect(playing).toBe(true);
   fireEvent.ended(audio);
-  expect(audio.getAttribute("src")).toBe("/game/audio/park-adults-v1.mp3");
-  expect(screen.getByText("Haikyuu!! OST - Adults")).toBeTruthy();
+  expect(audio.getAttribute("src")).toBe("/game/audio/park-frieren.mp3");
+  expect(audio.loop).toBe(true);
   expect(playing).toBe(true);
 });
 
-it("preserves explicit pause on a track transition and resumes the selected track", () => {
+it("loops Haikyuu in SLU with the correct title and playback control", () => {
+  const { container, unmount } = render(
+    <ParkAudio mapKey="slu_baguio" paused={false} />,
+  );
+  const audio = container.querySelector("audio")!;
+  expect(audio.getAttribute("src")).toBe("/game/audio/park-adults-v1.mp3");
+  expect(audio.loop).toBe(true);
+  expect(screen.getByText("Haikyuu!! OST - Adults")).toBeTruthy();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Pause SLU Baguio music" }),
+  );
+  expect(playing).toBe(false);
+  unmount();
+  expect(playing).toBe(false);
+});
+
+it("preserves explicit pause at the track boundary and resumes the same track", () => {
   const { container } = render(<ParkAudio paused={false} />);
   const audio = container.querySelector("audio")!;
   fireEvent.click(screen.getByRole("button", { name: "Pause Park music" }));

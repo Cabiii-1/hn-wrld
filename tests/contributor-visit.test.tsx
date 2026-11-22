@@ -36,6 +36,8 @@ const visit: ContributorVisit = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+  vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
   vi.stubGlobal(
     "matchMedia",
     vi.fn(() => ({ matches: false })),

@@ -2,21 +2,30 @@
 import { useEffect, useRef, useState } from "react";
 import { Disc3, Pause, Play } from "lucide-react";
 
-const tracks = [
-  { title: "Haikyuu!! OST - Adults", src: "/game/audio/park-adults-v1.mp3" },
-  {
+const tracks = {
+  slu_baguio: {
+    title: "Haikyuu!! OST - Adults",
+    src: "/game/audio/park-adults-v1.mp3",
+  },
+  tuguegarao_park: {
     title: "Frieren OST - The Precious Moments We Share",
     src: "/game/audio/park-frieren.mp3",
   },
-] as const;
+} as const;
 
-/** Park-only soundtrack. Browser autoplay denial is retried on normal input. */
-export function ParkAudio({ paused }: { paused: boolean }) {
+/** Scene soundtrack. Browser autoplay denial is retried on normal input. */
+export function ParkAudio({
+  paused,
+  mapKey = "tuguegarao_park",
+}: {
+  paused: boolean;
+  mapKey?: keyof typeof tracks;
+}) {
   const ref = useRef<HTMLAudioElement>(null);
   const manuallyPaused = useRef(false);
   const [playing, setPlaying] = useState(false);
-  const [trackIndex, setTrackIndex] = useState(0);
-  const track = tracks[trackIndex];
+  const track = tracks[mapKey];
+  const place = mapKey === "slu_baguio" ? "SLU Baguio" : "Park";
   useEffect(() => {
     const audio = ref.current;
     if (!audio) return;
@@ -52,7 +61,7 @@ export function ParkAudio({ paused }: { paused: boolean }) {
       audio.removeEventListener("canplay", play);
       audio.pause();
     };
-  }, [paused, trackIndex]);
+  }, [paused, track.src]);
   function toggle() {
     const audio = ref.current;
     if (!audio || paused) return;
@@ -68,7 +77,7 @@ export function ParkAudio({ paused }: { paused: boolean }) {
       </span>
       <button
         type="button"
-        aria-label={playing ? "Pause Park music" : "Play Park music"}
+        aria-label={`${playing ? "Pause" : "Play"} ${place} music`}
         onClick={toggle}
       >
         {playing ? (
@@ -80,16 +89,13 @@ export function ParkAudio({ paused }: { paused: boolean }) {
       <audio
         ref={ref}
         src={track.src}
+        loop
         preload="auto"
         hidden
         onPlaying={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onWaiting={() => setPlaying(false)}
         onError={() => setPlaying(false)}
-        onEnded={() => {
-          setPlaying(false);
-          setTrackIndex((index) => (index + 1) % tracks.length);
-        }}
       />
     </div>
   );

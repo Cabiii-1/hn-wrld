@@ -196,8 +196,8 @@ export function World({
         </div>
         <div className="game-stage">
           <GameCanvas key={attempt} bridge={bridge} />
-          {mapKey === "tuguegarao_park" && (
-            <ParkAudio paused={paused || status !== "ready"} />
+          {(mapKey === "tuguegarao_park" || mapKey === "slu_baguio") && (
+            <ParkAudio mapKey={mapKey} paused={paused || status !== "ready"} />
           )}
           {status === "loading" && (
             <div className="loading-state" role="status">
@@ -219,20 +219,18 @@ export function World({
           )}
           {status === "ready" && (
             <>
-              {mapKey !== "tuguegarao_park" && (
+              {mapKey === "sta_ana_house" && (
                 <>
                   <div className="welcome-chip">
                     <Sparkles size={16} />
                     <span>
                       {visitor ? `Welcome, ${visitor.name}.` : place.welcome}
                       <small>
-                        {mapKey === "slu_baguio" && cheerers?.length
-                          ? `${cheerers.length} familiar ${cheerers.length === 1 ? "face" : "faces"}, cheering you on.`
-                          : visitor
-                            ? "Take a little walk. Every bear is cheering her on."
-                            : connected && !npcs.length
-                              ? "A quiet little moment. More hellos will arrive soon."
-                              : "Take a little walk. Someone’s here for you."}
+                        {visitor
+                          ? "Take a little walk. Every bear is cheering her on."
+                          : connected && !npcs.length
+                            ? "A quiet little moment. More hellos will arrive soon."
+                            : "Take a little walk. Someone’s here for you."}
                       </small>
                     </span>
                   </div>
