@@ -3,6 +3,7 @@ import {
   CheerSpeech,
   MOTIVATIONAL_CHEERS,
   type CheerSpeechLine,
+  atongBearId,
 } from "../src/game/cheer-speech";
 
 function next(
@@ -14,14 +15,14 @@ function next(
   return speech.step(4000, visible, false)!;
 }
 
-it("uses the exact requested motivational lines and picks the special bearer once", () => {
+it("uses the exact requested motivational lines and only the assigned bear's quote once", () => {
   expect(MOTIVATIONAL_CHEERS).toEqual([
     "Kaya mo yan Hanna!!",
     "Goodluck Lagi!!",
     "Andito lang kami lagi sayo!!^^",
   ]);
   const ids = ["one", "two", "three", "four"];
-  const speech = new CheerSpeech(ids, () => 0.5);
+  const speech = new CheerSpeech(ids, () => 0.5, "three");
   expect(speech.specialBearId).toBe("three");
   let line = speech.step(1000, ids, false)!;
   const observed: CheerSpeechLine[] = [line];
@@ -57,7 +58,7 @@ it("rotates all visible speakers fairly without consecutive duplicates", () => {
 });
 
 it("covers every regular phrase in each shuffle bag without repeating the last phrase", () => {
-  const speech = new CheerSpeech(["special", "regular"], () => 0);
+  const speech = new CheerSpeech(["special", "regular"], () => 0, "special");
   // The special bearer stays fixed offscreen; it is not reassigned to this bear.
   const visible = ["regular"];
   const lines = [speech.step(1000, visible, false)!];
@@ -72,7 +73,7 @@ it("covers every regular phrase in each shuffle bag without repeating the last p
 });
 
 it("waits initially, shows one bubble for 4.5 seconds, then leaves a gap", () => {
-  const speech = new CheerSpeech(["only"], () => 0);
+  const speech = new CheerSpeech(["only"], () => 0, "only");
   expect(speech.step(999, ["only"], false)).toBeNull();
   const line = speech.step(1, ["only"], false);
   expect(line).toEqual({ id: "only", text: "nigga" });
@@ -85,7 +86,7 @@ it("waits initially, shows one bubble for 4.5 seconds, then leaves a gap", () =>
 });
 
 it("uses the special quote only once even when a single bear is the whole cast", () => {
-  const speech = new CheerSpeech(["only"], () => 0);
+  const speech = new CheerSpeech(["only"], () => 0, "only");
   const lines = [speech.step(1000, ["only"], false)!];
   for (let i = 0; i < 12; i++) lines.push(next(speech, ["only"]));
   expect(lines.filter((line) => line.text === "nigga")).toHaveLength(1);
@@ -125,7 +126,7 @@ it("ignores empty and foreign visibility, duplicates and invalid elapsed values 
   expect(empty.specialBearId).toBeUndefined();
   expect(empty.step(100000, ["outsider"], false)).toBeNull();
   const speech = new CheerSpeech(["", "one", "one", "two"], () => 0);
-  expect(speech.specialBearId).toBe("one");
+  expect(speech.specialBearId).toBeUndefined();
   expect(speech.step(100000, [], false)).toBeNull();
   expect(speech.step(100000, ["outsider"], false)).toBeNull();
   expect(speech.step(Number.NaN, ["two"], false)).toBeNull();
@@ -134,4 +135,28 @@ it("ignores empty and foreign visibility, duplicates and invalid elapsed values 
   expect(line?.id).toBe("two");
   expect(line?.text).not.toBe("nigga");
   expect(speech.step(0, [], false)).toBeNull();
+});
+
+it("matches Atong exactly without falling back to another friend", () => {
+  const roster = [
+    { id: "b", name: "Atong's friend" },
+    { id: "a", name: "  ATONG  " },
+  ];
+  expect(atongBearId(roster)).toBe("a");
+  expect(atongBearId(roster.slice(0, 1))).toBeUndefined();
+  const speech = new CheerSpeech(
+    ["b"],
+    () => 0,
+    atongBearId(roster.slice(0, 1)),
+  );
+  const lines = [speech.step(1000, ["b"], false)!];
+  for (let i = 0; i < 8; i++) lines.push(next(speech, ["b"]));
+  expect(
+    lines.every((line) =>
+      (MOTIVATIONAL_CHEERS as readonly string[]).includes(line.text),
+    ),
+  ).toBe(true);
+  expect(
+    new CheerSpeech(["b"], () => 0, "absent").specialBearId,
+  ).toBeUndefined();
 });

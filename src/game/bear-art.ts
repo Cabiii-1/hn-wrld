@@ -8,18 +8,18 @@ export function makeBearTextures(
   accessory: string,
 ) {
   const canvas = document.createElement("canvas");
-  canvas.width = 32 * 14;
+  canvas.width = 32 * 16;
   canvas.height = 32;
   const c = canvas.getContext("2d")!;
   const rect = (x: number, y: number, w: number, h: number, color: string) => {
     c.fillStyle = color;
     c.fillRect(x, y, w, h);
   };
-  for (let frame = 0; frame < 14; frame++) {
+  for (let frame = 0; frame < 16; frame++) {
     c.save();
     c.translate(frame * 32, 0);
     const cheering = frame >= 12;
-    const direction = cheering ? 0 : Math.floor(frame / 4);
+    const direction = cheering ? (frame >= 14 ? 1 : 0) : Math.floor(frame / 4);
     const walking = !cheering && frame % 4 >= 2;
     const step = frame % 2;
     const bob = step;
@@ -68,7 +68,16 @@ export function makeBearTextures(
   }
   const texture = scene.textures.addCanvas(key, canvas)!;
   texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
-  for (let i = 0; i < 14; i++) texture.add(i, 0, i * 32, 0, 32, 32);
+  for (let i = 0; i < 16; i++) texture.add(i, 0, i * 32, 0, 32, 32);
+  scene.anims.create({
+    key: `${key}-cheer-up`,
+    frames: [
+      { key, frame: 14 },
+      { key, frame: 15 },
+    ],
+    frameRate: 3,
+    repeat: -1,
+  });
   scene.anims.create({
     key: `${key}-cheer`,
     frames: [

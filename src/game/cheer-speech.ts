@@ -6,6 +6,12 @@ export const MOTIVATIONAL_CHEERS = [
 
 export type CheerSpeechLine = { id: string; text: string };
 
+export function atongBearId(roster: readonly { id: string; name: string }[]) {
+  return [...roster]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .find((bear) => bear.name.trim().toLowerCase() === "atong")?.id;
+}
+
 /** One transient bubble; no requests, persistence, or frame-driven UI state. */
 export class CheerSpeech {
   readonly specialBearId: string | undefined;
@@ -22,12 +28,11 @@ export class CheerSpeech {
   constructor(
     ids: readonly string[],
     private readonly random: () => number = Math.random,
+    specialBearId?: string,
   ) {
     this.ids = new Set(ids.filter((id) => id.length > 0));
-    const unique = [...this.ids];
-    this.specialBearId = unique.length
-      ? unique[Math.floor(this.unit() * unique.length)]
-      : undefined;
+    this.specialBearId =
+      specialBearId && this.ids.has(specialBearId) ? specialBearId : undefined;
   }
 
   /** Returns the active line, or null while idle, paused or outside the camera. */

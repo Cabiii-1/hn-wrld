@@ -36,3 +36,9 @@ Speech hides and its timers freeze during dialogue, tab blur or other game pause
 - Production build, including TypeScript: **passed**. The first sandboxed attempt hit a Windows `EPERM` while creating generated output; the authorized retry completed successfully.
 - Full suite: **224 tests passed** in 23 files using `npm test -- --maxWorkers=2`. One existing database test exceeded its 5-second timeout during the initial concurrent build (223 passed); the complete retry passed after the build finished.
 - New bubble visual verification: **not completed**. Computer Use stopped because it could not identify the native browser URL with enough confidence to enforce its policy. No desktop/phone visual pass is claimed for this follow-up. Earlier crowd screenshots document the formation only.
+
+## Road-facing follow-up - 2026-11-22
+
+Formation moved to road rows at foot Y 422/452, facing the school through new rear-facing cheer frames. The entrance axis remains clear. Only the nonblocking SLU display cast may use these road spots; normal placement validation and Hanna's road collision remain unchanged. Native letter identities are preserved without database writes. Atong is selected by trimmed, case-insensitive exact name; absent Atong means no extra quote, with no random fallback.
+
+Verification: **225 tests passed** across 23 files, full ESLint passed, and the production build (including TypeScript) passed. Tests cover the two road rows, clear entrance axis, road collision remaining blocked for Hanna/ordinary NPCs, native display-cast retention, and Atong-only matching with no fallback. Browser visual verification remains unavailable following the Computer Use URL-identification policy block; no visual pass is claimed.

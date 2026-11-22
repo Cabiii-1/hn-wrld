@@ -6,7 +6,7 @@ import { Crowd, facingDirection, type BearState } from "./crowd";
 import { demoNpcs } from "./demo-fixtures";
 import { SCENES } from "./scenes";
 import { sluCheeringCast, type CheeringBear } from "./slu-cheerers";
-import { CheerSpeech } from "./cheer-speech";
+import { CheerSpeech, atongBearId } from "./cheer-speech";
 type Actor = {
   data: BearState;
   sprite: Phaser.GameObjects.Sprite;
@@ -26,7 +26,12 @@ export class PlaceScene extends Phaser.Scene {
   private actors: Actor[] = [];
   private cheeringActors: CheerActor[] = [];
   private cheeringIds: ReadonlySet<string> = new Set();
-  private cheeringPositions: { id: string; x: number; y: number }[] = [];
+  private cheeringPositions: {
+    id: string;
+    name: string;
+    x: number;
+    y: number;
+  }[] = [];
   private cheerSpeech?: CheerSpeech;
   private cheerBubble?: Phaser.GameObjects.Container;
   private cheerBubbleSkin?: Phaser.GameObjects.Graphics;
@@ -112,7 +117,7 @@ export class PlaceScene extends Phaser.Scene {
         .setOrigin(0.5, 30 / 32)
         .setInteractive({ useHandCursor: true });
       sprite.play({
-        key: `${data.variant}-cheer`,
+        key: `${data.variant}-cheer-up`,
         startFrame: index % 2,
         delay: (index % 7) * 80,
       });
@@ -149,6 +154,8 @@ export class PlaceScene extends Phaser.Scene {
     if (this.cheeringPositions.length) {
       this.cheerSpeech = new CheerSpeech(
         this.cheeringPositions.map((bear) => bear.id),
+        Math.random,
+        atongBearId(this.cheeringPositions),
       );
       this.cheerBubbleSkin = this.add.graphics();
       this.cheerBubbleText = this.add.text(8, 7, "", {
@@ -256,8 +263,8 @@ export class PlaceScene extends Phaser.Scene {
     key: string,
     paused: boolean,
   ) {
-    if (sprite.anims.currentAnim?.key !== `${key}-cheer`)
-      sprite.play(`${key}-cheer`);
+    if (sprite.anims.currentAnim?.key !== `${key}-cheer-up`)
+      sprite.play(`${key}-cheer-up`);
     if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
       sprite.anims.pause();
     else sprite.anims.resume();

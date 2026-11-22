@@ -1,5 +1,6 @@
 import type { WorldNpc } from "./connected";
 import { SCENES, safePlacement, type SceneKey } from "./scenes";
+import { roadCheeringSpot } from "./slu-cheerers";
 import {
   canStand,
   moveFeet,
@@ -70,7 +71,14 @@ export class Crowd {
     private readonly nonBlocking: ReadonlySet<string> = new Set(),
   ) {
     this.bears = npcs
-      .filter((n) => safePlacement(map, n.x, n.y, n.radius))
+      .filter(
+        (n) =>
+          safePlacement(map, n.x, n.y, n.radius) ||
+          (map === "slu_baguio" &&
+            this.nonBlocking.has(n.id) &&
+            n.radius === 0 &&
+            roadCheeringSpot(n.x, n.y)),
+      )
       .map((n, i) => {
         const bear: BearState = {
           ...n,
