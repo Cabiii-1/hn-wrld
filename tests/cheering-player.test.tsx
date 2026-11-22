@@ -51,6 +51,21 @@ const initialScene = {
 const refresh = () =>
   act(() => document.dispatchEvent(new Event("visibilitychange")));
 
+it("starts Hanna in Park with House absent from her scene navigation", () => {
+  render(
+    <RecipientPlayer
+      initialScene={{ mapKey: "tuguegarao_park", npcs: [native] }}
+      initialResolved
+    />,
+  );
+  expect(mock.bridge?.mapKey).toBe("tuguegarao_park");
+  expect(
+    screen.queryByRole("button", { name: "Visit Sta. Ana House" }),
+  ).toBeNull();
+  expect(screen.getByRole("button", { name: "Visit Park" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Visit SLU Baguio" })).toBeTruthy();
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
   mock.bridge = null;

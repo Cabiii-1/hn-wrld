@@ -8,7 +8,6 @@ import { backendEnv, serviceClient, userClient } from "../supabase/server";
 import { hashPasscode, verifyPasscode } from "./passcode";
 import { openInvitation, sealInvitation } from "./invitation-links";
 import {
-  houseSchema,
   messageSchema,
   sceneSchema,
   sceneKeySchema,
@@ -16,6 +15,8 @@ import {
   sharedLetterSchema,
 } from "../../game/connected";
 import { SCENE_KEYS, isSceneKey, safePlacement } from "../../game/scenes";
+import { RECIPIENT_FINALE_ENABLED } from "../../game/recipient-release";
+import { parkGathering } from "../../game/park-gathering";
 import {
   finaleAdminSchema,
   finaleDraftSchema,
@@ -355,6 +356,17 @@ export async function handleBackend(request: Request, path: string[]) {
           "Your visit has ended. Please open your private link again.",
         );
       if (route === "recipient/session" && method === "GET") return ok();
+      if (!RECIPIENT_FINALE_ENABLED && path[1] === "ending") {
+        if (route === "recipient/ending/status" && method === "GET")
+          return json({
+            available: false,
+            unlocked: false,
+            seen: 0,
+            required: 0,
+            completed: false,
+          });
+        throw new HttpError(403, "Cj’s letter isn’t ready to open yet.");
+      }
       if (route === "recipient/ending/status" && method === "GET") {
         const result = await db.rpc("recipient_finale_status", {
           p_session_hash: hash,
@@ -399,17 +411,15 @@ export async function handleBackend(request: Request, path: string[]) {
         return ok();
       }
       if (route === "recipient/house" && method === "GET") {
-        const result = await db.rpc("recipient_house", {
-          p_session_hash: hash,
-        });
-        check(result.error);
-        return json(houseSchema.parse(result.data));
+        throw new HttpError(404, "This place is resting for now.");
       }
       if (path[1] === "scenes" && path.length === 3 && method === "GET") {
         const map = sceneKeySchema.parse(path[2]);
-        if (map === "slu_baguio") {
-          // Reuse the same protected projections as normal scene navigation.
-          // This is a visual roster, not additional placements or letter access.
+        if (map === "sta_ana_house")
+          throw new HttpError(404, "This place is resting for now.");
+        if (map === "slu_baguio" || map === "tuguegarao_park") {
+          // Reuse protected projections, preserving publication/session checks.
+          // Park consolidates display positions; stored letter identities stay intact.
           const scenes = await Promise.all(
             SCENE_KEYS.map(async (source) => {
               const result = await db.rpc("recipient_scene", {
@@ -426,6 +436,13 @@ export async function handleBackend(request: Request, path: string[]) {
               return scene;
             }),
           );
+          if (map === "tuguegarao_park")
+            return json(
+              sceneSchema.parse({
+                mapKey: map,
+                npcs: parkGathering(scenes.flatMap((s) => s.npcs)),
+              }),
+            );
           const slu = scenes.find((scene) => scene.mapKey === map)!;
           const roster = new Map(
             scenes.flatMap((scene) =>

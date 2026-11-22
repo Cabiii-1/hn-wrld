@@ -169,10 +169,10 @@ describe("M5 finale HTTP boundaries", () => {
     const status = await request("recipient/ending/status");
     expect(status.status).toBe(200);
     expect(await status.json()).toEqual({
-      available: true,
+      available: false,
       unlocked: false,
       seen: 0,
-      required: 2,
+      required: 0,
       completed: false,
     });
     const ending = await request("recipient/ending");
@@ -181,7 +181,13 @@ describe("M5 finale HTTP boundaries", () => {
     expect(
       (await request("recipient/ending/complete", "POST", { revision: 1 }))
         .status,
-    ).toBe(409);
+    ).toBe(403);
+    expect(
+      state.rpc.mock.calls.some(
+        ([name]) =>
+          name === "recipient_ending" || name === "recipient_complete_finale",
+      ),
+    ).toBe(false);
     state.rpc.mockResolvedValue({ data: null, error: { message: "Revoked" } });
     expect((await request("recipient/ending")).status).toBe(401);
   });
@@ -308,21 +314,31 @@ describe("SLU recipient cheering roster", () => {
     expect(state.from).not.toHaveBeenCalled();
     expect(state.download).not.toHaveBeenCalled();
   });
-  it.each(["sta_ana_house", "tuguegarao_park"] as const)(
-    "keeps %s on its single protected scene projection",
-    async (map) => {
-      scenes();
-      const result = await request(`recipient/scenes/${map}`);
-      expect(result.status).toBe(200);
-      expect(await result.json()).toEqual({
-        mapKey: map,
-        npcs: [npcs[SCENE_KEYS.indexOf(map)]],
-      });
-      expect(
-        state.rpc.mock.calls.filter(([name]) => name === "recipient_scene"),
-      ).toHaveLength(1);
-    },
-  );
+  it("brings all eligible contributors into Park with original letter IDs", async () => {
+    scenes();
+    const result = await request("recipient/scenes/tuguegarao_park");
+    expect(result.status).toBe(200);
+    const data = await result.json();
+    expect(data.mapKey).toBe("tuguegarao_park");
+    expect(data.npcs.map((n: { id: string }) => n.id).sort()).toEqual(
+      npcs.map((n) => n.id).sort(),
+    );
+    expect(
+      data.npcs.find((n: { name: string }) => n.name === "House friend").seen,
+    ).toBe(true);
+    expect(data.cheerers).toBeUndefined();
+    expect(
+      state.rpc.mock.calls.filter(([name]) => name === "recipient_scene"),
+    ).toHaveLength(3);
+  });
+  it("hides both house routes after fresh recipient authorization", async () => {
+    scenes();
+    expect((await request("recipient/scenes/sta_ana_house")).status).toBe(404);
+    expect((await request("recipient/house")).status).toBe(404);
+    expect(
+      state.rpc.mock.calls.every(([name]) => name === "active_recipient"),
+    ).toBe(true);
+  });
   it("rejects anonymous and expired recipient access before fetching any roster", async () => {
     expect((await request("recipient/scenes/slu_baguio")).status).toBe(401);
     expect(state.rpc).not.toHaveBeenCalled();

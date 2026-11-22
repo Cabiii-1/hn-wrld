@@ -50,6 +50,7 @@ export function World({
   visitor,
   paused = false,
   cheerers,
+  availableScenes = SCENE_KEYS,
 }: {
   npcs?: WorldNpc[];
   mapKey?: SceneKey;
@@ -58,6 +59,7 @@ export function World({
   visitor?: ContributorVisit["visitor"];
   paused?: boolean;
   cheerers?: Cheerer[];
+  availableScenes?: readonly SceneKey[];
 }) {
   const connected = npcs !== undefined && !preview && !visitor;
   const place = SCENES[mapKey];
@@ -163,7 +165,7 @@ export function World({
       </section>
       {onSceneChange && (
         <nav className="scene-picker" aria-label="Places in your little world">
-          {SCENE_KEYS.map((key) => (
+          {availableScenes.map((key) => (
             <Button
               key={key}
               variant="outline"

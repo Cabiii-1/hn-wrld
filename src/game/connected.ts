@@ -17,6 +17,7 @@ export const cheererSchema = npcSchema
   .strict();
 export type Cheerer = z.infer<typeof cheererSchema>;
 export const sceneSchema = houseSchema.extend({
+  npcs: z.array(npcSchema).max(600),
   mapKey: sceneKeySchema,
   cheerers: z.array(cheererSchema).max(600).optional(),
 });

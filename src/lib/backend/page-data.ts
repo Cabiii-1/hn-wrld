@@ -8,6 +8,7 @@ type PageRead =
   | "contributor/visit"
   | "recipient/session"
   | "recipient/scenes/sta_ana_house"
+  | "recipient/scenes/tuguegarao_park"
   | "recipient/ending/status";
 
 // Reuse the API's authorization and projections inside the current server

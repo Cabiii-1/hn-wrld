@@ -5,7 +5,8 @@ import { World } from "./world";
 import { Button } from "./ui/button";
 import { api } from "@/lib/backend/browser-api";
 import { sceneSchema, type Cheerer, type WorldNpc } from "@/game/connected";
-import { SCENES, SCENE_KEYS, type SceneKey } from "@/game/scenes";
+import { SCENES, type SceneKey } from "@/game/scenes";
+import { RECIPIENT_START, RECIPIENT_SCENES } from "@/game/recipient-release";
 export function RecipientPlayer({
   initialScene,
   initialResolved = false,
@@ -28,7 +29,7 @@ export function RecipientPlayer({
   );
   const [attempt, setAttempt] = useState(0);
   const [mapKey, setMapKey] = useState<SceneKey>(
-    initialScene?.mapKey ?? "sta_ana_house",
+    initialScene?.mapKey ?? RECIPIENT_START,
   );
   const navigated = useRef(false);
   useEffect(() => {
@@ -95,7 +96,7 @@ export function RecipientPlayer({
         )}
         {error && (
           <nav aria-label="Choose another place">
-            {SCENE_KEYS.filter((key) => key !== mapKey).map((key) => (
+            {RECIPIENT_SCENES.filter((key) => key !== mapKey).map((key) => (
               <Button
                 variant="ghost"
                 key={key}
@@ -122,6 +123,7 @@ export function RecipientPlayer({
       cheerers={cheerers}
       mapKey={mapKey}
       onSceneChange={changeScene}
+      availableScenes={RECIPIENT_SCENES}
     />
   );
 }

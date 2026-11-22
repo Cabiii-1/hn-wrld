@@ -33,14 +33,14 @@ describe("M4 navigation and protected scene loading", () => {
     vi.spyOn(document, "hidden", "get").mockReturnValue(false);
     render(
       <RecipientPlayer
-        initialScene={{ mapKey: "sta_ana_house", npcs: [] }}
+        initialScene={{ mapKey: "tuguegarao_park", npcs: [] }}
         initialResolved
       />,
     );
     const canvas = screen.getByTestId("game");
     expect(mock.api).not.toHaveBeenCalled();
     act(() => document.dispatchEvent(new Event("visibilitychange")));
-    expect(mock.api).toHaveBeenCalledWith("recipient/scenes/sta_ana_house");
+    expect(mock.api).toHaveBeenCalledWith("recipient/scenes/tuguegarao_park");
     expect(screen.getByTestId("game")).toBe(canvas);
     await act(async () => reject(new Error("Your visit has ended.")));
     await screen.findByText("Your visit has ended.");
@@ -78,15 +78,12 @@ describe("M4 navigation and protected scene loading", () => {
       npcs: [],
     }));
     render(<RecipientPlayer />);
-    await screen.findByRole("region", { name: "Explore Sta. Ana House" });
-    await userEvent.click(screen.getByRole("button", { name: "Visit Park" }));
     await screen.findByRole("region", { name: "Explore Park" });
     await userEvent.click(
       screen.getByRole("button", { name: "Visit SLU Baguio" }),
     );
     await screen.findByRole("region", { name: "Explore SLU Baguio" });
     expect(mock.api.mock.calls.map((c) => c[0])).toEqual([
-      "recipient/scenes/sta_ana_house",
       "recipient/scenes/tuguegarao_park",
       "recipient/scenes/slu_baguio",
     ]);
@@ -97,7 +94,7 @@ describe("M4 navigation and protected scene loading", () => {
     render(<RecipientPlayer />);
     await screen.findByText("Your visit has ended.");
     expect(screen.queryByTestId("game")).toBeNull();
-    mock.api.mockResolvedValue({ mapKey: "sta_ana_house", npcs: [] });
+    mock.api.mockResolvedValue({ mapKey: "tuguegarao_park", npcs: [] });
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(screen.getAllByTestId("game")).toHaveLength(1));
   });
